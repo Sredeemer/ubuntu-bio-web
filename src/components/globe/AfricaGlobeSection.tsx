@@ -4,7 +4,7 @@ import React, { useState, useMemo } from "react";
 import Link from "next/link";
 import { FlagGlobe, type FlagGlobeMarker } from "@/components/ui/flag-globe";
 import { AU_COUNTRIES } from "@/data/auCountries";
-import { Globe, RotateCw, Pause, Play, ShieldCheck, Compass, ArrowRight, Layers } from "lucide-react";
+import { Globe, ShieldCheck, Compass, ArrowRight } from "lucide-react";
 import "./AfricaGlobeSection.css";
 
 const REGIONS: Record<string, { label: string; codes: string[]; phi: number }> = {
@@ -42,8 +42,6 @@ const REGIONS: Record<string, { label: string; codes: string[]; phi: number }> =
 
 export function AfricaGlobeSection() {
   const [selectedRegion, setSelectedRegion] = useState<string>("all");
-  const [autoRotate, setAutoRotate] = useState<boolean>(true);
-  const [rotationSpeed, setRotationSpeed] = useState<number>(0.12);
 
   const activeRegion = REGIONS[selectedRegion] ?? REGIONS.all!;
 
@@ -91,28 +89,6 @@ export function AfricaGlobeSection() {
               </button>
             ))}
           </div>
-
-          <div className="ubio-globe-actions">
-            <button
-              onClick={() => setAutoRotate(!autoRotate)}
-              className="ubio-action-btn"
-              title={autoRotate ? "Pause auto-rotation" : "Resume auto-rotation"}
-              aria-label={autoRotate ? "Pause rotation" : "Play rotation"}
-            >
-              {autoRotate ? <Pause size={14} /> : <Play size={14} />}
-              <span>{autoRotate ? "Pause" : "Spin"}</span>
-            </button>
-            <button
-              onClick={() => {
-                setRotationSpeed((s) => (s >= 0.24 ? 0.08 : s + 0.08));
-              }}
-              className="ubio-action-btn"
-              title="Toggle rotation speed"
-            >
-              <RotateCw size={14} />
-              <span>Speed {Math.round((rotationSpeed / 0.12) * 100)}%</span>
-            </button>
-          </div>
         </div>
 
         {/* 3D Globe Stage */}
@@ -127,8 +103,8 @@ export function AfricaGlobeSection() {
               size={560}
               flagSize={26}
               altitude={0.16}
-              autoRotate={autoRotate}
-              rotationSpeed={rotationSpeed}
+              autoRotate={true}
+              rotationSpeed={0.12}
               phi={activeRegion.phi}
               theta={0.24}
               markerDots={true}

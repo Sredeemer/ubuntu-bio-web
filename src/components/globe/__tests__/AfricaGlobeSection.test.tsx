@@ -28,13 +28,11 @@ describe("AfricaGlobeSection", () => {
     expect(westAfricaTab.classList.contains("active")).toBe(true);
   });
 
-  it("toggles auto-rotation button", () => {
+  it("renders all African region filters", () => {
     render(<AfricaGlobeSection />);
-    const pauseBtn = screen.getByRole("button", { name: /Pause rotation/i });
-    expect(pauseBtn).toBeDefined();
-
-    fireEvent.click(pauseBtn);
-    expect(screen.getByRole("button", { name: /Play rotation/i })).toBeDefined();
+    expect(screen.getByRole("tab", { name: /All 54 AU Member States/i })).toBeDefined();
+    expect(screen.getByRole("tab", { name: /East Africa/i })).toBeDefined();
+    expect(screen.getByRole("tab", { name: /Southern Africa/i })).toBeDefined();
   });
 
   it("renders sovereign coverage metrics and catalog link", () => {

@@ -76,13 +76,13 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   width: 100%;
-  max-width: 1040px;
+  max-width: 900px;
   gap: 16px;
   margin-bottom: 32px;
-  padding: 12px 18px;
-  border-radius: var(--radius-lg, 12px);
+  padding: 10px 16px;
+  border-radius: var(--radius-full, 9999px);
   background: rgba(10, 25, 34, 0.6);
   border: 1px solid var(--hairline-dark, #1c2d38);
   backdrop-filter: blur(12px);
@@ -94,77 +94,7 @@
   flex-wrap: wrap;
   gap: 8px;
   align-items: center;
-}
-
-.ubio-region-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 14px;
-  border-radius: var(--radius-full, 9999px);
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: var(--text-on-dark-secondary, #c1ccd6);
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.ubio-region-pill:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: #ffffff;
-  border-color: rgba(255, 255, 255, 0.16);
-}
-
-.ubio-region-pill.active {
-  background: rgba(0, 237, 100, 0.14);
-  border-color: var(--brand-green, #00ed64);
-  color: #ffffff;
-  font-weight: 600;
-  box-shadow: 0 0 16px rgba(0, 237, 100, 0.18);
-}
-
-.ubio-pill-count {
-  display: inline-flex;
-  align-items: center;
   justify-content: center;
-  padding: 1px 6px;
-  border-radius: 10px;
-  font-size: 11px;
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--text-on-dark-dim, #7c8c9a);
-}
-
-.ubio-region-pill.active .ubio-pill-count {
-  background: rgba(0, 237, 100, 0.25);
-  color: var(--brand-green, #00ed64);
-}
-
-.ubio-globe-actions {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.ubio-action-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: var(--text-on-dark-secondary, #c1ccd6);
-  font-size: 12px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.ubio-action-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #ffffff;
-  border-color: rgba(255, 255, 255, 0.2);
 }
 
 /* Stage */
