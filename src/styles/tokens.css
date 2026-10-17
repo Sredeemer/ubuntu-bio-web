@@ -94,5 +94,13 @@
   --ease-press: cubic-bezier(0.34, 1.56, 0.64, 1);
   --duration-fast: 150ms;
   --duration-normal: 250ms;
-  --duration-slow: 400ms;
+  /* shadcn UI compatibility tokens */
+  --background: #001e2b;
+  --foreground: #ffffff;
+  --primary: #00ed64;
+  --primary-foreground: #001e2b;
+  --muted: #0f2430;
+  --muted-foreground: #a8b3bc;
+  --border: #1c2d38;
+  --ring: #00ed64;
 }

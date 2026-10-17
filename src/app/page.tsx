@@ -4,8 +4,8 @@ import React from "react";
 import { Navbar } from "../components/navbar/Navbar";
 import { HeroHeader } from "../components/hero/HeroHeader";
 import { ScrollyHero } from "../components/scrolly/ScrollyHero";
+import { AfricaGlobeSection } from "../components/globe/AfricaGlobeSection";
 import { AfricaGeoMap } from "../components/map/AfricaGeoMap";
-import { DatasetSearch } from "../components/search/DatasetSearch";
 import { StartToday } from "../components/start/StartToday";
 import { Footer } from "../components/footer/Footer";
 
@@ -16,7 +16,7 @@ export default function HomePage() {
       <main id="main-content">
         <HeroHeader />
         <ScrollyHero />
-        <DatasetSearch />
+        <AfricaGlobeSection />
         <AfricaGeoMap />
         <StartToday />
       </main>

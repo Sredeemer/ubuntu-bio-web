@@ -1,0 +1,347 @@
+/* AfricaGlobeSection.css - 3D Interactive Globe Section */
+
+.ubio-globe-section {
+  position: relative;
+  padding: var(--spacing-section, 96px) 24px;
+  background-color: var(--canvas-dark, #001e2b);
+  overflow: hidden;
+  border-top: 1px solid var(--hairline-dark, #1c2d38);
+  border-bottom: 1px solid var(--hairline-dark, #1c2d38);
+}
+
+.ubio-globe-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+
+/* Header */
+.ubio-globe-header {
+  text-align: center;
+  max-width: 780px;
+  margin-bottom: 32px;
+}
+
+.ubio-globe-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: var(--radius-full, 9999px);
+  background-color: rgba(0, 237, 100, 0.08);
+  border: 1px solid rgba(0, 237, 100, 0.25);
+  color: var(--brand-green, #00ed64);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  margin-bottom: 16px;
+}
+
+.ubio-globe-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: var(--brand-green, #00ed64);
+  box-shadow: 0 0 10px var(--brand-green, #00ed64);
+  animation: pulse 2s infinite;
+}
+
+.ubio-globe-badge-icon {
+  color: var(--brand-green, #00ed64);
+}
+
+.ubio-globe-title {
+  font-size: clamp(2rem, 4vw, 2.75rem);
+  font-weight: 600;
+  color: var(--text-on-dark, #ffffff);
+  line-height: 1.15;
+  margin-bottom: 14px;
+  letter-spacing: -0.02em;
+}
+
+.ubio-globe-subtitle {
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--text-on-dark-secondary, #c1ccd6);
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+/* Controls */
+.ubio-globe-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 1040px;
+  gap: 16px;
+  margin-bottom: 32px;
+  padding: 12px 18px;
+  border-radius: var(--radius-lg, 12px);
+  background: rgba(10, 25, 34, 0.6);
+  border: 1px solid var(--hairline-dark, #1c2d38);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.ubio-region-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.ubio-region-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: var(--radius-full, 9999px);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-on-dark-secondary, #c1ccd6);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ubio-region-pill:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.ubio-region-pill.active {
+  background: rgba(0, 237, 100, 0.14);
+  border-color: var(--brand-green, #00ed64);
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 0 16px rgba(0, 237, 100, 0.18);
+}
+
+.ubio-pill-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1px 6px;
+  border-radius: 10px;
+  font-size: 11px;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-on-dark-dim, #7c8c9a);
+}
+
+.ubio-region-pill.active .ubio-pill-count {
+  background: rgba(0, 237, 100, 0.25);
+  color: var(--brand-green, #00ed64);
+}
+
+.ubio-globe-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.ubio-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-on-dark-secondary, #c1ccd6);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ubio-action-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Stage */
+.ubio-globe-stage {
+  position: relative;
+  width: 100%;
+  max-width: 900px;
+  min-height: 580px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 12px 0 36px 0;
+}
+
+.ubio-globe-radial-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 500px;
+  height: 500px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(0, 237, 100, 0.12) 0%, rgba(0, 61, 79, 0.2) 40%, transparent 70%);
+  pointer-events: none;
+  filter: blur(24px);
+  z-index: 0;
+}
+
+.ubio-globe-viewport {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 560px;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ubio-3d-globe {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Floating Badges */
+.ubio-globe-floating-badge {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 18px;
+  border-radius: 12px;
+  background: rgba(8, 21, 29, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  color: #ffffff;
+  font-size: 13px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  z-index: 2;
+  transition: transform 0.3s ease;
+}
+
+.ubio-globe-floating-badge:hover {
+  transform: translateY(-2px);
+  border-color: rgba(0, 237, 100, 0.3);
+}
+
+.badge-left {
+  left: 10px;
+  bottom: 60px;
+}
+
+.badge-right {
+  right: 10px;
+  top: 60px;
+}
+
+.ubio-globe-floating-badge strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 2px;
+}
+
+.ubio-globe-floating-badge span {
+  font-size: 11px;
+  color: var(--text-on-dark-dim, #7c8c9a);
+}
+
+.badge-icon-accent {
+  color: var(--brand-green, #00ed64);
+  flex-shrink: 0;
+}
+
+/* Footer & CTA */
+.ubio-globe-footer {
+  width: 100%;
+  max-width: 1040px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ubio-globe-stats {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.ubio-globe-stat-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-number {
+  font-family: var(--font-mono, monospace);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--brand-green, #00ed64);
+}
+
+.stat-label {
+  font-size: 12px;
+  color: var(--text-on-dark-dim, #7c8c9a);
+}
+
+.ubio-globe-stat-divider {
+  width: 1px;
+  height: 32px;
+  background-color: var(--hairline-dark, #1c2d38);
+}
+
+.ubio-globe-cta {
+  display: flex;
+  align-items: center;
+}
+
+.ubio-cta-button {
+  padding: 12px 24px;
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+/* Responsive */
+@media (max-width: 860px) {
+  .ubio-globe-floating-badge {
+    position: static;
+    margin: 8px auto;
+    width: 100%;
+    max-width: 400px;
+  }
+
+  .ubio-globe-stage {
+    min-height: auto;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .ubio-globe-footer {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .ubio-globe-stats {
+    justify-content: center;
+  }
+
+  .ubio-globe-stat-divider {
+    display: none;
+  }
+}
