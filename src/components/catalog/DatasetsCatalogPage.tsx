@@ -189,11 +189,11 @@ export function DatasetsCatalogPage() {
             {/* Pathogen Type Section */}
             <div className="filter-section">
               <h3 className="filter-section-title">Pathogen Type</h3>
-              <div className="filter-checkbox-list">
+              <div className="catalog-filter-list">
                 {["Virus", "Bacteria", "Vector", "Fungus"].map((type) => (
                   <label
                     key={type}
-                    className="checkbox-label"
+                    className="catalog-filter-label"
                     htmlFor={`filter-type-${type}`}
                   >
                     <input
@@ -202,9 +202,9 @@ export function DatasetsCatalogPage() {
                       name={`filter-type-${type}`}
                       checked={selectedTypes.includes(type)}
                       onChange={() => toggleType(type)}
-                      className="standard-checkbox"
+                      className="catalog-filter-checkbox"
                     />
-                    <span className="checkbox-text">{type}</span>
+                    <span className="catalog-filter-text">{type}</span>
                   </label>
                 ))}
               </div>
@@ -213,11 +213,11 @@ export function DatasetsCatalogPage() {
             {/* Biocontainment Level Section */}
             <div className="filter-section">
               <h3 className="filter-section-title">Biocontainment Level</h3>
-              <div className="filter-checkbox-list">
+              <div className="catalog-filter-list">
                 {["BSL-4", "BSL-3", "BSL-2", "BSL-1"].map((bsl) => (
                   <label
                     key={bsl}
-                    className="checkbox-label"
+                    className="catalog-filter-label"
                     htmlFor={`filter-bsl-${bsl}`}
                   >
                     <input
@@ -226,9 +226,9 @@ export function DatasetsCatalogPage() {
                       name={`filter-bsl-${bsl}`}
                       checked={selectedBSLs.includes(bsl)}
                       onChange={() => toggleBSL(bsl)}
-                      className="standard-checkbox"
+                      className="catalog-filter-checkbox"
                     />
-                    <span className="checkbox-text">{bsl}</span>
+                    <span className="catalog-filter-text">{bsl}</span>
                   </label>
                 ))}
               </div>
@@ -260,7 +260,7 @@ export function DatasetsCatalogPage() {
                 {visibleCountries.map((c) => (
                   <label
                     key={c.code}
-                    className="checkbox-label"
+                    className="catalog-filter-label"
                     htmlFor={`filter-country-${c.code}`}
                   >
                     <input
@@ -269,9 +269,9 @@ export function DatasetsCatalogPage() {
                       name={`filter-country-${c.code}`}
                       checked={selectedCountries.includes(c.code)}
                       onChange={() => toggleCountry(c.code)}
-                      className="standard-checkbox"
+                      className="catalog-filter-checkbox"
                     />
-                    <span className="checkbox-text">
+                    <span className="catalog-filter-text">
                       <span className="country-code-chip">{c.code}</span>
                       {c.name}
                     </span>
@@ -380,16 +380,15 @@ export function DatasetsCatalogPage() {
                     </h2>
 
                     <div className="dataset-card-meta">
-                      <span className="taxon-tag">
-                        Taxon ID: <strong>{dataset.taxonId}</strong> (
-                        <em>{dataset.taxonName}</em>)
-                      </span>
                       <span className="institution-tag">
                         {dataset.leadInstitution}
                       </span>
+                      <span className="meta-sep">·</span>
+                      <span className="taxon-tag">
+                        Taxon <strong>{dataset.taxonId}</strong> (
+                        <em>{dataset.taxonName}</em>)
+                      </span>
                     </div>
-
-                    <p className="dataset-card-desc">{dataset.description}</p>
 
                     <div className="dataset-card-stats">
                       <div className="stat">
@@ -403,9 +402,9 @@ export function DatasetsCatalogPage() {
                         <span className="stat-value">{sizeFormatted}</span>
                       </div>
                       <div className="stat">
-                        <span className="stat-label">Platforms</span>
+                        <span className="stat-label">Sequencing</span>
                         <span className="stat-value">
-                          {dataset.seqPlatforms.join(", ")}
+                          {dataset.seqPlatforms[0] || "Illumina"}
                         </span>
                       </div>
                     </div>

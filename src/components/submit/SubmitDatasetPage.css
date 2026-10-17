@@ -320,7 +320,7 @@
   cursor: pointer;
 }
 
-.checkbox-label {
+.checkbox-card .checkbox-label {
   display: flex;
   flex-direction: column;
   gap: 4px;

@@ -110,13 +110,14 @@
 
 /* Sidebar Filter Panel */
 .ubio-catalog-sidebar {
-  width: 280px;
+  width: 270px;
   flex-shrink: 0;
   background: #ffffff;
   border: 1px solid var(--hairline-light, #e1e5e8);
   border-radius: 16px;
   padding: 20px;
   box-shadow: 0 2px 8px rgba(0, 30, 43, 0.04);
+  color-scheme: light;
   transition: width 0.25s ease, opacity 0.2s ease, padding 0.25s ease, margin 0.25s ease;
 }
 
@@ -133,7 +134,7 @@
 .sidebar-inner {
   display: flex;
   flex-direction: column;
-  width: 238px;
+  width: 100%;
 }
 
 .sidebar-header {
@@ -225,42 +226,50 @@
   color: var(--ink, #001e2b);
 }
 
-.filter-checkbox-list {
+.catalog-filter-list {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
-.checkbox-label {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 14px;
-  color: var(--ink, #001e2b);
-  cursor: pointer;
-  padding: 4px 0;
-  user-select: none;
-  transition: color 0.15s ease;
+.ubio-catalog-sidebar .catalog-filter-label {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 10px !important;
+  font-size: 13.5px !important;
+  font-weight: 500 !important;
+  color: var(--ink, #001e2b) !important;
+  cursor: pointer !important;
+  padding: 5px 6px !important;
+  border-radius: 6px !important;
+  user-select: none !important;
+  transition: background-color 0.15s ease, color 0.15s ease !important;
 }
 
-.checkbox-label:hover {
-  color: var(--brand-green-dark, #00684a);
+.ubio-catalog-sidebar .catalog-filter-label:hover {
+  background-color: var(--surface-light-soft, #f4f7f6) !important;
+  color: var(--brand-green-dark, #00684a) !important;
 }
 
-.standard-checkbox {
-  width: 16px;
-  height: 16px;
-  accent-color: var(--brand-green-dark, #00684a);
-  cursor: pointer;
-  border-radius: 4px;
-  flex-shrink: 0;
+.ubio-catalog-sidebar .catalog-filter-checkbox {
+  appearance: auto;
+  color-scheme: light !important;
+  width: 16px !important;
+  height: 16px !important;
+  accent-color: var(--brand-green-dark, #00684a) !important;
+  cursor: pointer !important;
+  border-radius: 4px !important;
+  flex-shrink: 0 !important;
+  margin: 0 !important;
 }
 
-.checkbox-text {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13.5px;
+.ubio-catalog-sidebar .catalog-filter-text {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+  font-size: 13.5px !important;
+  color: var(--ink, #001e2b) !important;
 }
 
 .country-filter-input {
@@ -273,6 +282,7 @@
   color: var(--ink, #001e2b);
   margin-bottom: 8px;
   font-family: inherit;
+  color-scheme: light;
 }
 
 .country-filter-input:focus {
@@ -285,8 +295,9 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 2px;
   padding-right: 4px;
+  color-scheme: light;
 }
 
 .country-code-chip {
@@ -574,11 +585,16 @@
 .dataset-card-meta {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   margin-bottom: 12px;
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   color: var(--ink-muted, #5c6c75);
   flex-wrap: wrap;
+}
+
+.meta-sep {
+  color: var(--hairline-light-strong, #c1ccd6);
+  font-size: 0.8rem;
 }
 
 .taxon-tag strong {
@@ -592,26 +608,20 @@
 }
 
 .institution-tag {
-  color: var(--ink-muted, #5c6c75);
-}
-
-.dataset-card-desc {
-  font-size: 0.88rem;
-  line-height: 1.55;
   color: var(--ink-secondary, #3d4f58);
-  margin-bottom: 18px;
+  font-weight: 500;
 }
 
 /* Card Stats */
 .dataset-card-stats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
+  gap: 12px;
   background: var(--surface-light-soft, #f4f7f6);
   border: 1px solid var(--hairline-light, #e1e5e8);
-  border-radius: 10px;
-  padding: 12px 14px;
-  margin-top: auto;
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin-top: 14px;
   margin-bottom: 18px;
 }
 
