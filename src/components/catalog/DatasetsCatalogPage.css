@@ -487,27 +487,64 @@
   flex-wrap: wrap;
 }
 
-.badge-country {
+.card-flag-circle {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  font-size: 0.78rem;
-  font-weight: 600;
-  background: var(--surface-light-soft, #f4f7f6);
-  border: 1px solid var(--hairline-light, #e1e5e8);
-  padding: 2px 8px;
-  border-radius: 6px;
-  color: var(--ink, #001e2b);
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(0, 30, 43, 0.12), 0 1px 3px rgba(0, 0, 0, 0.08);
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-.flag-code {
-  background: var(--surface-feature, #e3fcef);
-  color: var(--brand-green-dark, #00684a);
-  padding: 1px 4px;
-  border-radius: 3px;
+.card-flag-circle:hover {
+  transform: scale(1.12);
+  box-shadow: 0 0 0 1.5px var(--brand-green-dark, #00684a), 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.card-flag-circle svg {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  display: block;
+}
+
+.card-flag-fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
   font-family: var(--font-mono);
-  font-size: 0.7rem;
+  font-size: 9.5px;
   font-weight: 700;
+  background: var(--surface-light-soft, #f4f7f6);
+  border: 1px solid var(--hairline-light, #e1e5e8);
+  color: var(--ink-secondary, #3d4f58);
+}
+
+.sidebar-flag-circle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(0, 30, 43, 0.12);
+  flex-shrink: 0;
+}
+
+.sidebar-flag-circle svg {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  display: block;
 }
 
 .badge-type {

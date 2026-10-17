@@ -58,7 +58,7 @@ describe("DatasetsCatalogPage", () => {
     render(<DatasetsCatalogPage />);
     const copyBtns = screen.getAllByTitle(/Copy 'ubio pull/i);
     expect(copyBtns.length).toBeGreaterThan(0);
-    fireEvent.click(copyBtns[0]);
+    fireEvent.click(copyBtns[0]!);
 
     expect(writeTextMock).toHaveBeenCalledWith(expect.stringContaining("ubio pull"));
   });

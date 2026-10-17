@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { getAllDatasets } from "../../data/datasets";
 import { AU_COUNTRIES } from "../../data/auCountries";
+import * as Flags from "country-flag-icons/react/1x1";
 
 export function DatasetsCatalogPage() {
   const allDatasets = getAllDatasets();
@@ -257,26 +258,41 @@ export function DatasetsCatalogPage() {
                 aria-label="Filter countries"
               />
               <div className="country-scroll-list">
-                {visibleCountries.map((c) => (
-                  <label
-                    key={c.code}
-                    className="catalog-filter-label"
-                    htmlFor={`filter-country-${c.code}`}
-                  >
-                    <input
-                      type="checkbox"
-                      id={`filter-country-${c.code}`}
-                      name={`filter-country-${c.code}`}
-                      checked={selectedCountries.includes(c.code)}
-                      onChange={() => toggleCountry(c.code)}
-                      className="catalog-filter-checkbox"
-                    />
-                    <span className="catalog-filter-text">
-                      <span className="country-code-chip">{c.code}</span>
-                      {c.name}
-                    </span>
-                  </label>
-                ))}
+                {visibleCountries.map((c) => {
+                  const CountryFlag = (
+                    Flags as Record<
+                      string,
+                      React.ComponentType<React.SVGProps<SVGSVGElement>> | undefined
+                    >
+                  )[c.code];
+
+                  return (
+                    <label
+                      key={c.code}
+                      className="catalog-filter-label"
+                      htmlFor={`filter-country-${c.code}`}
+                    >
+                      <input
+                        type="checkbox"
+                        id={`filter-country-${c.code}`}
+                        name={`filter-country-${c.code}`}
+                        checked={selectedCountries.includes(c.code)}
+                        onChange={() => toggleCountry(c.code)}
+                        className="catalog-filter-checkbox"
+                      />
+                      <span className="catalog-filter-text">
+                        {CountryFlag ? (
+                          <span className="sidebar-flag-circle" aria-hidden="true">
+                            <CountryFlag />
+                          </span>
+                        ) : (
+                          <span className="country-code-chip">{c.code}</span>
+                        )}
+                        {c.name}
+                      </span>
+                    </label>
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -344,16 +360,33 @@ export function DatasetsCatalogPage() {
                     ? `${(dataset.totalSizeMb / 1024).toFixed(1)} GB`
                     : `${dataset.totalSizeMb} MB`;
 
+                const FlagComponent = (
+                  Flags as Record<
+                    string,
+                    React.ComponentType<React.SVGProps<SVGSVGElement>> | undefined
+                  >
+                )[dataset.countryCode];
+
                 return (
                   <article key={dataset.id} className="ubio-dataset-card">
                     <div className="dataset-card-header">
                       <div className="dataset-badges">
-                        <span className="badge-country">
-                          <span className="flag-code">
+                        {FlagComponent ? (
+                          <span
+                            className="card-flag-circle"
+                            title={dataset.countryName}
+                            aria-label={dataset.countryName}
+                          >
+                            <FlagComponent />
+                          </span>
+                        ) : (
+                          <span
+                            className="card-flag-fallback"
+                            title={dataset.countryName}
+                          >
                             {dataset.countryCode}
                           </span>
-                          {dataset.countryName}
-                        </span>
+                        )}
                         <span
                           className={`badge-type badge-${dataset.pathogenType.toLowerCase()}`}
                         >
