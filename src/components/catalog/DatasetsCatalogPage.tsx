@@ -359,15 +359,9 @@ export function DatasetsCatalogPage() {
                         >
                           {dataset.pathogenType}
                         </span>
-                        <span
-                          className={`badge-bsl badge-${dataset.biocontainment.toLowerCase()}`}
-                        >
-                          {dataset.biocontainment}
-                        </span>
                       </div>
-                      <span className="badge-gate">
-                        <ShieldCheck size={12} />
-                        Open Sovereign
+                      <span className="dataset-metrics-chip">
+                        {dataset.samplesCount} samples · {sizeFormatted}
                       </span>
                     </div>
 
@@ -379,55 +373,11 @@ export function DatasetsCatalogPage() {
                       </a>
                     </h2>
 
-                    <div className="dataset-card-meta">
-                      <span className="institution-tag">
-                        {dataset.leadInstitution}
-                      </span>
-                      <span className="meta-sep">·</span>
-                      <span className="taxon-tag">
-                        Taxon <strong>{dataset.taxonId}</strong> (
-                        <em>{dataset.taxonName}</em>)
-                      </span>
-                    </div>
+                    <p className="dataset-card-meta">
+                      {dataset.leadInstitution}
+                    </p>
 
-                    <div className="dataset-card-stats">
-                      <div className="stat">
-                        <span className="stat-label">Samples</span>
-                        <span className="stat-value">
-                          {dataset.samplesCount} isolates
-                        </span>
-                      </div>
-                      <div className="stat">
-                        <span className="stat-label">Data Volume</span>
-                        <span className="stat-value">{sizeFormatted}</span>
-                      </div>
-                      <div className="stat">
-                        <span className="stat-label">Sequencing</span>
-                        <span className="stat-value">
-                          {dataset.seqPlatforms[0] || "Illumina"}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Card Actions */}
                     <div className="dataset-card-actions">
-                      <div className="action-links">
-                        <a
-                          href={`/datasets/${dataset.namespace}/${dataset.datasetId}`}
-                          className="btn-inspect"
-                        >
-                          Inspect Dataset <ArrowRight size={14} />
-                        </a>
-                        <a
-                          href={`/datasets/${dataset.namespace}/${dataset.datasetId}/tree`}
-                          className="btn-tree"
-                          title="Browse File Tree & Sequences"
-                        >
-                          <FolderTree size={14} />
-                          Files ({dataset.files.length})
-                        </a>
-                      </div>
-
                       <button
                         type="button"
                         className="btn-copy-pull"
@@ -446,6 +396,13 @@ export function DatasetsCatalogPage() {
                           </>
                         )}
                       </button>
+
+                      <a
+                        href={`/datasets/${dataset.namespace}/${dataset.datasetId}`}
+                        className="btn-inspect"
+                      >
+                        Inspect <ArrowRight size={14} />
+                      </a>
                     </div>
                   </article>
                 );
