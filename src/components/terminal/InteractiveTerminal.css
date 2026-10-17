@@ -1,0 +1,234 @@
+/* Modal-Inspired Interactive Terminal Styles */
+.ubio-terminal-frame {
+  width: 100%;
+  max-width: 680px;
+  background-color: var(--surface-card);
+  border: 1px solid var(--hairline-dark);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-terminal);
+  overflow: hidden;
+  position: relative;
+  transition: border-color var(--duration-normal) ease;
+}
+
+/* Modal Specular Edge Gradient */
+.ubio-terminal-frame::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(0, 237, 100, 0.4) 30%,
+    rgba(56, 189, 248, 0.7) 50%,
+    rgba(0, 237, 100, 0.4) 70%,
+    transparent 100%
+  );
+  pointer-events: none;
+  z-index: 2;
+}
+
+.ubio-terminal-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background-color: var(--surface-dark-elevated);
+  border-bottom: 1px solid var(--hairline-dark);
+  gap: 12px;
+}
+
+.ubio-window-dots {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.window-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: var(--radius-full);
+}
+
+.dot-close { background-color: #ef4444; }
+.dot-minimize { background-color: #f59e0b; }
+.dot-maximize { background-color: #10b981; }
+
+.ubio-tab-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background-color: rgba(0, 0, 0, 0.35);
+  padding: 3px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--hairline-dark);
+}
+
+.ubio-tab-btn {
+  padding: 4px 12px;
+  font-size: 12px;
+  font-family: var(--font-mono);
+  font-weight: 500;
+  color: var(--text-on-dark-muted);
+  border-radius: var(--radius-xs);
+  transition: all var(--duration-fast) ease;
+}
+
+.ubio-tab-btn:hover {
+  color: var(--text-on-dark);
+}
+
+.ubio-tab-btn.active {
+  background-color: var(--brand-teal-deep);
+  color: var(--brand-green);
+  border: 1px solid rgba(0, 237, 100, 0.25);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+
+.ubio-copy-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  color: var(--text-on-dark-muted);
+  background-color: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--hairline-dark);
+  transition: all var(--duration-fast) ease;
+}
+
+.ubio-copy-btn:hover {
+  color: var(--brand-green);
+  border-color: rgba(0, 237, 100, 0.3);
+}
+
+.icon-success {
+  color: var(--brand-green);
+}
+
+.ubio-terminal-screen {
+  padding: 20px 22px;
+  font-family: var(--font-mono);
+  font-size: 13.5px;
+  line-height: 1.6;
+  min-height: 230px;
+  background-color: #061117;
+}
+
+.ubio-prompt-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  color: var(--text-on-dark);
+}
+
+.terminal-prompt-user {
+  color: var(--brand-green);
+  font-weight: 600;
+}
+
+.terminal-prompt-sep {
+  color: var(--text-on-dark-dim);
+}
+
+.terminal-prompt-dir {
+  color: var(--accent-blue);
+}
+
+.terminal-prompt-symbol {
+  color: var(--text-on-dark-secondary);
+  font-weight: 600;
+}
+
+.terminal-typed-cmd {
+  color: #ffffff;
+  font-weight: 500;
+}
+
+.terminal-cursor {
+  display: inline-block;
+  width: 7px;
+  height: 1.15em;
+  background-color: var(--brand-green);
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  animation: blink 1s steps(2, start) infinite;
+}
+
+.terminal-cursor.typing {
+  animation: none;
+  opacity: 1;
+}
+
+.ubio-output-stream {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ubio-stream-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  opacity: 0;
+  transform: translateY(4px);
+  animation: stream-fade-in 220ms var(--ease-spring) forwards;
+}
+
+.ubio-line-arrow {
+  color: var(--text-on-dark-dim);
+  user-select: none;
+}
+
+.line-info .ubio-line-text {
+  color: var(--text-on-dark-secondary);
+}
+
+.line-success .ubio-line-text {
+  color: var(--brand-green);
+  font-weight: 500;
+}
+
+.line-warning .ubio-line-text {
+  color: var(--accent-amber);
+}
+
+.line-dim .ubio-line-text {
+  color: var(--text-on-dark-dim);
+}
+
+.ubio-terminal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background-color: var(--surface-dark-elevated);
+  border-top: 1px solid var(--hairline-dark);
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--text-on-dark-dim);
+}
+
+.ubio-footer-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--brand-green);
+}
+
+.sparkle-icon {
+  color: var(--brand-green);
+}
+
+@keyframes stream-fade-in {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

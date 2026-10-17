@@ -1,0 +1,731 @@
+/* ==========================================================================
+   UbuntuBio Datasets Catalog Styles — Clean White Light Theme
+   Featuring Collapsible Sidebar Filters with Standard Checkboxes
+   ========================================================================== */
+
+.ubio-catalog-container {
+  min-height: calc(100vh - 80px);
+  padding: 40px 24px 100px;
+  max-width: 1400px;
+  margin: 0 auto;
+  color: var(--ink, #001e2b);
+}
+
+/* Catalog Hero Banner */
+.ubio-catalog-hero {
+  text-align: center;
+  padding: 10px 0 28px;
+  position: relative;
+}
+
+.ubio-catalog-hero-inner {
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+.ubio-catalog-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  background: var(--surface-feature, #e3fcef);
+  border: 1px solid rgba(0, 104, 74, 0.2);
+  color: var(--brand-green-dark, #00684a);
+  font-size: 0.82rem;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.ubio-catalog-title {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 3.4vw, 3rem);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--ink, #001e2b);
+  margin-bottom: 12px;
+}
+
+.ubio-catalog-subtitle {
+  font-size: 1.05rem;
+  color: var(--ink-secondary, #3d4f58);
+  line-height: 1.6;
+  max-width: 720px;
+  margin: 0 auto 28px;
+}
+
+/* Quick Metrics Bar */
+.ubio-catalog-metrics-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  flex-wrap: wrap;
+  padding: 14px 28px;
+  background: #ffffff;
+  border: 1px solid var(--hairline-light, #e1e5e8);
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(0, 30, 43, 0.04);
+  width: fit-content;
+  margin: 0 auto;
+}
+
+.metric-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.metric-val {
+  font-family: var(--font-mono);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--brand-green-dark, #00684a);
+}
+
+.metric-lbl {
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--ink-muted, #5c6c75);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.metric-divider {
+  width: 1px;
+  height: 32px;
+  background: var(--hairline-light, #e1e5e8);
+}
+
+/* ==========================================================================
+   Two-Column Layout: Collapsible Sidebar + Content
+   ========================================================================== */
+.ubio-catalog-layout {
+  display: flex;
+  gap: 28px;
+  align-items: flex-start;
+  margin-top: 36px;
+}
+
+/* Sidebar Filter Panel */
+.ubio-catalog-sidebar {
+  width: 280px;
+  flex-shrink: 0;
+  background: #ffffff;
+  border: 1px solid var(--hairline-light, #e1e5e8);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 30, 43, 0.04);
+  transition: width 0.25s ease, opacity 0.2s ease, padding 0.25s ease, margin 0.25s ease;
+}
+
+.ubio-catalog-sidebar.collapsed {
+  width: 0;
+  padding: 0;
+  margin-right: -28px;
+  border: none;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.sidebar-inner {
+  display: flex;
+  flex-direction: column;
+  width: 238px;
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--hairline-light, #e1e5e8);
+  margin-bottom: 16px;
+}
+
+.sidebar-header-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--ink, #001e2b);
+}
+
+.filter-count-badge {
+  background: var(--brand-green-dark, #00684a);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 9999px;
+  line-height: 1;
+}
+
+.btn-sidebar-reset {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--brand-green-dark, #00684a);
+  text-decoration: underline;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.btn-sidebar-reset:hover {
+  color: var(--brand-green-pressed, #008c34);
+}
+
+/* Filter Sections */
+.filter-section {
+  padding: 14px 0;
+  border-top: 1px solid var(--hairline-light, #e1e5e8);
+}
+
+.filter-section:first-of-type {
+  border-top: none;
+  padding-top: 0;
+}
+
+.filter-section-title {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink, #001e2b);
+  margin-bottom: 10px;
+}
+
+.filter-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.filter-section-header .filter-section-title {
+  margin-bottom: 0;
+}
+
+.btn-clear-group {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-muted, #5c6c75);
+  text-decoration: underline;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.btn-clear-group:hover {
+  color: var(--ink, #001e2b);
+}
+
+.filter-checkbox-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--ink, #001e2b);
+  cursor: pointer;
+  padding: 4px 0;
+  user-select: none;
+  transition: color 0.15s ease;
+}
+
+.checkbox-label:hover {
+  color: var(--brand-green-dark, #00684a);
+}
+
+.standard-checkbox {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--brand-green-dark, #00684a);
+  cursor: pointer;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.checkbox-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13.5px;
+}
+
+.country-filter-input {
+  width: 100%;
+  padding: 8px 12px;
+  background: var(--surface-light-soft, #f4f7f6);
+  border: 1px solid var(--hairline-light, #e1e5e8);
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--ink, #001e2b);
+  margin-bottom: 8px;
+  font-family: inherit;
+}
+
+.country-filter-input:focus {
+  outline: none;
+  border-color: var(--brand-green-dark, #00684a);
+}
+
+.country-scroll-list {
+  max-height: 220px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding-right: 4px;
+}
+
+.country-code-chip {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 1px 5px;
+  background: var(--surface-light-soft, #f4f7f6);
+  border: 1px solid var(--hairline-light, #e1e5e8);
+  border-radius: 4px;
+  color: var(--ink-secondary, #3d4f58);
+}
+
+/* ==========================================================================
+   Main Content Area
+   ========================================================================== */
+.ubio-catalog-main-content {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Toolbar */
+.catalog-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.btn-toggle-sidebar {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: var(--radius-full);
+  background: #ffffff;
+  border: 1px solid var(--hairline-light-strong, #c1ccd6);
+  color: var(--ink, #001e2b);
+  font-weight: 600;
+  font-size: 13.5px;
+  box-shadow: 0 1px 4px rgba(0, 30, 43, 0.04);
+  transition: all 0.15s ease;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.btn-toggle-sidebar:hover {
+  border-color: var(--ink, #001e2b);
+  background: var(--surface-light-soft, #f4f7f6);
+}
+
+.catalog-search-box {
+  flex: 1;
+  min-width: 280px;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.catalog-search-box .search-icon {
+  position: absolute;
+  left: 16px;
+  color: var(--ink-muted, #5c6c75);
+  pointer-events: none;
+}
+
+.catalog-search-input {
+  width: 100%;
+  padding: 11px 40px 11px 44px;
+  background: #ffffff;
+  border: 1px solid var(--hairline-light-strong, #c1ccd6);
+  border-radius: var(--radius-full);
+  font-size: 14px;
+  color: var(--ink, #001e2b);
+  font-family: var(--font-body);
+  transition: all 0.15s ease;
+}
+
+.catalog-search-input:focus {
+  outline: none;
+  border-color: var(--brand-green-dark, #00684a);
+  box-shadow: 0 0 0 3px rgba(0, 104, 74, 0.12);
+}
+
+.catalog-search-input::placeholder {
+  color: var(--ink-muted, #5c6c75);
+}
+
+.catalog-search-box .btn-clear-search {
+  position: absolute;
+  right: 14px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-muted, #5c6c75);
+  background: var(--surface-light-soft, #f4f7f6);
+  border: 1px solid var(--hairline-light, #e1e5e8);
+  border-radius: 6px;
+  padding: 2px 8px;
+  cursor: pointer;
+}
+
+.catalog-search-box .btn-clear-search:hover {
+  color: var(--ink, #001e2b);
+}
+
+.results-count-pill {
+  font-size: 13.5px;
+  color: var(--ink-secondary, #3d4f58);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.results-count-pill strong {
+  color: var(--ink, #001e2b);
+  font-weight: 700;
+}
+
+/* Empty State */
+.ubio-catalog-empty {
+  text-align: center;
+  padding: 64px 20px;
+  background: #ffffff;
+  border: 1px dashed var(--hairline-light-strong, #c1ccd6);
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.ubio-catalog-empty .empty-icon {
+  color: var(--ink-muted, #5c6c75);
+}
+
+.ubio-catalog-empty h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink, #001e2b);
+}
+
+.ubio-catalog-empty p {
+  color: var(--ink-secondary, #3d4f58);
+  max-width: 400px;
+  font-size: 14px;
+}
+
+/* ==========================================================================
+   Dataset Grid & Cards — Pure White Aesthetic
+   ========================================================================== */
+.ubio-catalog-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  gap: 24px;
+}
+
+.ubio-catalog-grid .ubio-dataset-card {
+  background: #ffffff;
+  border: 1px solid var(--hairline-light, #e1e5e8);
+  border-radius: 20px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 2px 8px rgba(0, 30, 43, 0.04);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s var(--ease-spring);
+  position: relative;
+}
+
+.ubio-catalog-grid .ubio-dataset-card:hover {
+  border-color: var(--hairline-light-strong, #c1ccd6);
+  box-shadow: 0 12px 32px rgba(0, 30, 43, 0.08);
+  transform: translateY(-2px);
+}
+
+.dataset-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.dataset-badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.badge-country {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  background: var(--surface-light-soft, #f4f7f6);
+  border: 1px solid var(--hairline-light, #e1e5e8);
+  padding: 3px 8px;
+  border-radius: 6px;
+  color: var(--ink, #001e2b);
+}
+
+.flag-code {
+  background: var(--surface-feature, #e3fcef);
+  color: var(--brand-green-dark, #00684a);
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.badge-type {
+  font-size: 0.74rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.badge-virus {
+  background: #fdf2f8;
+  color: #be185d;
+  border: 1px solid #fbcfe8;
+}
+
+.badge-bacteria {
+  background: #f0f9ff;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+}
+
+.badge-vector {
+  background: #fffbeb;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+
+.badge-fungus {
+  background: #f5f3ff;
+  color: #6d28d9;
+  border: 1px solid #ddd6fe;
+}
+
+.badge-bsl {
+  font-size: 0.72rem;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--surface-light-soft, #f4f7f6);
+  border: 1px solid var(--hairline-light, #e1e5e8);
+  color: var(--ink-secondary, #3d4f58);
+}
+
+.badge-gate {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--brand-green-dark, #00684a);
+}
+
+.dataset-card-title {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 700;
+  line-height: 1.35;
+  margin-bottom: 8px;
+  letter-spacing: -0.01em;
+}
+
+.dataset-card-title a {
+  color: var(--ink, #001e2b);
+  transition: color 0.15s ease;
+}
+
+.dataset-card-title a:hover {
+  color: var(--brand-green-dark, #00684a);
+}
+
+.dataset-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  font-size: 0.8rem;
+  color: var(--ink-muted, #5c6c75);
+  flex-wrap: wrap;
+}
+
+.taxon-tag strong {
+  color: var(--ink, #001e2b);
+  font-family: var(--font-mono);
+}
+
+.taxon-tag em {
+  color: var(--ink-secondary, #3d4f58);
+  font-style: italic;
+}
+
+.institution-tag {
+  color: var(--ink-muted, #5c6c75);
+}
+
+.dataset-card-desc {
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: var(--ink-secondary, #3d4f58);
+  margin-bottom: 18px;
+}
+
+/* Card Stats */
+.dataset-card-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  background: var(--surface-light-soft, #f4f7f6);
+  border: 1px solid var(--hairline-light, #e1e5e8);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-top: auto;
+  margin-bottom: 18px;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.stat .stat-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-muted, #5c6c75);
+}
+
+.stat .stat-value {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--ink, #001e2b);
+}
+
+/* Card Actions */
+.dataset-card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.action-links {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-inspect {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: #ffffff;
+  background: var(--ink, #001e2b);
+  padding: 7px 14px;
+  border-radius: var(--radius-full);
+  transition: background 0.15s ease;
+}
+
+.btn-inspect:hover {
+  background: var(--brand-teal, #003d4f);
+}
+
+.btn-tree {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--ink-secondary, #3d4f58);
+  padding: 7px 12px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--hairline-light, #e1e5e8);
+  background: #ffffff;
+  transition: all 0.15s ease;
+}
+
+.btn-tree:hover {
+  border-color: var(--hairline-light-strong, #c1ccd6);
+  color: var(--ink, #001e2b);
+}
+
+.btn-copy-pull {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--hairline-light, #e1e5e8);
+  background: var(--surface-light-soft, #f4f7f6);
+  color: var(--ink, #001e2b);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-copy-pull:hover {
+  border-color: var(--brand-green-dark, #00684a);
+  color: var(--brand-green-dark, #00684a);
+}
+
+.btn-copy-pull code {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .ubio-catalog-layout {
+    flex-direction: column;
+  }
+
+  .ubio-catalog-sidebar {
+    width: 100%;
+  }
+
+  .ubio-catalog-sidebar.collapsed {
+    display: none;
+  }
+
+  .sidebar-inner {
+    width: 100%;
+  }
+}

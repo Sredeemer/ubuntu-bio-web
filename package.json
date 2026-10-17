@@ -1,0 +1,32 @@
+{
+  "name": "ubuntubio-web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "lucide-react": "^1.59.0",
+    "maplibre-gl": "^4.7.1",
+    "next": "^15.0.0",
+    "pmtiles": "^3.2.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/react": "^16.3.3",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "eslint": "^9.0.0",
+    "eslint-config-next": "^15.0.0",
+    "jsdom": "^30.1.3",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  }
+}
