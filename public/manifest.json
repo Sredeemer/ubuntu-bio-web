@@ -1,0 +1,32 @@
+{
+  "name": "UbuntuBio — Decentralized African Bioinformatics Hub",
+  "short_name": "UbuntuBio",
+  "description": "Open-source data hub for African pathogen surveillance, veterinary genomics, and crop biodiversity.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#001e2b",
+  "theme_color": "#001e2b",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}

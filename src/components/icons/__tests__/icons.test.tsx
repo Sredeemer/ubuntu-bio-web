@@ -58,4 +58,11 @@ describe("Custom SVG Icons", () => {
     const group = container.querySelector("g");
     expect(group?.getAttribute("fill")).toBe("#00ed64");
   });
+
+  it("configures browser thumbnail and icon metadata correctly", async () => {
+    const { metadata } = await import("../../../app/layout");
+    expect(metadata.icons).toBeDefined();
+    expect(metadata.openGraph?.images).toBeDefined();
+    expect(metadata.manifest).toBe("/manifest.json");
+  });
 });
