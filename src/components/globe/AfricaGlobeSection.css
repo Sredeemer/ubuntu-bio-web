@@ -1,4 +1,4 @@
-/* AfricaGlobeSection.css - 3D Interactive Globe Section */
+/* AfricaGlobeSection.css - 3D Interactive Globe Section with Scroll Parallax */
 
 .ubio-globe-section {
   position: relative;
@@ -19,11 +19,11 @@
   z-index: 1;
 }
 
-/* Header */
+/* 1. Header */
 .ubio-globe-header {
   text-align: center;
   max-width: 780px;
-  margin-bottom: 32px;
+  margin-bottom: 24px;
 }
 
 .ubio-globe-badge {
@@ -71,56 +71,31 @@
   margin: 0 auto;
 }
 
-/* Controls */
-.ubio-globe-controls {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  max-width: 900px;
-  gap: 16px;
-  margin-bottom: 32px;
-  padding: 10px 16px;
-  border-radius: var(--radius-full, 9999px);
-  background: rgba(10, 25, 34, 0.6);
-  border: 1px solid var(--hairline-dark, #1c2d38);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-}
-
-.ubio-region-filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: center;
-  justify-content: center;
-}
-
-/* Stage */
+/* 2. 3D Globe Stage with Scroll Parallax */
 .ubio-globe-stage {
   position: relative;
   width: 100%;
   max-width: 900px;
-  min-height: 580px;
+  min-height: 560px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 12px 0 36px 0;
+  margin: 8px 0 28px 0;
+  will-change: transform;
 }
 
 .ubio-globe-radial-glow {
   position: absolute;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
-  width: 500px;
-  height: 500px;
+  width: 520px;
+  height: 520px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(0, 237, 100, 0.12) 0%, rgba(0, 61, 79, 0.2) 40%, transparent 70%);
+  background: radial-gradient(circle, rgba(0, 237, 100, 0.14) 0%, rgba(0, 61, 79, 0.22) 40%, transparent 70%);
   pointer-events: none;
-  filter: blur(24px);
+  filter: blur(28px);
   z-index: 0;
+  will-change: transform;
 }
 
 .ubio-globe-viewport {
@@ -132,6 +107,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  will-change: transform;
 }
 
 .ubio-3d-globe {
@@ -139,7 +115,7 @@
   height: 100% !important;
 }
 
-/* Floating Badges */
+/* Floating Badges with Staggered Parallax */
 .ubio-globe-floating-badge {
   position: absolute;
   display: flex;
@@ -147,20 +123,15 @@
   gap: 12px;
   padding: 12px 18px;
   border-radius: 12px;
-  background: rgba(8, 21, 29, 0.75);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  background: rgba(8, 21, 29, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   color: #ffffff;
   font-size: 13px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
   z-index: 2;
-  transition: transform 0.3s ease;
-}
-
-.ubio-globe-floating-badge:hover {
-  transform: translateY(-2px);
-  border-color: rgba(0, 237, 100, 0.3);
+  will-change: transform;
 }
 
 .badge-left {
@@ -170,7 +141,7 @@
 
 .badge-right {
   right: 10px;
-  top: 60px;
+  top: 50px;
 }
 
 .ubio-globe-floating-badge strong {
@@ -191,16 +162,101 @@
   flex-shrink: 0;
 }
 
-/* Footer & CTA */
+/* 3. Reordered Region Filter Controls (Clean, non-distorted glass container) */
+.ubio-region-bar-container {
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto 36px auto;
+  padding: 18px 24px;
+  border-radius: 16px;
+  background: rgba(10, 25, 34, 0.65);
+  border: 1px solid var(--hairline-dark, #1c2d38);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+}
+
+.ubio-region-label-heading {
+  text-align: center;
+  margin-bottom: 14px;
+}
+
+.ubio-region-label-heading span {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-on-dark-dim, #7c8c9a);
+}
+
+.ubio-region-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+}
+
+.ubio-region-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: var(--radius-full, 9999px);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  color: var(--text-on-dark-secondary, #c1ccd6);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+}
+
+.ubio-region-pill:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+}
+
+.ubio-region-pill.active {
+  background: rgba(0, 237, 100, 0.12);
+  border-color: var(--brand-green, #00ed64);
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 0 16px rgba(0, 237, 100, 0.2);
+}
+
+.ubio-pill-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: var(--radius-full, 9999px);
+  font-size: 11px;
+  font-family: var(--font-mono, monospace);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-on-dark-dim, #7c8c9a);
+}
+
+.ubio-region-pill.active .ubio-pill-count {
+  background: rgba(0, 237, 100, 0.25);
+  color: var(--brand-green, #00ed64);
+  font-weight: 700;
+}
+
+/* 4. Footer & Stats */
 .ubio-globe-footer {
   width: 100%;
-  max-width: 1040px;
+  max-width: 960px;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 24px;
-  padding-top: 24px;
+  padding-top: 28px;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
@@ -246,19 +302,24 @@
   text-decoration: none;
 }
 
-/* Responsive */
+/* Responsive Adjustments */
 @media (max-width: 860px) {
   .ubio-globe-floating-badge {
     position: static;
     margin: 8px auto;
     width: 100%;
-    max-width: 400px;
+    max-width: 420px;
+    transform: none !important;
   }
 
   .ubio-globe-stage {
     min-height: auto;
     flex-direction: column;
     gap: 16px;
+  }
+
+  .ubio-region-bar-container {
+    padding: 14px 16px;
   }
 
   .ubio-globe-footer {

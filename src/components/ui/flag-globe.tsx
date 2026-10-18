@@ -600,12 +600,21 @@ export function FlagGlobe({
   React.useEffect(() => {
     const root = rootRef.current;
     if (!root) return;
-    const measure = () => setMeasured(Math.floor(Math.min(root.clientWidth, root.clientHeight)));
+    const measure = () => {
+      const w = root.clientWidth;
+      const h = root.clientHeight;
+      const target = size ?? 0;
+      if (w > 0 && h > 0) {
+        setMeasured(target ? Math.min(target, w, h) : Math.min(w, h));
+      } else if (target > 0) {
+        setMeasured(target);
+      }
+    };
     const observer = new ResizeObserver(measure);
     observer.observe(root);
     measure();
     return () => observer.disconnect();
-  }, []);
+  }, [size]);
 
   // Pause off-screen, in background tabs, and for reduced motion.
   React.useEffect(() => {
@@ -744,10 +753,15 @@ export function FlagGlobe({
       canvas.removeEventListener("webglcontextlost", onLost);
       canvas.removeEventListener("webglcontextrestored", onRestored);
       kickRef.current = () => {};
-      globe.destroy();
-      gl?.getExtension("WEBGL_lose_context")?.loseContext();
+      try {
+        globe.destroy();
+      } catch {
+        // safely ignore race on unmount
+      }
       globeRef.current = null;
-      host.replaceChildren();
+      if (host.contains(canvas)) {
+        host.removeChild(canvas);
+      }
       setGlState("pending");
     };
   }, [hasSize, dpr, glVersion]);

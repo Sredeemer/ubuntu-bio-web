@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import Link from "next/link";
 import { FlagGlobe, type FlagGlobeMarker } from "@/components/ui/flag-globe";
 import { AU_COUNTRIES } from "@/data/auCountries";
@@ -42,6 +42,8 @@ const REGIONS: Record<string, { label: string; codes: string[]; phi: number }> =
 
 export function AfricaGlobeSection() {
   const [selectedRegion, setSelectedRegion] = useState<string>("all");
+  const [parallaxY, setParallaxY] = useState<number>(0);
+  const sectionRef = useRef<HTMLElement | null>(null);
 
   const activeRegion = REGIONS[selectedRegion] ?? REGIONS.all!;
 
@@ -55,49 +57,86 @@ export function AfricaGlobeSection() {
     });
   }, [activeRegion]);
 
+  // Smooth Scroll Parallax
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+    if (media.matches) return;
+
+    let rafId = 0;
+    const handleScroll = () => {
+      if (!sectionRef.current) return;
+      const rect = sectionRef.current.getBoundingClientRect();
+      const windowH = window.innerHeight;
+      // Parallax applies when the section is within viewport range
+      if (rect.top < windowH && rect.bottom > 0) {
+        const center = rect.top + rect.height / 2;
+        const distFromCenter = center - windowH / 2;
+        // Subtle, smooth vertical displacement between -35px and +35px
+        const offset = Math.round(distFromCenter * -0.07);
+        setParallaxY(offset);
+      }
+    };
+
+    const onScroll = () => {
+      if (!rafId) {
+        rafId = requestAnimationFrame(() => {
+          handleScroll();
+          rafId = 0;
+        });
+      }
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    handleScroll();
+
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (rafId) cancelAnimationFrame(rafId);
+    };
+  }, []);
+
   return (
-    <section className="ubio-globe-section" aria-label="African Genomic Coverage 3D Globe">
+    <section
+      ref={sectionRef}
+      className="ubio-globe-section"
+      aria-label="African Genomic Coverage 3D Globe"
+    >
       <div className="ubio-globe-container">
-        {/* Section Header */}
+        {/* 1. Section Header */}
         <div className="ubio-globe-header">
           <div className="ubio-globe-badge">
             <span className="ubio-globe-dot" />
             <Globe size={14} className="ubio-globe-badge-icon" />
-            <span>Interactive 3D Coverage Network</span>
+            <span>African Union Coverage • 54 Sovereign Member States</span>
           </div>
           <h2 className="ubio-globe-title">
             Pan-African Genomic Observatory
           </h2>
           <p className="ubio-globe-subtitle">
-            Explore 54 African Union sovereign data nodes in interactive 3D space. Drag the globe to inspect regional pathogen surveillance repositories, vector callsets, and biodiversity nodes.
+            Explore 54 sovereign sequencing nodes in interactive 3D space. Drag the globe to inspect regional pathogen surveillance repositories, vector callsets, and biodiversity nodes.
           </p>
         </div>
 
-        {/* Region Filter Controls */}
-        <div className="ubio-globe-controls">
-          <div className="ubio-region-filters" role="tablist" aria-label="Select African Region">
-            {Object.entries(REGIONS).map(([key, reg]) => (
-              <button
-                key={key}
-                role="tab"
-                aria-selected={selectedRegion === key}
-                onClick={() => setSelectedRegion(key)}
-                className={`ubio-region-pill ${selectedRegion === key ? "active" : ""}`}
-              >
-                {reg.label}
-                <span className="ubio-pill-count">{reg.codes.length}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* 3D Globe Stage */}
+        {/* 2. 3D Globe Stage with Scroll Parallax */}
         <div className="ubio-globe-stage">
-          {/* Subtle Radial Glow */}
-          <div className="ubio-globe-radial-glow" aria-hidden="true" />
+          {/* Radial Nebula Glow with inverse Parallax */}
+          <div
+            className="ubio-globe-radial-glow"
+            style={{
+              transform: `translate(-50%, -50%) translateY(${parallaxY * -0.4}px)`,
+            }}
+            aria-hidden="true"
+          />
 
-          {/* Interactive Flag Globe */}
-          <div className="ubio-globe-viewport">
+          {/* Interactive 3D Flag Globe with Parallax */}
+          <div
+            className="ubio-globe-viewport"
+            style={{
+              transform: `translateY(${parallaxY}px)`,
+              transition: "transform 0.1s ease-out",
+            }}
+          >
             <FlagGlobe
               markers={markers}
               size={560}
@@ -113,8 +152,14 @@ export function AfricaGlobeSection() {
             />
           </div>
 
-          {/* Floating Metric Badges */}
-          <div className="ubio-globe-floating-badge badge-left">
+          {/* Floating Badges with Staggered Parallax */}
+          <div
+            className="ubio-globe-floating-badge badge-left"
+            style={{
+              transform: `translateY(${parallaxY * -0.5}px)`,
+              transition: "transform 0.15s ease-out",
+            }}
+          >
             <ShieldCheck size={18} className="badge-icon-accent" />
             <div>
               <strong>100% African Data Sovereignty</strong>
@@ -122,16 +167,43 @@ export function AfricaGlobeSection() {
             </div>
           </div>
 
-          <div className="ubio-globe-floating-badge badge-right">
+          <div
+            className="ubio-globe-floating-badge badge-right"
+            style={{
+              transform: `translateY(${parallaxY * 0.4}px)`,
+              transition: "transform 0.15s ease-out",
+            }}
+          >
             <Compass size={18} className="badge-icon-accent" />
             <div>
-              <strong>{markers.length} Active Nodes</strong>
-              <span>Click & Drag to Rotate Globe</span>
+              <strong>{markers.length} Sovereign Nodes</strong>
+              <span>Click & Drag to Rotate in 3D</span>
             </div>
           </div>
         </div>
 
-        {/* Footer Meta & Catalog CTA */}
+        {/* 3. Reordered Region Filter Controls (Clean, non-distorted glass pill bar) */}
+        <div className="ubio-region-bar-container">
+          <div className="ubio-region-label-heading">
+            <span>Explore Regional Coverage</span>
+          </div>
+          <div className="ubio-region-filters" role="tablist" aria-label="Select African Region">
+            {Object.entries(REGIONS).map(([key, reg]) => (
+              <button
+                key={key}
+                role="tab"
+                aria-selected={selectedRegion === key}
+                onClick={() => setSelectedRegion(key)}
+                className={`ubio-region-pill ${selectedRegion === key ? "active" : ""}`}
+              >
+                <span>{reg.label}</span>
+                <span className="ubio-pill-count">{reg.codes.length}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* 4. Footer Meta & Catalog CTA */}
         <div className="ubio-globe-footer">
           <div className="ubio-globe-stats">
             <div className="ubio-globe-stat-item">
@@ -161,4 +233,5 @@ export function AfricaGlobeSection() {
     </section>
   );
 }
+
 export default AfricaGlobeSection;

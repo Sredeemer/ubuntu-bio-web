@@ -15,7 +15,7 @@ describe("AfricaGlobeSection", () => {
   it("renders the 3D globe section and heading", () => {
     render(<AfricaGlobeSection />);
     expect(screen.getByText("Pan-African Genomic Observatory")).toBeDefined();
-    expect(screen.getByText("Interactive 3D Coverage Network")).toBeDefined();
+    expect(screen.getByText(/54 Sovereign Member States/i)).toBeDefined();
     expect(screen.getByRole("region", { name: /Globe with flags/i })).toBeDefined();
   });
 
