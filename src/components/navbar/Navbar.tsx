@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { Terminal, ExternalLink, Menu, X } from "lucide-react";
+import { UbuntuBioLogo } from "../icons/UbuntuBioLogo";
 
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -11,6 +12,7 @@ export function Navbar() {
       <div className="ubio-navbar-container">
         {/* Brand Identity */}
         <a href="/" className="ubio-brand-link" aria-label="UbuntuBio Home">
+          <UbuntuBioLogo size={26} color="#00ed64" />
           <div className="ubio-brand-name-group">
             <span className="ubio-brand-title">
               UbuntuBio<span className="brand-dot">.</span>

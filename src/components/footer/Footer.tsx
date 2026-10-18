@@ -1,4 +1,5 @@
 import React from "react";
+import { UbuntuBioLogo } from "../icons/UbuntuBioLogo";
 
 export function Footer() {
   return (
@@ -8,6 +9,7 @@ export function Footer() {
           {/* Brand Info */}
           <div className="ubio-footer-col brand-col">
             <div className="footer-brand-header">
+              <UbuntuBioLogo size={22} color="#00ed64" />
               <span className="footer-brand-title">
                 UbuntuBio<span className="brand-dot">.</span>
               </span>

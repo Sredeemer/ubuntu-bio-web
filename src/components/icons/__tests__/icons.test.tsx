@@ -7,6 +7,7 @@ import {
   NanoporeIcon,
   SovereignShieldIcon,
   FederatedClusterIcon,
+  UbuntuBioLogo,
 } from "../index";
 
 describe("Custom SVG Icons", () => {
@@ -46,5 +47,15 @@ describe("Custom SVG Icons", () => {
     const svg = container.querySelector("svg");
     expect(svg).toBeDefined();
     expect(svg?.querySelectorAll("circle").length).toBeGreaterThanOrEqual(5);
+  });
+
+  it("renders UbuntuBioLogo in green with 8 radial hub paths", () => {
+    const { container } = render(<UbuntuBioLogo size={32} color="#00ed64" />);
+    const svg = container.querySelector("svg");
+    expect(svg).toBeDefined();
+    expect(svg?.getAttribute("viewBox")).toBe("0 0 40 48");
+    expect(svg?.querySelectorAll("path").length).toBe(8);
+    const group = container.querySelector("g");
+    expect(group?.getAttribute("fill")).toBe("#00ed64");
   });
 });
