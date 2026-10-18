@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { Terminal, ExternalLink, Menu, X } from "lucide-react";
 import { UbuntuBioLogo } from "../icons/UbuntuBioLogo";
+import { HubStatusBadge } from "../common/HubStatusBadge";
 
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -47,6 +48,7 @@ export function Navbar() {
 
         {/* Action Controls */}
         <div className="ubio-nav-actions">
+          <HubStatusBadge />
           <a href="/datasets" className="btn-pill-primary">
             Explore Datasets
           </a>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   ArrowLeft,
   Copy,
@@ -13,12 +13,14 @@ import {
   ExternalLink,
   Info,
   Layers,
-  BookOpen
+  BookOpen,
+  GitCommit,
 } from "lucide-react";
 import { DatasetItem } from "../../data/datasets";
+import { fetchCommitHistory, CommitLogItem } from "../../lib/api";
 
 interface DatasetDetailPageProps {
-  dataset?: DatasetItem | undefined;
+  dataset?: DatasetItem | null | undefined;
   namespace: string;
   datasetId: string;
 }
@@ -27,6 +29,13 @@ export function DatasetDetailPage({ dataset, namespace, datasetId }: DatasetDeta
   const [copiedPull, setCopiedPull] = useState(false);
   const [copiedCitation, setCopiedCitation] = useState(false);
   const [activeTab, setActiveTab] = useState<"overview" | "files" | "citation">("overview");
+  const [commits, setCommits] = useState<CommitLogItem[]>([]);
+
+  useEffect(() => {
+    fetchCommitHistory(namespace, datasetId).then((res) => {
+      if (res && res.length > 0) setCommits(res);
+    });
+  }, [namespace, datasetId]);
 
   if (!dataset) {
     return (

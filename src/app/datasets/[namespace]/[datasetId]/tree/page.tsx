@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { Navbar } from "../../../../../components/navbar/Navbar";
 import { Footer } from "../../../../../components/footer/Footer";
 import { DatasetTreePage } from "../../../../../components/tree/DatasetTreePage";
-import { getDataset } from "../../../../../data/datasets";
+import { fetchRepository } from "../../../../../lib/api";
 
 interface PageProps {
   params: Promise<{
@@ -14,7 +14,7 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { namespace, datasetId } = await params;
-  const dataset = getDataset(namespace, datasetId);
+  const dataset = await fetchRepository(namespace, datasetId);
   if (!dataset) {
     return {
       title: "Files Tree — UbuntuBio",
@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function Page({ params }: PageProps) {
   const { namespace, datasetId } = await params;
-  const dataset = getDataset(namespace, datasetId);
+  const dataset = await fetchRepository(namespace, datasetId);
 
   return (
     <div className="ubio-landing-wrapper ubio-band-light">
@@ -44,3 +44,4 @@ export default async function Page({ params }: PageProps) {
     </div>
   );
 }
+

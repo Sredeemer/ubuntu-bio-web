@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   ArrowLeft,
   FileText,
@@ -15,14 +15,16 @@ import {
   ChevronRight
 } from "lucide-react";
 import { DatasetItem, DatasetFile } from "../../data/datasets";
+import { fetchRepoTree, TreeItem } from "../../lib/api";
 
 interface DatasetTreePageProps {
-  dataset?: DatasetItem | undefined;
+  dataset?: DatasetItem | null | undefined;
   namespace: string;
   datasetId: string;
 }
 
 export function DatasetTreePage({ dataset, namespace, datasetId }: DatasetTreePageProps) {
+  const [fileList, setFileList] = useState<DatasetFile[]>(dataset?.files || []);
   const [selectedFile, setSelectedFile] = useState<DatasetFile | null>(() => {
     if (dataset && dataset.files.length > 0) {
       return dataset.files[0] ?? null;
@@ -32,6 +34,32 @@ export function DatasetTreePage({ dataset, namespace, datasetId }: DatasetTreePa
   const [copiedHash, setCopiedHash] = useState(false);
   const [copiedCommand, setCopiedCommand] = useState(false);
   const [copiedHeader, setCopiedHeader] = useState(false);
+
+  // Sync with live Git tree from FastAPI Hub
+  useEffect(() => {
+    fetchRepoTree(namespace, datasetId).then((items: TreeItem[]) => {
+      if (items && items.length > 0) {
+        const liveFiles: DatasetFile[] = items.map((item) => {
+          const ext = item.path.split(".").pop()?.toUpperCase() || "TSV";
+          const format = (["FASTQ", "BAM", "VCF", "FASTA", "TSV", "JSON"].includes(ext)
+            ? ext
+            : "TSV") as DatasetFile["format"];
+          return {
+            name: item.path.split("/").pop() || item.path,
+            path: item.path,
+            sizeBytes: item.size || 1024,
+            format,
+            casHash: `git:${item.oid}`,
+            chunksCount: 1,
+          };
+        });
+        setFileList(liveFiles);
+        if (!selectedFile && liveFiles.length > 0) {
+          setSelectedFile(liveFiles[0] ?? null);
+        }
+      }
+    });
+  }, [namespace, datasetId]);
 
   if (!dataset) {
     return (
@@ -126,11 +154,11 @@ export function DatasetTreePage({ dataset, namespace, datasetId }: DatasetTreePa
             <span className="tree-list-title">
               <FolderTree size={16} /> Repository File Index
             </span>
-            <span className="tree-list-count font-mono">{dataset.files.length} files</span>
+            <span className="tree-list-count font-mono">{fileList.length} files</span>
           </div>
 
           <div className="tree-files-scroll" role="listbox" aria-label="Dataset files list">
-            {dataset.files.map((file) => {
+            {fileList.map((file) => {
               const isSelected = selectedFile?.path === file.path;
               const sizeMb = (file.sizeBytes / (1024 * 1024)).toFixed(2);
 

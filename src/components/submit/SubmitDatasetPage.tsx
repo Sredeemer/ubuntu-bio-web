@@ -15,6 +15,7 @@ import {
   Info
 } from "lucide-react";
 import { AU_COUNTRIES, PROHIBITED_HUMAN_TAXON_ID } from "../../data/auCountries";
+import { createRepository } from "../../lib/api";
 
 export function SubmitDatasetPage() {
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
@@ -39,6 +40,8 @@ export function SubmitDatasetPage() {
 
   // Submission result state
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hubRepoSlug, setHubRepoSlug] = useState<string | null>(null);
   const [copiedCli, setCopiedCli] = useState(false);
   const [copiedManifest, setCopiedManifest] = useState(false);
 
@@ -106,10 +109,29 @@ export function SubmitDatasetPage() {
     setTimeout(() => setCopiedManifest(false), 2000);
   };
 
-  const handleFinalSubmit = (e: React.FormEvent) => {
+  const handleFinalSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isHumanTaxon) return;
-    setSubmitted(true);
+    setIsSubmitting(true);
+
+    try {
+      const res = await createRepository({
+        owner_slug: namespace.trim().toLowerCase(),
+        name: datasetId.trim().toLowerCase(),
+        description: description.trim(),
+        domain: pathogenType.toLowerCase(),
+        access: "public",
+        license: "cc-by-4.0",
+      });
+      if (res.success && res.data) {
+        setHubRepoSlug(res.data.slug);
+      }
+    } catch {
+      // Proceed gracefully with local instructions
+    } finally {
+      setIsSubmitting(false);
+      setSubmitted(true);
+    }
   };
 
   return (
@@ -489,13 +511,13 @@ export function SubmitDatasetPage() {
                 <div className="success-icon-wrap">
                   <FileCheck2 size={40} className="text-green" />
                 </div>
-                <h3>Ingest Ticket Initialized!</h3>
+                <h3>{hubRepoSlug ? "Repository Created on UbuntuBio Hub!" : "Ingest Ticket Initialized!"}</h3>
                 <p>
                   Dataset manifest registered for{" "}
                   <strong>
                     {namespace}/{datasetId}
                   </strong>
-                  . Run the command below in your local sequencing directory to push files into OpenXet CAS.
+                  .{hubRepoSlug ? ` Bare Git repository successfully initialized on Hub at http://localhost:8000/${hubRepoSlug}.git.` : ""} Run the command below in your local sequencing directory to push files into OpenXet CAS.
                 </p>
                 <div className="cli-box-large">
                   <code>{generatedCliCmd}</code>
@@ -504,7 +526,10 @@ export function SubmitDatasetPage() {
                   </button>
                 </div>
                 <div className="success-actions">
-                  <a href="/datasets" className="btn-pill-primary">
+                  <a href={`/datasets/${namespace}/${datasetId}`} className="btn-pill-primary">
+                    View Dataset Details
+                  </a>
+                  <a href="/datasets" className="btn-secondary">
                     View in Datasets Catalog
                   </a>
                   <button
@@ -512,6 +537,7 @@ export function SubmitDatasetPage() {
                     className="btn-secondary"
                     onClick={() => {
                       setSubmitted(false);
+                      setHubRepoSlug(null);
                       setCurrentStep(1);
                     }}
                   >
@@ -594,9 +620,11 @@ export function SubmitDatasetPage() {
                   <button
                     type="button"
                     className="btn-pill-primary"
+                    disabled={isSubmitting}
                     onClick={handleFinalSubmit}
                   >
-                    Confirm & Initialize Ingest <Check size={16} />
+                    {isSubmitting ? "Initializing on Hub API..." : "Confirm & Initialize Ingest"}{" "}
+                    <Check size={16} />
                   </button>
                 </div>
               </>

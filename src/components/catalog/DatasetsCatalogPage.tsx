@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   Search,
   Filter,
@@ -12,12 +12,14 @@ import {
   ShieldCheck,
   SlidersHorizontal,
 } from "lucide-react";
-import { getAllDatasets } from "../../data/datasets";
+import { DatasetItem, getAllDatasets } from "../../data/datasets";
 import { AU_COUNTRIES } from "../../data/auCountries";
+import { searchDatasets, fetchRepositories } from "../../lib/api";
 import * as Flags from "country-flag-icons/react/1x1";
 
 export function DatasetsCatalogPage() {
-  const allDatasets = getAllDatasets();
+  const [datasets, setDatasets] = useState<DatasetItem[]>(getAllDatasets());
+  const [isLiveApi, setIsLiveApi] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [selectedBSLs, setSelectedBSLs] = useState<string[]>([]);
@@ -26,8 +28,34 @@ export function DatasetsCatalogPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
+  // Sync with FastAPI Hub on mount & search changes
+  useEffect(() => {
+    let active = true;
+    const timer = setTimeout(() => {
+      searchDatasets(searchQuery, {
+        country: selectedCountries.length === 1 ? selectedCountries[0] : undefined,
+      }).then((result) => {
+        if (!active) return;
+        setIsLiveApi(result.isLive);
+        if (result.isLive && result.items.length > 0) {
+          const liveIds = new Set(result.items.map((i) => i.id));
+          const merged = [
+            ...result.items,
+            ...getAllDatasets().filter((d) => !liveIds.has(d.id)),
+          ];
+          setDatasets(merged);
+        }
+      });
+    }, 200);
+
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
+  }, [searchQuery, selectedCountries]);
+
   const filteredDatasets = useMemo(() => {
-    return allDatasets.filter((d) => {
+    return datasets.filter((d) => {
       // Type filter (checkboxes)
       if (selectedTypes.length > 0 && !selectedTypes.includes(d.pathogenType)) {
         return false;
@@ -43,7 +71,7 @@ export function DatasetsCatalogPage() {
       ) {
         return false;
       }
-      // Search query
+      // Search query (client-side pass for instant typing response)
       if (!searchQuery.trim()) return true;
       const q = searchQuery.toLowerCase().trim();
       return (
@@ -56,7 +84,7 @@ export function DatasetsCatalogPage() {
         d.description.toLowerCase().includes(q)
       );
     });
-  }, [allDatasets, searchQuery, selectedTypes, selectedBSLs, selectedCountries]);
+  }, [datasets, searchQuery, selectedTypes, selectedBSLs, selectedCountries]);
 
   const toggleType = (type: string) => {
     setSelectedTypes((prev) =>
@@ -127,7 +155,7 @@ export function DatasetsCatalogPage() {
           {/* Quick Metrics Bar */}
           <div className="ubio-catalog-metrics-bar">
             <div className="metric-item">
-              <span className="metric-val">{allDatasets.length}</span>
+              <span className="metric-val">{datasets.length}</span>
               <span className="metric-lbl">Indexed Datasets</span>
             </div>
             <div className="metric-divider" />
@@ -138,7 +166,7 @@ export function DatasetsCatalogPage() {
             <div className="metric-divider" />
             <div className="metric-item">
               <span className="metric-val">
-                {allDatasets
+                {datasets
                   .reduce((acc, d) => acc + d.samplesCount, 0)
                   .toLocaleString()}
               </span>
@@ -148,7 +176,7 @@ export function DatasetsCatalogPage() {
             <div className="metric-item">
               <span className="metric-val">
                 {(
-                  allDatasets.reduce((acc, d) => acc + d.totalSizeMb, 0) / 1024
+                  datasets.reduce((acc, d) => acc + d.totalSizeMb, 0) / 1024
                 ).toFixed(1)}{" "}
                 GB
               </span>
@@ -335,7 +363,7 @@ export function DatasetsCatalogPage() {
 
             <div className="results-count-pill">
               Showing <strong>{filteredDatasets.length}</strong> of{" "}
-              {allDatasets.length} datasets
+              {datasets.length} datasets
             </div>
           </div>
 

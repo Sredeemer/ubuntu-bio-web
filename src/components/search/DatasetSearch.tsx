@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Search, Check, Copy, ArrowRight } from "lucide-react";
 import { AU_COUNTRIES } from "../../data/auCountries";
+import { searchDatasets } from "../../lib/api";
 
 export interface DatasetItem {
   id: string;
@@ -121,13 +122,39 @@ const SAMPLE_DATASETS: DatasetItem[] = [
 ];
 
 export function DatasetSearch() {
+  const [datasetsList, setDatasetsList] = useState<DatasetItem[]>(SAMPLE_DATASETS);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState<string>("all");
   const [selectedCountry, setSelectedCountry] = useState<string>("all");
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
+  // Sync with live FastAPI hub search
+  useEffect(() => {
+    let active = true;
+    const timer = setTimeout(() => {
+      searchDatasets(searchQuery, {
+        country: selectedCountry !== "all" ? selectedCountry : undefined,
+      }).then((result) => {
+        if (!active) return;
+        if (result.isLive && result.items.length > 0) {
+          const liveIds = new Set(result.items.map((i) => i.id));
+          const merged = [
+            ...result.items,
+            ...SAMPLE_DATASETS.filter((d) => !liveIds.has(d.id)),
+          ];
+          setDatasetsList(merged);
+        }
+      });
+    }, 200);
+
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
+  }, [searchQuery, selectedCountry]);
+
   const filteredDatasets = useMemo(() => {
-    return SAMPLE_DATASETS.filter((item) => {
+    return datasetsList.filter((item) => {
       const matchesSearch =
         searchQuery === "" ||
         item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -141,7 +168,7 @@ export function DatasetSearch() {
 
       return matchesSearch && matchesType && matchesCountry;
     });
-  }, [searchQuery, selectedType, selectedCountry]);
+  }, [datasetsList, searchQuery, selectedType, selectedCountry]);
 
   const copyPullCommand = (id: string) => {
     navigator.clipboard.writeText(`ubio pull ${id}`);
