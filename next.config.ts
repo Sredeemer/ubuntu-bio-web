@@ -23,6 +23,14 @@ const nextConfig: NextConfig = {
         source: "/api/:path*",
         destination: `${BACKEND_URL}/api/:path*`,
       },
+      {
+        source: "/:owner/:name.git/:path*",
+        destination: `${BACKEND_URL}/:owner/:name.git/:path*`,
+      },
+      {
+        source: "/:owner/:name.git",
+        destination: `${BACKEND_URL}/:owner/:name.git`,
+      },
     ];
   },
 };
