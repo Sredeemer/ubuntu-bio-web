@@ -5,12 +5,15 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import { Navbar } from "../../../components/navbar/Navbar";
 import { Footer } from "../../../components/footer/Footer";
+import { useAuth } from "../../../context/AuthContext";
 
 function AuthCallbackContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
   const [errorMessage, setErrorMessage] = useState("");
+
+  const { loginWithToken } = useAuth();
 
   useEffect(() => {
     const token = searchParams.get("token");
@@ -23,22 +26,26 @@ function AuthCallbackContent() {
     }
 
     if (token) {
-      try {
-        localStorage.setItem("ubuntubio_token", token);
-        setStatus("success");
-        const timer = setTimeout(() => {
-          router.push("/submit");
-        }, 1500);
-        return () => clearTimeout(timer);
-      } catch (err) {
+      loginWithToken(token).then((ok) => {
+        if (ok) {
+          setStatus("success");
+          const timer = setTimeout(() => {
+            router.push("/submit");
+          }, 1200);
+          return () => clearTimeout(timer);
+        } else {
+          setStatus("error");
+          setErrorMessage("Failed to verify authentication credentials with the hub.");
+        }
+      }).catch(() => {
         setStatus("error");
-        setErrorMessage("Failed to store authentication credentials locally.");
-      }
+        setErrorMessage("Unexpected error verifying authentication token.");
+      });
     } else {
       setStatus("error");
       setErrorMessage("No authentication token was returned from the authorization server.");
     }
-  }, [searchParams, router]);
+  }, [searchParams, router, loginWithToken]);
 
   return (
     <div

@@ -409,3 +409,128 @@ export async function createRepository(
     return { success: false, error: msg };
   }
 }
+
+export interface UserProfile {
+  id: string;
+  name: string;
+  orcid_id: string;
+  email?: string;
+  avatar?: string;
+}
+
+export interface PersonalAccessToken {
+  id: string;
+  name: string;
+  scope: string;
+  created_at: string;
+  expires_at: string | null;
+}
+
+/**
+ * Fetch the authenticated user's profile from the hub.
+ */
+export async function fetchUserProfile(token: string): Promise<UserProfile | null> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/auth/whoami`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/json",
+      },
+    });
+    if (!res.ok) return null;
+    return (await res.json()) as UserProfile;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * List the user's active personal access tokens.
+ */
+export async function fetchUserTokens(token: string): Promise<PersonalAccessToken[]> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/auth/tokens`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/json",
+      },
+    });
+    if (!res.ok) return [];
+    return (await res.json()) as PersonalAccessToken[];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Create a new personal access token for CLI or programmatic access.
+ */
+export async function createPersonalAccessToken(
+  name: string,
+  scope: "read" | "write" | "admin",
+  token: string
+): Promise<{ success: boolean; raw_token?: string; token_record?: PersonalAccessToken; error?: string }> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/auth/tokens`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+        Accept: "application/json",
+      },
+      body: JSON.stringify({ name, scope, expires_in_days: 90 }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: "Failed to create token" }));
+      return { success: false, error: err.detail };
+    }
+    const data = await res.json();
+    return { success: true, raw_token: data.raw_token, token_record: data };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "Failed to create token";
+    return { success: false, error: msg };
+  }
+}
+
+/**
+ * Revoke an existing personal access token.
+ */
+export async function revokePersonalAccessToken(tokenId: string, token: string): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/auth/tokens/${tokenId}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return res.ok || res.status === 204;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Development login helper to generate a session token without ORCID redirect.
+ */
+export async function devLogin(orcidId?: string, name?: string): Promise<{ success: boolean; raw_token?: string; error?: string }> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/auth/dev-login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        orcid_id: orcidId || "0000-0002-1825-0097",
+        name: name || "UbuntuBio Researcher",
+        email: "researcher@ubuntubio.org",
+      }),
+    });
+    if (!res.ok) {
+      return { success: false, error: "Dev login is unavailable or disabled in this environment." };
+    }
+    const data = await res.json();
+    return { success: true, raw_token: data.raw_token };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "Failed to connect to dev login";
+    return { success: false, error: msg };
+  }
+}
+

@@ -12,6 +12,8 @@
 @import "../components/tree/DatasetTreePage.css";
 @import "../components/submit/SubmitDatasetPage.css";
 @import "../components/docs/DocsPages.css";
+@import "../components/auth/LoginPage.css";
+@import "../components/settings/SettingsPage.css";
 
 /* Reset & Box Sizing */
 *, *::before, *::after {

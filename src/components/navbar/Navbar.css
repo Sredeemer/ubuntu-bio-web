@@ -105,3 +105,176 @@
     display: flex;
   }
 }
+
+/* Secondary Ghost/Bordered Pill Button */
+.btn-pill-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 18px;
+  border-radius: var(--radius-full, 9999px);
+  background-color: transparent;
+  border: 1px solid var(--hairline-subtle, rgba(255, 255, 255, 0.15));
+  color: var(--text-on-dark, #ffffff);
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.btn-pill-secondary:hover {
+  border-color: var(--brand-green, #00ed64);
+  color: var(--brand-green, #00ed64);
+  background: rgba(0, 237, 100, 0.05);
+}
+
+/* User Profile Trigger & Dropdown Menu */
+.ubio-profile-menu-wrapper {
+  position: relative;
+}
+
+.ubio-profile-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px 4px 6px;
+  border-radius: var(--radius-full, 9999px);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--hairline-subtle, rgba(255, 255, 255, 0.12));
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ubio-profile-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--brand-green, #00ed64);
+}
+
+.ubio-avatar-circle {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #00ed64 0%, #00684a 100%);
+  color: #001e2b;
+  font-weight: 700;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.ubio-profile-btn-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-on-dark, #ffffff);
+  max-width: 110px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Dropdown Menu Card */
+.ubio-profile-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 280px;
+  background-color: #08151d;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 237, 100, 0.15);
+  backdrop-filter: blur(20px);
+  padding: 8px;
+  z-index: 100;
+  animation: dropdownFadeIn 0.15s ease-out;
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ubio-profile-dropdown-header {
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 6px;
+}
+
+.ubio-dropdown-user-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ubio-dropdown-orcid-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-family: var(--font-mono, monospace);
+  color: #a6ce39;
+  background: rgba(166, 206, 57, 0.12);
+  padding: 2px 8px;
+  border-radius: 12px;
+  text-decoration: none;
+}
+
+.ubio-dropdown-orcid-badge:hover {
+  background: rgba(166, 206, 57, 0.2);
+}
+
+.ubio-profile-dropdown-items {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ubio-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  color: var(--text-on-dark-secondary, #c1ccd6);
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.15s ease;
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.ubio-dropdown-item:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+}
+
+.ubio-dropdown-divider {
+  height: 1px;
+  background-color: rgba(255, 255, 255, 0.08);
+  margin: 6px 4px;
+}
+
+.ubio-dropdown-item-logout {
+  color: #f87171;
+}
+
+.ubio-dropdown-item-logout:hover {
+  background-color: rgba(239, 68, 68, 0.12);
+  color: #fca5a5;
+}

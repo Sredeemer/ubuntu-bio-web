@@ -16,8 +16,10 @@ import {
 } from "lucide-react";
 import { AU_COUNTRIES, PROHIBITED_HUMAN_TAXON_ID } from "../../data/auCountries";
 import { createRepository } from "../../lib/api";
+import { useAuth } from "../../context/AuthContext";
 
 export function SubmitDatasetPage() {
+  const { token } = useAuth();
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
 
   // Form State
@@ -115,14 +117,17 @@ export function SubmitDatasetPage() {
     setIsSubmitting(true);
 
     try {
-      const res = await createRepository({
-        owner_slug: namespace.trim().toLowerCase(),
-        name: datasetId.trim().toLowerCase(),
-        description: description.trim(),
-        domain: pathogenType.toLowerCase(),
-        access: "public",
-        license: "cc-by-4.0",
-      });
+      const res = await createRepository(
+        {
+          owner_slug: namespace.trim().toLowerCase(),
+          name: datasetId.trim().toLowerCase(),
+          description: description.trim(),
+          domain: pathogenType.toLowerCase(),
+          access: "public",
+          license: "cc-by-4.0",
+        },
+        token || undefined
+      );
       if (res.success && res.data) {
         setHubRepoSlug(res.data.slug);
       }
