@@ -7,8 +7,42 @@
 import { DatasetItem, DatasetFile, DATASETS, getDataset as getLocalDataset } from "../data/datasets";
 import { AU_COUNTRIES } from "../data/auCountries";
 
-export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+/**
+ * UbuntuBio Hub API Base URL
+ *
+ * In the browser, we use relative paths (empty string) to route through Next.js rewrites proxy.
+ * This guarantees:
+ * 1. Zero Mixed Content security errors (browser always connects to https://...)
+ * 2. Zero CORS errors
+ *
+ * On the server (SSR / Node / Vitest), we use the configured environment variable or live backend fallback.
+ */
+function getApiBaseUrl(): string {
+  if (typeof window !== "undefined") {
+    // Browser context: always use relative paths to eliminate Mixed Content violations
+    return "";
+  }
+  return (
+    process.env.INTERNAL_API_URL ||
+    process.env.API_BASE_URL ||
+    process.env.NEXT_PUBLIC_API_URL ||
+    "http://52.19.144.208"
+  );
+}
+
+export const API_BASE_URL = getApiBaseUrl();
+
+function getApiOrigin(): string {
+  if (typeof window !== "undefined" && window.location?.origin) {
+    return window.location.origin;
+  }
+  return (
+    process.env.INTERNAL_API_URL ||
+    process.env.API_BASE_URL ||
+    process.env.NEXT_PUBLIC_API_URL ||
+    "http://52.19.144.208"
+  );
+}
 
 export interface RepoResponse {
   id: string;
@@ -194,7 +228,7 @@ export async function checkBackendHealth(): Promise<HealthResponse | null> {
  */
 export async function fetchRepositories(domain?: string): Promise<DatasetItem[]> {
   try {
-    const url = new URL(`${API_BASE_URL}/api/repos`);
+    const url = new URL(`${API_BASE_URL}/api/repos`, getApiOrigin());
     if (domain) {
       url.searchParams.set("domain", domain);
     }
@@ -257,7 +291,7 @@ export async function searchDatasets(
   }
 ): Promise<{ items: DatasetItem[]; total: number; isLive: boolean }> {
   try {
-    const url = new URL(`${API_BASE_URL}/api/search/datasets`);
+    const url = new URL(`${API_BASE_URL}/api/search/datasets`, getApiOrigin());
     if (query) url.searchParams.set("q", query);
     if (filters?.domain) url.searchParams.set("domain", filters.domain);
     if (filters?.country) url.searchParams.set("country", filters.country);
