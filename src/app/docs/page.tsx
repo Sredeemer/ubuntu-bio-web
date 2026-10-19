@@ -64,50 +64,52 @@ export default function DocsOverviewPage() {
               <span className="code-lang">bash</span>
             </div>
             <pre>
-{`# Install via cargo or package manager
-curl -sSf https://ubuntubio.org/install.sh | sh
+{`# Install the official Python CLI from PyPI
+pip install ubuntu-bio
+
+# Or using uv
+uv add ubuntu-bio
 
 # Verify installation
 ubio --version`}
             </pre>
           </div>
 
-          <h3>1. Pulling a Sovereign Pathogen Dataset</h3>
+          <h3>1. Downloading a Sovereign Pathogen Dataset</h3>
           <p>
-            Stream or clone an entire dataset directly to your local workstation or high-performance compute (HPC) cluster:
+            Stream or download an entire dataset snapshot directly to your local workstation or compute cluster:
           </p>
 
           <div className="docs-code-block">
             <div className="code-block-header">
-              <span>Pull Lassa Mammarenavirus Dataset</span>
+              <span>Download Lassa Mammarenavirus Dataset</span>
               <span className="code-lang">bash</span>
             </div>
             <pre>
-{`# Pull Lassa virus surveillance dataset from Institut Pasteur de Dakar
-ubio pull pasteur-dakar/lassa-surveillance-2026
+{`# Authenticate session
+ubio login
 
-# Inspect file contents on the fly without downloading entire BAMs
-ubio cat pasteur-dakar/lassa-surveillance-2026/consensus/Lassa_SN01_consensus.fasta | head -n 10`}
+# Download Lassa virus surveillance dataset snapshot
+ubio download pasteur-dakar/lassa-surveillance-2026 --output-dir ./lassa-data`}
             </pre>
           </div>
 
           <h3>2. Publishing an African Pathogen Study</h3>
           <p>
-            Submit your laboratory sequencing run to the federated registry:
+            Submit your laboratory sequencing run with content-addressed chunking:
           </p>
 
           <div className="docs-code-block">
             <div className="code-block-header">
-              <span>Push Genomic Data</span>
+              <span>Upload Genomic Data</span>
               <span className="code-lang">bash</span>
             </div>
             <pre>
-{`# Publish study from Nigeria (NG) tracking Vibrio cholerae (Taxon 666)
-ubio push acegid/cholera-lagos-2026 \\
-  --country NG \\
-  --taxon 666 \\
-  --platform "Illumina NovaSeq" \\
-  --bsl BSL-2`}
+{`# 1. Create the repository
+ubio create acegid/cholera-lagos-2026 --domain bacteria --access public
+
+# 2. Upload assemblies and sample metadata
+ubio upload acegid/cholera-lagos-2026 ./data --message "Add consensus assemblies and MIxS metadata"`}
             </pre>
           </div>
         </section>
@@ -117,7 +119,7 @@ ubio push acegid/cholera-lagos-2026 \\
           <div className="docs-next-links">
             <a href="/docs/cli" className="docs-next-card">
               <span className="next-card-title">CLI Command Reference</span>
-              <span className="next-card-desc">Detailed syntax for ubio pull, push, cat, and verify</span>
+              <span className="next-card-desc">Detailed syntax for ubio login, create, upload, download, and search</span>
               <ArrowRight size={16} className="next-card-arrow" />
             </a>
             <a href="/docs/api" className="docs-next-card">

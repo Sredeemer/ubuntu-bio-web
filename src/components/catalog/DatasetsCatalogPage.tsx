@@ -107,7 +107,7 @@ export function DatasetsCatalogPage() {
   const handleCopyPull = (id: string, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    navigator.clipboard.writeText(`ubio pull ${id}`);
+    navigator.clipboard.writeText(`ubio download ${id}`);
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);
   };
@@ -443,7 +443,7 @@ export function DatasetsCatalogPage() {
                         type="button"
                         className="btn-copy-pull"
                         onClick={(e) => handleCopyPull(dataset.id, e)}
-                        title={`Copy 'ubio pull ${dataset.id}'`}
+                        title={`Copy 'ubio download ${dataset.id}'`}
                       >
                         {copiedId === dataset.id ? (
                           <>
@@ -453,7 +453,7 @@ export function DatasetsCatalogPage() {
                         ) : (
                           <>
                             <Copy size={13} />
-                            <code>ubio pull</code>
+                            <code>ubio download</code>
                           </>
                         )}
                       </button>

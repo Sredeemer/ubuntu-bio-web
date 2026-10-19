@@ -17,9 +17,9 @@ export interface TerminalTab {
 
 const TABS: TerminalTab[] = [
   {
-    id: "push",
-    label: "ubio push",
-    command: "ubio push pasteur-dakar/lassa-2026 ./raw_data",
+    id: "upload",
+    label: "ubio upload",
+    command: "ubio upload pasteur-dakar/lassa-2026 ./assemblies -m \"Release consensus genomes\"",
     executionMs: 1400,
     badge: "Optimized Sequence Upload",
     outputs: [
@@ -33,8 +33,8 @@ const TABS: TerminalTab[] = [
   },
   {
     id: "auth",
-    label: "ubio login (ORCID)",
-    command: "ubio login --orcid",
+    label: "ubio login",
+    command: "ubio login",
     executionMs: 800,
     badge: "Decentralized PKCE Auth",
     outputs: [
@@ -46,8 +46,8 @@ const TABS: TerminalTab[] = [
   },
   {
     id: "search",
-    label: "ubio search (Sub-50ms)",
-    command: "ubio search --taxon 'Vibrio cholerae' --country KE --limit 3",
+    label: "ubio search",
+    command: "ubio search \"Vibrio cholerae\" --country KE --limit 3",
     executionMs: 350,
     badge: "Meilisearch Geo-Index",
     outputs: [
@@ -67,7 +67,7 @@ export function InteractiveTerminal({
   activeTabOverride?: string;
   onTabChange?: (tabId: string) => void;
 }) {
-  const [selectedTabId, setSelectedTabId] = useState<string>("push");
+  const [selectedTabId, setSelectedTabId] = useState<string>("upload");
   const [typedCommand, setTypedCommand] = useState<string>("");
   const [isTyping, setIsTyping] = useState<boolean>(true);
   const [copied, setCopied] = useState<boolean>(false);

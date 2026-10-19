@@ -47,7 +47,7 @@ describe("DatasetsCatalogPage", () => {
     expect(screen.getByRole("button", { name: /Show Filters/i })).toBeDefined();
   });
 
-  it("handles copy ubio pull command", async () => {
+  it("handles copy ubio download command", async () => {
     const writeTextMock = vi.fn().mockResolvedValue(undefined);
     Object.assign(navigator, {
       clipboard: {
@@ -56,10 +56,10 @@ describe("DatasetsCatalogPage", () => {
     });
 
     render(<DatasetsCatalogPage />);
-    const copyBtns = screen.getAllByTitle(/Copy 'ubio pull/i);
+    const copyBtns = screen.getAllByTitle(/Copy 'ubio download/i);
     expect(copyBtns.length).toBeGreaterThan(0);
     fireEvent.click(copyBtns[0]!);
 
-    expect(writeTextMock).toHaveBeenCalledWith(expect.stringContaining("ubio pull"));
+    expect(writeTextMock).toHaveBeenCalledWith(expect.stringContaining("ubio download"));
   });
 });

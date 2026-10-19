@@ -90,6 +90,6 @@ describe("SubmitDatasetPage", () => {
 
     // Step 4
     expect(screen.getByText(/Step 4: Dataset Manifest & UbuntuBio CLI Push/i)).toBeDefined();
-    expect(screen.getByText(/ubio push inrb-kinshasa\/ebola-drc-2026/i)).toBeDefined();
+    expect(screen.getByText(/ubio create inrb-kinshasa\/ebola-drc-2026/i)).toBeDefined();
   });
 });

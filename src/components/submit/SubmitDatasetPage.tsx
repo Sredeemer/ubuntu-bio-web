@@ -69,7 +69,7 @@ export function SubmitDatasetPage() {
 
   const selectedCountryObj = AU_COUNTRIES.find((c) => c.code === countryCode);
 
-  const generatedCliCmd = `ubio push ${namespace || "namespace"}/${datasetId || "dataset-id"} --country ${countryCode} --taxon ${taxonId || "0"} --platform "${seqPlatform}" --bsl ${biocontainment}`;
+  const generatedCliCmd = `ubio create ${namespace || "namespace"}/${datasetId || "dataset-id"} --domain ${(pathogenType || "virus").toLowerCase()}\nubio upload ${namespace || "namespace"}/${datasetId || "dataset-id"} ./data --message "Initial dataset upload"`;
 
   const manifestJson = JSON.stringify(
     {

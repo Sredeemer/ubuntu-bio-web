@@ -2,10 +2,10 @@ import React from "react";
 import { ChevronRight } from "lucide-react";
 
 const RESOURCES = [
-  { label: "Python client (ubuntu-bio)", href: "#architecture" },
-  { label: "Submission guidelines", href: "#catalog" },
-  { label: "Data governance policy", href: "#coverage" },
-  { label: "Regional coverage & member states", href: "#coverage" },
+  { label: "Python client (ubuntu-bio)", href: "/docs/cli" },
+  { label: "Submission guidelines", href: "/submit" },
+  { label: "Data governance policy", href: "/docs/governance" },
+  { label: "Our Story & WACCBIP Origin", href: "/#story" },
 ] as const;
 
 export function StartToday() {
@@ -25,9 +25,9 @@ export function StartToday() {
               </h3>
               <p className="start-card-desc">
                 Register your institution, validate MIxS metadata against AU country codes, and
-                push callsets with deduplicated, resumable uploads.
+                upload datasets with content-addressed, resumable chunking.
               </p>
-              <a href="#catalog" className="btn-pill-primary start-card-cta">
+              <a href="/submit" className="btn-pill-primary start-card-cta">
                 Get started
               </a>
             </div>
@@ -35,9 +35,9 @@ export function StartToday() {
               <code>
                 <span className="code-dim">$</span> pip install ubuntu-bio{"\n"}
                 <span className="code-dim">$</span> ubio login{"\n"}
-                <span className="code-dim">$</span> ubio push ./lassa-2026 \{"\n"}
-                {"    "}--country SN --taxon 11620{"\n"}
-                <span className="code-ok">validated · 142 samples · 48.2 GB</span>
+                <span className="code-dim">$</span> ubio create lassa-2026 -d virus{"\n"}
+                <span className="code-dim">$</span> ubio upload lassa-2026 ./data{"\n"}
+                <span className="code-ok">✓ committed · 142 samples · 48.2 GB deduplicated</span>
               </code>
             </pre>
           </article>

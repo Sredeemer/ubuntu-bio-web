@@ -171,7 +171,7 @@ export function DatasetSearch() {
   }, [datasetsList, searchQuery, selectedType, selectedCountry]);
 
   const copyPullCommand = (id: string) => {
-    navigator.clipboard.writeText(`ubio pull ${id}`);
+    navigator.clipboard.writeText(`ubio download ${id}`);
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);
   };
@@ -313,9 +313,9 @@ export function DatasetSearch() {
                   onClick={() => copyPullCommand(ds.id)}
                   className="btn-pull-action"
                   title="Copy CLI command"
-                  aria-label={`Copy pull command for ${ds.id}`}
+                  aria-label={`Copy download command for ${ds.id}`}
                 >
-                  <code className="pull-code">ubio pull {ds.id.split("/")[1]}</code>
+                  <code className="pull-code">ubio download {ds.id.split("/")[1]}</code>
                   {copiedId === ds.id ? (
                     <Check size={13} className="action-icon icon-copied" />
                   ) : (

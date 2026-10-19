@@ -54,7 +54,7 @@ export function DatasetDetailPage({ dataset, namespace, datasetId }: DatasetDeta
   }
 
   const handleCopyPull = () => {
-    navigator.clipboard.writeText(`ubio pull ${dataset.id}`);
+    navigator.clipboard.writeText(`ubio download ${dataset.id}`);
     setCopiedPull(true);
     setTimeout(() => setCopiedPull(false), 2000);
   };
@@ -350,19 +350,19 @@ export function DatasetDetailPage({ dataset, namespace, datasetId }: DatasetDeta
           <div className="sidebar-card cli-action-card">
             <div className="cli-action-header">
               <Terminal size={16} className="text-green" />
-              <span>Pull with UbuntuBio CLI</span>
+              <span>Download with UbuntuBio CLI</span>
             </div>
             <p className="cli-action-hint">
-              Clone or stream this dataset directly to your local cluster or pipeline:
+              Clone or download this dataset directly to your local workstation or pipeline:
             </p>
             <div className="cli-code-box">
               <span className="cli-prompt">$</span>
-              <code className="cli-cmd">ubio pull {dataset.id}</code>
+              <code className="cli-cmd">ubio download {dataset.id}</code>
               <button
                 type="button"
                 className="btn-copy-cli"
                 onClick={handleCopyPull}
-                aria-label="Copy pull command"
+                aria-label="Copy download command"
               >
                 {copiedPull ? <Check size={15} className="text-green" /> : <Copy size={15} />}
               </button>

@@ -106,6 +106,34 @@
   }
 }
 
+@media (max-width: 680px) {
+  .ubio-navbar-container {
+    padding: 10px 16px;
+  }
+  .ubio-nav-cta-btn {
+    display: none !important;
+  }
+  .ubio-nav-actions {
+    gap: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .ubio-brand-tag {
+    display: none;
+  }
+  .ubio-nav-actions .hub-status-pill,
+  .ubio-nav-actions [title*="UbuntuBio Hub API"] {
+    display: none !important;
+  }
+}
+
+.ubio-mobile-drawer-cta {
+  margin-top: 6px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
 /* Secondary Ghost/Bordered Pill Button */
 .btn-pill-secondary {
   display: inline-flex;

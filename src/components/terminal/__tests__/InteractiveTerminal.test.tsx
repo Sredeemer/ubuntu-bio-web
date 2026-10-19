@@ -7,7 +7,7 @@ describe("InteractiveTerminal Component", () => {
   it("renders CLI terminal with tabs and initial command", () => {
     render(<InteractiveTerminal />);
     expect(screen.getByText("ubuntu-bio@node-af")).toBeDefined();
-    expect(screen.getByRole("tab", { name: /ubio push/i })).toBeDefined();
+    expect(screen.getByRole("tab", { name: /ubio upload/i })).toBeDefined();
     expect(screen.getByRole("tab", { name: /ubio login/i })).toBeDefined();
     expect(screen.getByRole("tab", { name: /ubio search/i })).toBeDefined();
   });

@@ -1,11 +1,11 @@
 import React from "react";
 import type { Metadata } from "next";
 import { DocsLayout } from "../../../components/docs/DocsLayout";
-import { Terminal, ShieldAlert } from "lucide-react";
+import { ShieldAlert } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "CLI Command Reference — UbuntuBio Docs",
-  description: "Complete command-line interface documentation for the UbuntuBio CLI (ubio).",
+  description: "Complete command-line interface documentation for the official UbuntuBio CLI (ubio).",
 };
 
 export default function DocsCliPage() {
@@ -15,138 +15,189 @@ export default function DocsCliPage() {
         <div className="docs-badge">CLI Reference</div>
         <h1 className="docs-page-title">UbuntuBio CLI (<code>ubio</code>)</h1>
         <p className="docs-page-lead">
-          The <code>ubio</code> CLI tool provides local and cluster-level synchronization with the UbuntuBio
-          decentralized storage network, utilizing OpenXet CAS deduplication for high-speed transfer.
+          The <code>ubio</code> CLI tool connects researchers and HPC pipelines to the UbuntuBio Hub,
+          providing authentication, dataset versioning, full-text catalog search, and content-addressed downloads.
         </p>
 
-        {/* Global Options */}
+        {/* Installation */}
         <section className="docs-section">
-          <h2>Global Flags & Configuration</h2>
+          <h2>Installation</h2>
+          <div className="docs-code-block">
+            <div className="code-block-header">
+              <span>Install via PyPI</span>
+              <span className="code-lang">bash</span>
+            </div>
+            <pre>
+{`pip install ubuntu-bio
+# Or with uv:
+uv add ubuntu-bio
+
+# Both 'ubio' and 'ubuntu-bio' entrypoints are installed`}
+            </pre>
+          </div>
+        </section>
+
+        {/* Global Flags */}
+        <section className="docs-section">
+          <h2>Global Flags &amp; Environment Variables</h2>
           <div className="docs-code-block">
             <pre>
 {`ubio [OPTIONS] <COMMAND>
 
-OPTIONS:
-  -v, --verbose       Enable debug and verbose trace logging
-  -q, --quiet         Suppress non-error output
-  --endpoint <URL>    Override default UbuntuBio Hub endpoint [default: https://hub.ubuntubio.org]
-  -h, --help          Print help information
-  -V, --version       Print version information`}
+GLOBAL OPTIONS:
+  --server <URL>      Override Hub API server [default: https://hub.ubuntubio.org]
+  --help              Show help menu and exit
+
+ENVIRONMENT VARIABLES:
+  UBUNTUBIO_SERVER_URL   Override Hub API server URL
+  UBUNTUBIO_API_TOKEN    Personal Access Token for non-interactive / CI pipelines
+  UBUNTUBIO_CONFIG_DIR   Config directory [default: ~/.config/ubuntubio]`}
             </pre>
           </div>
         </section>
 
-        {/* Command: ubio pull */}
+        {/* Command: ubio login */}
         <section className="docs-section">
-          <h2><code>ubio pull</code></h2>
+          <h2><code>ubio login</code></h2>
           <p>
-            Downloads or streams a dataset from the sovereign hub to your local directory or pipeline.
+            Authenticates your session with ORCID. Opens a 1-step browser authorization loopback or falls back to an RFC 8628 device verification code.
           </p>
           <div className="docs-code-block">
-            <div className="code-block-header">
-              <span>Usage</span>
-              <span className="code-lang">bash</span>
-            </div>
             <pre>
-{`ubio pull [OPTIONS] <NAMESPACE/DATASET_ID> [DESTINATION]
+{`# Interactive browser authorization
+ubio login
 
-ARGUMENTS:
-  <NAMESPACE/DATASET_ID>   Target dataset identifier (e.g. pasteur-dakar/lassa-surveillance-2026)
-  [DESTINATION]            Target local path [default: ./<DATASET_ID>]
-
-OPTIONS:
-  --shallow                Download manifest only, hydrate chunks on demand
-  --include <PATTERN>      Glob pattern for filtering files (e.g. "*.fasta")
-  --workers <N>            Concurrent CAS chunk download threads [default: 8]`}
-            </pre>
-          </div>
-
-          <h4>Example:</h4>
-          <div className="docs-code-block">
-            <pre>
-{`# Pull only consensus FASTA files
-ubio pull acegid/cholera-lagos-2026 ./cholera_data --include "*.fasta"`}
+# Non-interactive / headless CI authentication
+ubio login --token ubp_your_personal_access_token`}
             </pre>
           </div>
         </section>
 
-        {/* Command: ubio push */}
+        {/* Command: ubio whoami */}
         <section className="docs-section">
-          <h2><code>ubio push</code></h2>
+          <h2><code>ubio whoami</code></h2>
           <p>
-            Chunks local genomic files into OpenXet content-addressable blocks and publishes the study to the AU federation.
+            Displays your active researcher identity, ORCID iD, and verified personal namespace handle.
+          </p>
+          <div className="docs-code-block">
+            <pre>
+{`ubio whoami
+
+# Output in JSON format for automated scripting
+ubio whoami --json`}
+            </pre>
+          </div>
+        </section>
+
+        {/* Command: ubio create */}
+        <section className="docs-section">
+          <h2><code>ubio create</code></h2>
+          <p>
+            Creates a new dataset repository. If a bare slug is passed, <code>ubio</code> automatically prefixes your verified personal handle.
+          </p>
+          <div className="docs-code-block">
+            <pre>
+{`# Creates @your-username/lassa-surveillance-2026
+ubio create lassa-surveillance-2026 --domain virus --access public
+
+# Creates under an organization namespace
+ubio create pasteur-dakar/cholera-2026 --domain bacteria --access public --description "Vibrio cholerae surveillance"`}
+            </pre>
+          </div>
+          <h4>Options:</h4>
+          <ul>
+            <li><code>--domain</code>, <code>-d</code> (Required): Biological domain (<code>bacteria</code>, <code>virus</code>, <code>parasite</code>, <code>fungus</code>, <code>plant</code>, <code>animal</code>, <code>vector</code>, <code>metagenome</code>, <code>environmental</code>)</li>
+            <li><code>--access</code>, <code>-a</code>: Access tier (<code>public</code>, <code>gated</code>, <code>private</code>) [default: public]</li>
+            <li><code>--description</code>: Human-readable study description</li>
+            <li><code>--license</code>: Data license SPDX identifier [default: cc-by-4.0]</li>
+          </ul>
+        </section>
+
+        {/* Command: ubio upload */}
+        <section className="docs-section">
+          <h2><code>ubio upload</code></h2>
+          <p>
+            Walks a local folder and uploads FASTA sequences, BAM alignments, and metadata to the target repository.
           </p>
 
           <div className="docs-alert-box alert-warning">
             <ShieldAlert size={18} className="alert-icon" />
             <div>
-              <strong>Strict Human Exclusion Invariant:</strong>
+              <strong>Non-Human Data Requirement:</strong>
               <p>
-                <code>ubio push</code> automatically performs client-side inspection. If NCBI Taxon ID 9606 is detected
-                or human sequence markers are identified, the operation aborts immediately.
+                In compliance with UbuntuBio v1 data governance, human genomic data (NCBI Taxon ID 9606) is strictly prohibited.
               </p>
             </div>
           </div>
 
           <div className="docs-code-block">
-            <div className="code-block-header">
-              <span>Usage</span>
-              <span className="code-lang">bash</span>
-            </div>
             <pre>
-{`ubio push [OPTIONS] <NAMESPACE/DATASET_ID> [SOURCE_DIR]
-
-ARGUMENTS:
-  <NAMESPACE/DATASET_ID>   Target dataset repository
-  [SOURCE_DIR]             Directory containing genomic files [default: .]
-
-OPTIONS:
-  --country <ISO2>         Origin AU Member State ISO 3166-1 alpha-2 code [required]
-  --taxon <ID>             NCBI Taxonomy ID (Taxon 9606 prohibited) [required]
-  --platform <NAME>        Sequencing platform (e.g. "Illumina NovaSeq", "Oxford Nanopore")
-  --bsl <TIER>             Biosafety level [default: BSL-2]
-  --license <NAME>         Data license [default: "Nagoya Protocol Data Access Agreement"]`}
+{`ubio upload pasteur-dakar/cholera-2026 ./data-dir --message "Initial release of consensus assemblies"`}
             </pre>
           </div>
+          <h4>Options:</h4>
+          <ul>
+            <li><code>--message</code>, <code>-m</code>: Git commit message [default: "Upload dataset"]</li>
+            <li><code>--branch</code>, <code>-b</code>: Destination branch [default: "main"]</li>
+          </ul>
+        </section>
 
-          <h4>Example:</h4>
+        {/* Command: ubio search */}
+        <section className="docs-section">
+          <h2><code>ubio search</code></h2>
+          <p>
+            Performs full-text search across pathogen titles, descriptions, and African Union member states.
+          </p>
           <div className="docs-code-block">
             <pre>
-{`# Push Ebola surveillance run from DRC
-ubio push inrb-kinshasa/ebola-zaire-drc-2026 ./ebola_runs \\
-  --country CD \\
-  --taxon 186538 \\
-  --platform "Oxford Nanopore GridION" \\
-  --bsl BSL-4`}
+{`# Search for cholera studies in Kenya
+ubio search "cholera" --country KE
+
+# Search for antimicrobial resistance studies in bacteria
+ubio search "antimicrobial resistance" --domain bacteria --limit 10`}
             </pre>
           </div>
         </section>
 
-        {/* Command: ubio cat */}
+        {/* Command: ubio download */}
         <section className="docs-section">
-          <h2><code>ubio cat</code></h2>
+          <h2><code>ubio download</code></h2>
           <p>
-            Streams file contents directly from CAS chunks without writing the entire file to disk. Ideal for piped analysis:
+            Downloads a dataset snapshot to a local directory with content deduplication and local caching.
           </p>
           <div className="docs-code-block">
             <pre>
-{`# Pipe FASTA stream directly into samtools or blast
-ubio cat pasteur-dakar/lassa-surveillance-2026/consensus/Lassa_SN01_consensus.fasta | grep "^>"`}
+{`# Download complete snapshot into ./local-data
+ubio download pasteur-dakar/cholera-2026 --output-dir ./local-data
+
+# Force re-download bypassing local cache
+ubio download pasteur-dakar/cholera-2026 --force`}
             </pre>
           </div>
         </section>
 
-        {/* Command: ubio verify */}
+        {/* Command: ubio download-remote */}
         <section className="docs-section">
-          <h2><code>ubio verify</code></h2>
+          <h2><code>ubio download-remote</code></h2>
           <p>
-            Validates local files against remote OpenXet cryptographic hashes to ensure data integrity:
+            Downloads external raw sequence assets listed in a <code>remote_files.tsv</code> manifest with parallel MD5 verification.
           </p>
           <div className="docs-code-block">
             <pre>
-{`ubio verify ./cholera_data
-# Output:
-# [OK] All 28 CAS chunks verified against sha256 checksums.`}
+{`ubio download-remote ./remote_files.tsv --output-dir ./raw_fastq --workers 8`}
+            </pre>
+          </div>
+        </section>
+
+        {/* Command: ubio logout */}
+        <section className="docs-section">
+          <h2><code>ubio logout</code></h2>
+          <p>
+            Clears locally cached session tokens from <code>~/.config/ubuntubio/credentials.json</code>.
+          </p>
+          <div className="docs-code-block">
+            <pre>
+{`ubio logout`}
             </pre>
           </div>
         </section>

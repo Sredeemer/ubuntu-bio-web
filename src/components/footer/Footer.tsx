@@ -19,7 +19,7 @@ export function Footer() {
             </p>
             <div className="footer-status-pill">
               <span className="footer-beacon" />
-              <span>54 AU Member States Active</span>
+              <span>Goal: 54 AU Member States Coverage</span>
             </div>
           </div>
 
@@ -64,9 +64,6 @@ export function Footer() {
           <p className="footer-legal">
             © {new Date().getFullYear()} UbuntuBio Initiative. Open Source under Apache-2.0 / MIT.
           </p>
-          <div className="footer-compliance-badge">
-            <span>Human Data (Taxon 9606) Strictly Prohibited</span>
-          </div>
         </div>
       </div>
     </footer>

@@ -12,10 +12,11 @@ describe("StartToday Component", () => {
     expect(container.querySelector(".ubio-band-light")).not.toBeNull();
   });
 
-  it("uses an AU member state and a non-human taxon in the example command", () => {
+  it("uses valid ubio create and upload commands in the example command", () => {
     render(<StartToday />);
     const code = screen.getByLabelText("Example upload commands").textContent ?? "";
-    expect(code).toContain("--country SN");
+    expect(code).toContain("ubio create");
+    expect(code).toContain("ubio upload");
     expect(code).not.toContain("9606");
   });
 });

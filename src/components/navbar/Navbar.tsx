@@ -60,16 +60,8 @@ export function Navbar() {
           <a href="/docs" className="ubio-nav-item">
             Documentation
           </a>
-          <a href="/#coverage" className="ubio-nav-item">
-            AU Coverage
-          </a>
-          <a
-            href="https://github.com/Sredeemer/bioinf-db"
-            target="_blank"
-            rel="noreferrer"
-            className="ubio-nav-item"
-          >
-            GitHub
+          <a href="/#story" className="ubio-nav-item">
+            Our Story
           </a>
         </nav>
 
@@ -165,7 +157,7 @@ export function Navbar() {
             </a>
           )}
 
-          <a href="/datasets" className="btn-pill-primary">
+          <a href="/datasets" className="btn-pill-primary ubio-nav-cta-btn">
             Explore Datasets
           </a>
 
@@ -204,12 +196,23 @@ export function Navbar() {
             Documentation
           </a>
           <a
-            href="/#coverage"
+            href="/#story"
             onClick={() => setMobileMenuOpen(false)}
             className="mobile-nav-item"
           >
-            AU Coverage
+            Our Story
           </a>
+
+          <div className="ubio-mobile-drawer-cta">
+            <a
+              href="/datasets"
+              onClick={() => setMobileMenuOpen(false)}
+              className="btn-pill-primary"
+              style={{ width: "100%", textAlign: "center", justifyContent: "center" }}
+            >
+              Explore Datasets
+            </a>
+          </div>
 
           {isAuthenticated ? (
             <>

@@ -76,11 +76,11 @@ describe("DatasetDetailPage", () => {
       />
     );
 
-    const copyBtn = screen.getByLabelText(/Copy pull command/i);
+    const copyBtn = screen.getByLabelText(/Copy download command/i);
     fireEvent.click(copyBtn);
 
     expect(writeTextMock).toHaveBeenCalledWith(
-      "ubio pull pasteur-dakar/lassa-surveillance-2026"
+      "ubio download pasteur-dakar/lassa-surveillance-2026"
     );
   });
 });

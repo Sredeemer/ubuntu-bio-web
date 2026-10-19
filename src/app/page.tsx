@@ -5,7 +5,7 @@ import { Navbar } from "../components/navbar/Navbar";
 import { HeroHeader } from "../components/hero/HeroHeader";
 import { ScrollyHero } from "../components/scrolly/ScrollyHero";
 import { AfricaGlobeSection } from "../components/globe/AfricaGlobeSection";
-import { AfricaGeoMap } from "../components/map/AfricaGeoMap";
+import { WaccbipOriginSection } from "../components/origin/WaccbipOriginSection";
 import { StartToday } from "../components/start/StartToday";
 import { Footer } from "../components/footer/Footer";
 
@@ -17,7 +17,7 @@ export default function HomePage() {
         <HeroHeader />
         <ScrollyHero />
         <AfricaGlobeSection />
-        <AfricaGeoMap />
+        <WaccbipOriginSection />
         <StartToday />
       </main>
       <Footer />
