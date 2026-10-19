@@ -568,3 +568,33 @@ export async function devLogin(orcidId?: string, name?: string): Promise<{ succe
   }
 }
 
+/**
+ * Verify and approve a terminal device code (RFC 8628).
+ */
+export async function verifyDeviceCode(
+  userCode: string,
+  token: string
+): Promise<{ success: boolean; message?: string; error?: string }> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/auth/device/verify`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+        Accept: "application/json",
+      },
+      body: JSON.stringify({ user_code: userCode }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: "Failed to verify device code" }));
+      return { success: false, error: err.detail || "Verification failed." };
+    }
+    const data = await res.json();
+    return { success: true, message: data.message };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "Failed to connect to verification service";
+    return { success: false, error: msg };
+  }
+}
+
+
