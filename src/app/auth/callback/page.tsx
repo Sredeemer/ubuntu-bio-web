@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import { Navbar } from "../../../components/navbar/Navbar";
 import { Footer } from "../../../components/footer/Footer";
-import { useAuth } from "../../../context/AuthContext";
+import { useAuth, POST_LOGIN_REDIRECT_KEY } from "../../../context/AuthContext";
 
 function AuthCallbackContent() {
   const searchParams = useSearchParams();
@@ -29,9 +29,17 @@ function AuthCallbackContent() {
       loginWithToken(token).then((ok) => {
         if (ok) {
           setStatus("success");
+          const targetUrl =
+            typeof window !== "undefined"
+              ? sessionStorage.getItem(POST_LOGIN_REDIRECT_KEY)
+              : null;
+          if (targetUrl) {
+            sessionStorage.removeItem(POST_LOGIN_REDIRECT_KEY);
+          }
+          const destination = targetUrl || "/submit";
           const timer = setTimeout(() => {
-            router.push("/submit");
-          }, 1200);
+            router.push(destination);
+          }, 1000);
           return () => clearTimeout(timer);
         } else {
           setStatus("error");

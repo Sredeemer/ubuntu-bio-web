@@ -97,7 +97,7 @@ export function LoginPage() {
             <button
               type="button"
               className="btn-oauth btn-oauth-orcid"
-              onClick={loginWithOrcid}
+              onClick={() => loginWithOrcid()}
               disabled={loading}
               id="btn-login-orcid"
             >

@@ -5,16 +5,23 @@ import { DeviceVerificationPage } from "../DeviceVerificationPage";
 import { AuthContext } from "../../../context/AuthContext";
 import * as api from "../../../lib/api";
 
+let mockSearchParams: Record<string, string | null> = {
+  user_code: "UBIO-8492-AF",
+};
+
 // Mock next/navigation
 vi.mock("next/navigation", () => ({
   useSearchParams: () => ({
-    get: (param: string) => (param === "user_code" ? "UBIO-8492-AF" : null),
+    get: (param: string) => mockSearchParams[param] ?? null,
   }),
 }));
 
 describe("DeviceVerificationPage", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
+    mockSearchParams = {
+      user_code: "UBIO-8492-AF",
+    };
   });
 
   it("shows sign in CTA when researcher is not logged in", () => {
@@ -82,4 +89,43 @@ describe("DeviceVerificationPage", () => {
       expect(screen.getByRole("heading", { name: /terminal authorized!/i })).toBeDefined();
     });
   });
+
+  it("auto-authorizes device when auto=1 is passed and user is authenticated", async () => {
+    mockSearchParams = {
+      user_code: "UBIO-AUTO-01",
+      auto: "1",
+    };
+
+    const verifySpy = vi.spyOn(api, "verifyDeviceCode").mockResolvedValueOnce({
+      success: true,
+      message: "Device authorized",
+    });
+
+    render(
+      <AuthContext.Provider
+        value={{
+          user: {
+            id: "user-123",
+            name: "Dr. Redeemer Okekale",
+            orcid_id: "0009-0000-2900-592X",
+          },
+          token: "ubp_test_token",
+          isLoading: false,
+          isAuthenticated: true,
+          loginWithToken: vi.fn(),
+          loginWithOrcid: vi.fn(),
+          logout: vi.fn(),
+          refreshUser: vi.fn(),
+        }}
+      >
+        <DeviceVerificationPage />
+      </AuthContext.Provider>
+    );
+
+    await waitFor(() => {
+      expect(verifySpy).toHaveBeenCalledWith("UBIO-AUTO-01", "ubp_test_token");
+      expect(screen.getByRole("heading", { name: /terminal authorized!/i })).toBeDefined();
+    });
+  });
 });
+

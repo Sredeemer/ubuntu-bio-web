@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   Terminal,
@@ -18,6 +18,8 @@ import "./DeviceVerificationPage.css";
 export function DeviceVerificationPage() {
   const searchParams = useSearchParams();
   const initialCode = searchParams.get("user_code") || "";
+  const autoParam = searchParams.get("auto");
+  const portParam = searchParams.get("port");
 
   const { user, token, isAuthenticated, isLoading, loginWithOrcid } = useAuth();
 
@@ -25,12 +27,49 @@ export function DeviceVerificationPage() {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const autoTriggeredRef = useRef(false);
 
   useEffect(() => {
     if (initialCode) {
       setCode(initialCode);
     }
   }, [initialCode]);
+
+  // Auto-verify when auto=1 is passed and user is authenticated
+  useEffect(() => {
+    if (
+      autoParam === "1" &&
+      initialCode &&
+      isAuthenticated &&
+      token &&
+      !autoTriggeredRef.current
+    ) {
+      autoTriggeredRef.current = true;
+      setSubmitting(true);
+      setErrorMessage("");
+
+      verifyDeviceCode(initialCode.trim(), token)
+        .then((res) => {
+          setSubmitting(false);
+          if (res.success) {
+            setSuccess(true);
+            if (portParam) {
+              try {
+                window.location.href = `http://127.0.0.1:${portParam}/callback?token=${encodeURIComponent(token)}`;
+              } catch {
+                // fallback
+              }
+            }
+          } else {
+            setErrorMessage(res.error || "Failed to auto-authorize device. Please check the code.");
+          }
+        })
+        .catch(() => {
+          setSubmitting(false);
+          setErrorMessage("Unexpected error authorizing device.");
+        });
+    }
+  }, [autoParam, initialCode, isAuthenticated, token, portParam]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,10 +83,22 @@ export function DeviceVerificationPage() {
 
     if (res.success) {
       setSuccess(true);
+      if (portParam) {
+        try {
+          window.location.href = `http://127.0.0.1:${portParam}/callback?token=${encodeURIComponent(token)}`;
+        } catch {
+          // fallback
+        }
+      }
     } else {
       setErrorMessage(res.error || "Failed to authorize device. Please check the code.");
     }
   };
+
+  const currentReturnUrl =
+    typeof window !== "undefined"
+      ? window.location.pathname + window.location.search
+      : "/device";
 
   return (
     <div className="ubio-device-container">
@@ -83,10 +134,12 @@ export function DeviceVerificationPage() {
               </p>
             </div>
 
-            {isLoading ? (
+            {isLoading || (submitting && autoParam === "1") ? (
               <div style={{ textAlign: "center", padding: "2rem" }}>
                 <Loader2 className="animate-spin" size={32} color="#00ed64" style={{ margin: "0 auto 1rem" }} />
-                <p style={{ color: "#9ca3af", fontSize: "0.875rem" }}>Checking session...</p>
+                <p style={{ color: "#9ca3af", fontSize: "0.875rem" }}>
+                  {submitting ? "Authorizing terminal session..." : "Checking session..."}
+                </p>
               </div>
             ) : !isAuthenticated ? (
               <div>
@@ -97,7 +150,7 @@ export function DeviceVerificationPage() {
                 <button
                   type="button"
                   className="ubio-device-btn-primary"
-                  onClick={loginWithOrcid}
+                  onClick={() => loginWithOrcid(currentReturnUrl)}
                   id="btn-device-orcid-login"
                 >
                   <svg width="18" height="18" viewBox="0 0 256 256" fill="none">

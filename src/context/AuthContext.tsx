@@ -9,7 +9,7 @@ interface AuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   loginWithToken: (rawToken: string) => Promise<boolean>;
-  loginWithOrcid: () => void;
+  loginWithOrcid: (returnTo?: string) => void;
   logout: () => void;
   refreshUser: () => Promise<void>;
 }
@@ -17,6 +17,7 @@ interface AuthContextType {
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AUTH_TOKEN_KEY = "ubuntubio_token";
+export const POST_LOGIN_REDIRECT_KEY = "ubuntubio_post_login_redirect";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(null);
@@ -76,8 +77,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   // Redirect to ORCID OAuth authorization endpoint
-  const loginWithOrcid = useCallback(() => {
+  const loginWithOrcid = useCallback((returnTo?: string) => {
     if (typeof window !== "undefined") {
+      if (returnTo) {
+        sessionStorage.setItem(POST_LOGIN_REDIRECT_KEY, returnTo);
+      }
       window.location.href = "/api/auth/orcid/authorize";
     }
   }, []);
