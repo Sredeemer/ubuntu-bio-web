@@ -25,8 +25,15 @@ export function DatasetsCatalogPage() {
   const [selectedBSLs, setSelectedBSLs] = useState<string[]>([]);
   const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
   const [countryFilterText, setCountryFilterText] = useState("");
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  // Default filters to open on desktop, collapsed on mobile
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.innerWidth > 900) {
+      setIsSidebarOpen(true);
+    }
+  }, []);
 
   // Sync with FastAPI Hub on mount & search changes
   useEffect(() => {
@@ -422,7 +429,7 @@ export function DatasetsCatalogPage() {
                         </span>
                       </div>
                       <span className="dataset-metrics-chip">
-                        {dataset.samplesCount} samples · {sizeFormatted}
+                        {dataset.samplesCount > 0 ? `${dataset.samplesCount} samples` : "Genomic Callset"} · {sizeFormatted}
                       </span>
                     </div>
 
@@ -436,6 +443,10 @@ export function DatasetsCatalogPage() {
 
                     <p className="dataset-card-meta">
                       {dataset.leadInstitution}
+                    </p>
+
+                    <p className="dataset-card-desc">
+                      {dataset.description}
                     </p>
 
                     <div className="dataset-card-actions">

@@ -142,7 +142,7 @@ export function DatasetTreePage({ dataset, namespace, datasetId }: DatasetTreePa
         </div>
         <h1 className="ubio-tree-title">File Tree & Sequence Browser</h1>
         <p className="ubio-tree-subtitle">
-          {dataset.name} &bull; <span className="font-mono">{dataset.files.length} indexed files</span>
+          {dataset.name} &bull; <span className="font-mono">{fileList.length} indexed files</span>
         </p>
       </div>
 
@@ -257,17 +257,19 @@ export function DatasetTreePage({ dataset, namespace, datasetId }: DatasetTreePa
 
               {/* CLI Command Box */}
               <div className="preview-cli-block">
-                <span className="cli-hint">Stream this file with UbuntuBio CLI:</span>
+                <span className="cli-hint">Download this dataset with UbuntuBio CLI:</span>
                 <div className="cli-snippet">
                   <span className="cli-prompt">$</span>
                   <code className="font-mono">
-                    ubio cat {dataset.id}/{selectedFile.path} | head -n 20
+                    ubio download {dataset.namespace}/{dataset.datasetId} --output-dir ./data
                   </code>
                   <button
                     type="button"
                     className="btn-copy-cli"
                     onClick={() =>
-                      handleCopyCommand(`ubio cat ${dataset.id}/${selectedFile.path} | head -n 20`)
+                      handleCopyCommand(
+                        `ubio download ${dataset.namespace}/${dataset.datasetId} --output-dir ./data`
+                      )
                     }
                     title="Copy CLI command"
                   >

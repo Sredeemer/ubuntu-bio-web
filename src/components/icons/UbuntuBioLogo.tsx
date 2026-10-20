@@ -13,6 +13,8 @@ export interface UbuntuBioLogoProps {
   className?: string;
   /** Accessibility label. If provided, role="img" will be added. */
   title?: string;
+  /** Whether the logo should slowly spin continuously. Defaults to false. */
+  spin?: boolean;
 }
 
 export function UbuntuBioLogo({
@@ -22,9 +24,11 @@ export function UbuntuBioLogo({
   color = "#00ed64",
   className = "",
   title,
+  spin = false,
 }: UbuntuBioLogoProps) {
   const w = width ?? size;
   const h = height ?? Math.round((size * 48) / 40);
+  const classes = [className, spin ? "ubio-logo-spin" : ""].filter(Boolean).join(" ");
 
   return (
     <svg
@@ -33,7 +37,7 @@ export function UbuntuBioLogo({
       viewBox="0 0 40 48"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      className={className}
+      className={classes}
       role={title ? "img" : "presentation"}
       aria-label={title}
       aria-hidden={!title}

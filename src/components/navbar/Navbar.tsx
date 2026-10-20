@@ -3,7 +3,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Menu, X, User, Settings, LogOut, FileText, UploadCloud, ChevronDown } from "lucide-react";
 import { UbuntuBioLogo } from "../icons/UbuntuBioLogo";
-import { HubStatusBadge } from "../common/HubStatusBadge";
 import { useAuth } from "../../context/AuthContext";
 
 export function Navbar() {
@@ -40,7 +39,7 @@ export function Navbar() {
       <div className="ubio-navbar-container">
         {/* Brand Identity */}
         <a href="/" className="ubio-brand-link" aria-label="UbuntuBio Home">
-          <UbuntuBioLogo size={26} color="#00ed64" />
+          <UbuntuBioLogo size={26} color="#00ed64" spin={true} />
           <div className="ubio-brand-name-group">
             <span className="ubio-brand-title">
               UbuntuBio<span className="brand-dot">.</span>
@@ -67,8 +66,6 @@ export function Navbar() {
 
         {/* Action Controls */}
         <div className="ubio-nav-actions">
-          <HubStatusBadge />
-
           {isAuthenticated && user ? (
             <div className="ubio-profile-menu-wrapper" ref={dropdownRef}>
               <button

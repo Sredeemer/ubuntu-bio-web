@@ -75,8 +75,8 @@
 .ubio-globe-stage {
   position: relative;
   width: 100%;
-  max-width: 900px;
-  min-height: 520px;
+  max-width: 960px;
+  min-height: 580px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -88,12 +88,12 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 480px;
-  height: 480px;
+  width: 540px;
+  height: 540px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(0, 237, 100, 0.14) 0%, rgba(0, 61, 79, 0.2) 40%, transparent 70%);
+  background: radial-gradient(circle, rgba(0, 237, 100, 0.16) 0%, rgba(0, 61, 79, 0.22) 40%, transparent 70%);
   pointer-events: none;
-  filter: blur(28px);
+  filter: blur(32px);
   z-index: 0;
   will-change: transform;
 }
@@ -102,7 +102,7 @@
   position: relative;
   z-index: 1;
   width: 100%;
-  max-width: 540px;
+  max-width: 640px;
   aspect-ratio: 1 / 1;
   display: flex;
   align-items: center;

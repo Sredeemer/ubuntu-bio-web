@@ -39,13 +39,12 @@ export function HubStatusBadge() {
       aria-label={isConnected ? `Hub API connected version ${health.version}` : "Hub API offline fallback active"}
     >
       <span className="hub-status-dot" />
-      <Server size={13} className="hub-status-icon" />
       <span className="hub-status-text">
         {loading
-          ? "Checking Hub API..."
+          ? "checking systems..."
           : isConnected
-          ? `Hub API v${health.version}`
-          : "Local Cache Active"}
+          ? "all systems working"
+          : "local cache active"}
       </span>
     </div>
   );

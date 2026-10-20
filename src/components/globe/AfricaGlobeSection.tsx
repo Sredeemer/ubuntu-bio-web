@@ -98,13 +98,13 @@ export function AfricaGlobeSection() {
           >
             <FlagGlobe
               markers={markers}
-              size={540}
-              flagSize={26}
+              size={640}
+              flagSize={28}
               altitude={0.16}
               autoRotate={true}
-              rotationSpeed={0.12}
-              phi={0.35} // Centered on Africa
-              theta={0.24}
+              rotationSpeed={0.06}
+              phi={0.35} // Centered on African continent
+              theta={0.16} // Optimal tilt framing North, West, Central, East and Southern Africa
               markerDots={true}
               stars={true}
               className="ubio-3d-globe"

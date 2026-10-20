@@ -1,5 +1,8 @@
 import React from "react";
+import Link from "next/link";
 import { UbuntuBioLogo } from "../icons/UbuntuBioLogo";
+import { HubStatusBadge } from "../common/HubStatusBadge";
+import "./Footer.css";
 
 export function Footer() {
   return (
@@ -8,64 +11,112 @@ export function Footer() {
         <div className="ubio-footer-grid">
           {/* Brand Info */}
           <div className="ubio-footer-col brand-col">
-            <div className="footer-brand-header">
-              <UbuntuBioLogo size={22} color="#00ed64" />
+            <Link href="/" className="footer-brand-header">
+              <div className="footer-logo-box">
+                <UbuntuBioLogo size={28} color="#00ed64" spin={true} />
+              </div>
               <span className="footer-brand-title">
                 UbuntuBio<span className="brand-dot">.</span>
               </span>
-            </div>
+            </Link>
             <p className="footer-mandate-text">
-              Decentralized, open-source bioinformatics repository engineered exclusively for African pathogen, vector, and agricultural genomics.
+              Open-source biological data infrastructure engineered for African pathogen, vector,
+              and biodiversity genomics.
             </p>
-            <div className="footer-status-pill">
-              <span className="footer-beacon" />
-              <span>Goal: 54 AU Member States Coverage</span>
-            </div>
           </div>
 
-          {/* Core Technologies */}
+          {/* Platform Links */}
           <div className="ubio-footer-col">
-            <h4 className="footer-col-title">Architecture</h4>
+            <h4 className="footer-col-title">Platform</h4>
             <ul className="footer-link-list">
-              <li>Bandwidth-Optimized Sequence Sync</li>
-              <li>Git LFS Pointer Trees</li>
-              <li>Meilisearch Geospatial Index</li>
-              <li>ORCID PKCE Authentication</li>
-              <li>MapLibre Vector Cartography</li>
+              <li>
+                <Link href="/datasets" className="footer-link">
+                  Browse Datasets
+                </Link>
+              </li>
+              <li>
+                <Link href="/submit" className="footer-link">
+                  Deposit Data
+                </Link>
+              </li>
+              <li>
+                <Link href="/#story" className="footer-link">
+                  Our Story
+                </Link>
+              </li>
             </ul>
           </div>
 
-          {/* Domain Governance */}
+          {/* Documentation Links */}
           <div className="ubio-footer-col">
-            <h4 className="footer-col-title">Governance</h4>
+            <h4 className="footer-col-title">Developers</h4>
             <ul className="footer-link-list">
-              <li>Nagoya Protocol Compliance</li>
-              <li>AU Scientific Data Policy</li>
-              <li>Strict Human 9606 Filter</li>
-              <li>MIxS Minimum Metadata</li>
-              <li>Open Access Licensing</li>
+              <li>
+                <Link href="/docs/cli" className="footer-link">
+                  Python CLI (<code>ubio</code>)
+                </Link>
+              </li>
+              <li>
+                <Link href="/docs/api" className="footer-link">
+                  REST API Reference
+                </Link>
+              </li>
+              <li>
+                <Link href="/docs/governance" className="footer-link">
+                  Data Governance
+                </Link>
+              </li>
             </ul>
           </div>
 
-          {/* CLI & Client */}
+          {/* Community Links */}
           <div className="ubio-footer-col">
-            <h4 className="footer-col-title">Python Ecosystem</h4>
+            <h4 className="footer-col-title">Community</h4>
             <ul className="footer-link-list">
-              <li>pip install ubuntu-bio</li>
-              <li>CLI Binary: ubio</li>
-              <li>POSIX 0600 Token Security</li>
-              <li>FastAPI Async Hub Server</li>
+              <li>
+                <a
+                  href="https://www.waccbip.org/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="footer-link"
+                >
+                  WACCBIP, University of Ghana
+                </a>
+              </li>
+              <li>
+                <a
+                  href="mailto:contact@ubuntubio.org?subject=UbuntuBio%20Partnership"
+                  className="footer-link"
+                >
+                  Contact &amp; Support
+                </a>
+              </li>
             </ul>
           </div>
         </div>
 
         {/* Bottom Bar */}
         <div className="ubio-footer-bottom">
-          <p className="footer-legal">
-            © {new Date().getFullYear()} UbuntuBio Initiative. Open Source under Apache-2.0 / MIT.
-          </p>
+          <div className="footer-legal-group">
+            <p className="footer-legal">
+              &copy; {new Date().getFullYear()} UbuntuBio Initiative &bull; Open Source under Apache-2.0 / MIT.
+            </p>
+            <a
+              href="https://www.waccbip.org/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="footer-subtext"
+            >
+              Founded at WACCBIP, University of Ghana &bull; Legon
+            </a>
+          </div>
+          <div className="footer-status-pill">
+            <HubStatusBadge />
+          </div>
         </div>
       </div>
     </footer>
   );
 }
+
+export default Footer;

@@ -367,3 +367,26 @@ button {
   white-space: nowrap;
   border-width: 0;
 }
+
+/* Animated spinning UbuntuBio SVG logo */
+.ubio-logo-spin {
+  animation: ubioLogoSpinSlow 24s linear infinite;
+  transform-origin: 50% 50%;
+  display: inline-block;
+  will-change: transform;
+}
+
+@keyframes ubioLogoSpinSlow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ubio-logo-spin {
+    animation: none;
+  }
+}

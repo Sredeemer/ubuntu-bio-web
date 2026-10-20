@@ -628,6 +628,99 @@
   }
 }
 
+@media (max-width: 768px) {
+  .ubio-detail-header {
+    padding: 16px 14px;
+    margin-bottom: 16px;
+    border-radius: 12px;
+  }
+
+  .country-au-tag,
+  .badge-gate-desktop,
+  .meta-block-desktop-only {
+    display: none !important;
+  }
+
+  .ubio-detail-header-badges {
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+
+  .badge-country,
+  .badge-type,
+  .badge-bsl {
+    font-size: 0.7rem;
+    padding: 2px 7px;
+  }
+
+  .flag-code {
+    font-size: 0.68rem;
+    padding: 1px 4px;
+  }
+
+  .ubio-detail-title {
+    font-size: 1.28rem;
+    line-height: 1.25;
+    margin-bottom: 6px;
+  }
+
+  .ubio-detail-description {
+    font-size: 0.84rem;
+    line-height: 1.45;
+    margin-bottom: 12px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .ubio-detail-header-meta {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-top: 10px;
+  }
+
+  .meta-block {
+    gap: 2px;
+  }
+
+  .meta-label {
+    font-size: 0.65rem;
+  }
+
+  .meta-value {
+    font-size: 0.82rem;
+  }
+
+  .ubio-detail-tabs {
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 6px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .ubio-detail-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .detail-tab {
+    padding: 6px 11px;
+    font-size: 0.78rem;
+    gap: 0;
+    white-space: nowrap;
+    border-radius: 6px;
+  }
+
+  .detail-tab svg,
+  .detail-tab-icon {
+    display: none !important;
+  }
+}
+
 /* ==========================================================================
    Light Band (White Page Theme)
    ========================================================================== */
@@ -749,6 +842,58 @@
 
 .ubio-band-light .spec-table th {
   background: var(--surface-light-soft, #f4f7f6);
+}
+
+.ubio-band-light .mixs-specs-table-wrapper {
+  background: #ffffff;
+  border-color: var(--hairline-light, #e1e5e8);
+  box-shadow: 0 1px 4px rgba(0, 30, 43, 0.04);
+}
+
+.ubio-band-light .mixs-specs-table td {
+  border-bottom-color: var(--hairline-light, #e1e5e8);
+}
+
+.ubio-band-light .mixs-specs-table .spec-label {
+  background: var(--surface-light-soft, #f4f7f6);
+  color: var(--ink-secondary, #3d4f58);
+  font-weight: 600;
+}
+
+.ubio-band-light .mixs-specs-table .spec-val {
+  color: var(--ink, #001e2b);
+}
+
+.ubio-band-light .mixs-specs-table .spec-val code {
+  background: rgba(0, 135, 68, 0.08);
+  color: #007a3d;
+  border: 1px solid rgba(0, 135, 68, 0.2);
+}
+
+.ubio-band-light .status-badge-verified {
+  background: rgba(0, 135, 68, 0.08);
+  color: #007a3d;
+  border-color: rgba(0, 135, 68, 0.25);
+}
+
+.ubio-band-light .file-snapshot-item {
+  background: #ffffff;
+  border-color: var(--hairline-light, #e1e5e8);
+  color: var(--ink, #001e2b);
+}
+
+.ubio-band-light .file-snapshot-item .file-name {
+  color: var(--ink, #001e2b);
+}
+
+.ubio-band-light .file-snapshot-item .file-size {
+  color: var(--ink-secondary, #3d4f58);
+}
+
+.ubio-band-light .file-snapshot-item .cas-chunk-tag {
+  background: var(--surface-light-soft, #f4f7f6);
+  color: var(--ink-secondary, #3d4f58);
+  border: 1px solid var(--hairline-light, #e1e5e8);
 }
 
 .ubio-band-light .citation-box,

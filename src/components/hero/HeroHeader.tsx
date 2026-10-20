@@ -34,13 +34,9 @@ export function HeroHeader() {
         </p>
 
         <div className="ubio-hero-cta-row">
-          <a href="#catalog" className="btn-pill-primary">
+          <a href="/datasets" className="btn-pill-primary">
             <span>Explore datasets</span>
             <ArrowRight size={16} aria-hidden="true" />
-          </a>
-          <a href="#coverage" className="ubio-link-chevron">
-            <span>View AU member state coverage</span>
-            <ChevronRight size={16} aria-hidden="true" />
           </a>
         </div>
 

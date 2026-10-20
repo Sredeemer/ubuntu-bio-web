@@ -1,5 +1,5 @@
 /* ==========================================================================
-   WACCBIP Origin & Community Call Section Styles
+   WACCBIP Origin Section - Reimagined with 3D Scroll Parallax & White Card
    ========================================================================== */
 
 .ubio-origin-section {
@@ -11,215 +11,563 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+/* Ambient Backdrop Glow */
 .ubio-origin-section::before {
   content: "";
   position: absolute;
-  top: -100px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: min(1000px, 90vw);
-  height: 500px;
-  background: radial-gradient(circle, rgba(0, 237, 100, 0.08) 0%, rgba(0, 104, 74, 0.03) 50%, transparent 75%);
+  top: -80px;
+  left: 20%;
+  width: min(750px, 85vw);
+  height: 550px;
+  background: radial-gradient(circle, rgba(0, 237, 100, 0.09) 0%, rgba(0, 80, 58, 0.03) 55%, transparent 75%);
   pointer-events: none;
   z-index: 0;
 }
 
 .ubio-origin-container {
   position: relative;
-  max-width: 1200px;
+  max-width: 1220px;
   margin: 0 auto;
   z-index: 1;
 }
 
-.ubio-origin-header {
-  max-width: 860px;
-  margin: 0 auto 64px auto;
-  text-align: center;
+/* 2-Column Split Layout */
+.ubio-origin-layout {
+  display: grid;
+  grid-template-columns: 1fr 1.15fr;
+  gap: 56px;
+  align-items: center;
+}
+
+/* ==========================================================================
+   Left Column: Origin Narrative & 3D Ring Stage
+   ========================================================================== */
+
+.ubio-origin-left {
+  display: flex;
+  flex-direction: column;
 }
 
 .ubio-origin-badge {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 16px;
+  align-self: flex-start;
+  padding: 6px 14px;
   border-radius: var(--radius-full, 9999px);
   background: rgba(0, 237, 100, 0.08);
   border: 1px solid rgba(0, 237, 100, 0.25);
   color: var(--brand-green, #00ed64);
   font-family: var(--font-mono, monospace);
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 600;
   letter-spacing: 0.02em;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .ubio-origin-title {
   font-family: var(--font-display, inherit);
-  font-size: clamp(32px, 4.4vw, 54px);
-  line-height: 1.15;
-  color: #f5f3e7;
-  margin-bottom: 24px;
+  font-size: clamp(30px, 3.4vw, 46px);
+  line-height: 1.18;
+  color: #f8fafc;
+  margin-bottom: 18px;
   letter-spacing: -0.02em;
 }
 
 .ubio-origin-lead {
-  font-size: clamp(17px, 1.8vw, 20px);
-  line-height: 1.6;
-  color: #e2e8f0;
-  margin-bottom: 16px;
-}
-
-.ubio-origin-lead strong {
-  color: #ffffff;
-  font-weight: 600;
-}
-
-.ubio-origin-text {
-  font-size: clamp(15px, 1.4vw, 17px);
-  line-height: 1.7;
-  color: var(--text-on-dark-secondary, #94a3b8);
-  margin-bottom: 36px;
-}
-
-/* Quote Box */
-.ubio-origin-quote-card {
-  position: relative;
-  background: rgba(4, 26, 38, 0.85);
-  border: 1px solid rgba(0, 237, 100, 0.2);
-  border-radius: var(--radius-xl, 16px);
-  padding: 28px 36px;
-  text-align: left;
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.25);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-}
-
-.quote-sparkle {
-  color: var(--brand-green, #00ed64);
-  margin-bottom: 12px;
-}
-
-.quote-statement {
-  font-size: clamp(16px, 1.6vw, 19px);
+  font-size: clamp(15.5px, 1.4vw, 17.5px);
   line-height: 1.65;
-  color: #f1f5f9;
-  font-style: italic;
-  margin-bottom: 14px;
+  color: #cbd5e1;
+  margin-bottom: 32px;
 }
 
-.quote-statement em {
+.ubio-origin-lead em {
   color: var(--brand-green, #00ed64);
   font-style: normal;
   font-weight: 600;
 }
 
-.quote-attribution {
-  display: block;
-  font-size: 13px;
+/* 3D Ring Stage */
+.ubio-ring-stage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 0 20px 0;
+  perspective: 1000px;
+}
+
+.ubio-ring-ambient-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 280px;
+  height: 280px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(0, 237, 100, 0.22) 0%, rgba(0, 104, 74, 0.08) 50%, transparent 70%);
+  filter: blur(28px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.ubio-ring-wrapper {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform-style: preserve-3d;
+  will-change: transform;
+  transition: transform 0.18s cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+
+.ubio-ring-img {
+  width: 100%;
+  max-width: 320px;
+  height: auto;
+  aspect-ratio: 1 / 1;
+  object-fit: contain;
+  filter: drop-shadow(0 20px 35px rgba(0, 0, 0, 0.55)) drop-shadow(0 0 35px rgba(0, 237, 100, 0.28));
+  animation: ringAmbientFloat 6s ease-in-out infinite alternate;
+}
+
+@keyframes ringAmbientFloat {
+  0% {
+    transform: translateY(0px) scale(1);
+  }
+  100% {
+    transform: translateY(-10px) scale(1.02);
+  }
+}
+
+.ubio-ring-pedestal-blur {
+  position: absolute;
+  bottom: 0;
+  width: 220px;
+  height: 22px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(0, 237, 100, 0.35) 0%, rgba(0, 0, 0, 0.5) 50%, transparent 80%);
+  filter: blur(10px);
+  z-index: 0;
+}
+
+/* ==========================================================================
+   Right Column: Porcelain White Card with Manifesto & Carousel
+   ========================================================================== */
+
+.ubio-origin-white-card {
+  position: relative;
+  background-color: var(--canvas-ivory, #fbfbf3);
+  color: var(--ink, #001e2b);
+  border-radius: 22px;
+  padding: 38px 36px;
+  box-shadow:
+    0 24px 60px -15px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.12),
+    0 8px 24px -4px rgba(0, 237, 100, 0.15);
+  transition: box-shadow 0.3s ease;
+}
+
+.ubio-origin-white-card:hover {
+  box-shadow:
+    0 28px 70px -15px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(255, 255, 255, 0.18),
+    0 12px 32px -4px rgba(0, 237, 100, 0.22);
+}
+
+/* Card Header & Manifesto Quote */
+.white-card-manifesto-header {
+  margin-bottom: 24px;
+}
+
+.white-card-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  background-color: rgba(0, 135, 68, 0.08);
+  border: 1px solid rgba(0, 135, 68, 0.2);
+  color: #007a3d;
   font-family: var(--font-mono, monospace);
-  color: #94a3b8;
-  letter-spacing: 0.02em;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  margin-bottom: 14px;
 }
 
-/* 3-Column Invitation Cards */
-.ubio-invitation-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
+
+.white-card-quote {
+  font-size: clamp(15.5px, 1.45vw, 17.5px);
+  line-height: 1.6;
+  color: #1e293b;
+  font-style: italic;
+  margin-bottom: 14px;
 }
 
-.ubio-invitation-card {
+.white-card-attribution {
   display: flex;
   flex-direction: column;
-  padding: 32px 28px;
-  background: rgba(3, 20, 29, 0.75);
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  border-radius: var(--radius-xl, 16px);
-  transition: all 0.25s ease;
+  gap: 2px;
+  font-size: 13px;
+  color: #475569;
 }
 
-.ubio-invitation-card:hover {
-  transform: translateY(-4px);
-  border-color: rgba(0, 237, 100, 0.35);
-  background: rgba(3, 24, 36, 0.9);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+.white-card-attribution strong {
+  color: #0f172a;
+  font-weight: 600;
 }
 
-.invitation-icon-wrapper {
+.white-card-attribution span {
+  font-size: 12px;
+  color: #64748b;
+  font-family: var(--font-mono, monospace);
+}
+
+/* Card Divider */
+.white-card-divider {
+  height: 1px;
+  background: linear-gradient(90deg, rgba(0, 30, 43, 0.08) 0%, rgba(0, 30, 43, 0.14) 50%, rgba(0, 30, 43, 0.02) 100%);
+  margin: 22px 0 24px 0;
+}
+
+/* ==========================================================================
+   Interactive Carousel inside White Card
+   ========================================================================== */
+
+.carousel-nav-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.carousel-eyebrow {
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #52637a;
+  font-family: var(--font-mono, monospace);
+}
+
+.carousel-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.carousel-arrow-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  background: rgba(0, 237, 100, 0.08);
-  border: 1px solid rgba(0, 237, 100, 0.2);
-  margin-bottom: 20px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #edece0;
+  border: 1px solid #deddce;
+  color: #001e2b;
+  transition: all 0.2s ease;
 }
 
-.invitation-card-title {
-  font-size: 20px;
-  font-weight: 600;
+.carousel-arrow-btn:hover {
+  background: #008744;
+  border-color: #008744;
   color: #ffffff;
+  transform: scale(1.05);
+}
+
+/* Segmented Tabs */
+.carousel-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  background: #edece0;
+  padding: 4px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  border: 1px solid #deddce;
+}
+
+.carousel-tab-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #52637a;
+  background: transparent;
+  transition: all 0.2s ease;
+}
+
+.carousel-tab-btn.active {
+  background: #ffffff;
+  color: #001e2b;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.tab-pill-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #deddce;
+  color: #001e2b;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.carousel-tab-btn.active .tab-pill-number {
+  background: #008744;
+  color: #ffffff;
+}
+
+/* Viewport & Slide */
+.carousel-track-viewport {
+  overflow: hidden;
+  width: 100%;
+  border-radius: 14px;
+  background: #ffffff;
+  border: 1px solid #deddce;
+  padding: 24px;
+  min-height: 200px;
+}
+
+.carousel-track {
+  display: flex;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+
+.carousel-slide {
+  min-width: 100%;
+  box-sizing: border-box;
+  opacity: 0.3;
+  transition: opacity 0.35s ease;
+}
+
+.carousel-slide.is-active {
+  opacity: 1;
+}
+
+.role-slide-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
   margin-bottom: 12px;
+}
+
+.role-icon-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: rgba(0, 135, 68, 0.1);
+  border: 1px solid rgba(0, 135, 68, 0.22);
+  color: #008744;
+  flex-shrink: 0;
+}
+
+.role-category-tag {
+  display: block;
+  font-size: 11px;
+  font-family: var(--font-mono, monospace);
+  font-weight: 600;
+  color: #007a3d;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 2px;
+}
+
+.role-title {
+  font-size: 19px;
+  font-weight: 600;
+  color: #0f172a;
   letter-spacing: -0.01em;
 }
 
-.invitation-card-desc {
-  font-size: 14.5px;
+.role-desc {
+  font-size: 14px;
   line-height: 1.6;
-  color: #94a3b8;
-  margin-bottom: 24px;
-  flex-grow: 1;
+  color: #475569;
+  margin-bottom: 20px;
 }
 
-.invitation-card-link {
+.role-action-row {
+  display: flex;
+  align-items: center;
+}
+
+.role-cta-btn {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-size: 14px;
+  padding: 9px 20px;
+  border-radius: var(--radius-full, 9999px);
+  background-color: #008744;
+  color: #ffffff;
+  font-size: 13.5px;
   font-weight: 600;
-  color: var(--brand-green, #00ed64);
   text-decoration: none;
-  transition: gap 0.2s ease, color 0.2s ease;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 135, 68, 0.25);
 }
 
-.invitation-card-link:hover {
-  gap: 12px;
-  color: #5eff9b;
+.role-cta-btn:hover {
+  background-color: #006b36;
+  gap: 11px;
+  box-shadow: 0 4px 14px rgba(0, 135, 68, 0.35);
+  transform: translateY(-1px);
 }
 
-/* Responsive Media Queries */
-@media (max-width: 960px) {
-  .ubio-invitation-grid {
+/* Dots Indicator */
+.carousel-dots-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 16px;
+}
+
+.carousel-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: #cbd5e1;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.25s ease;
+}
+
+.carousel-dot.active {
+  width: 24px;
+  background: #008744;
+}
+
+/* ==========================================================================
+   Responsive Adaptations
+   ========================================================================== */
+
+@media (max-width: 991px) {
+  .ubio-origin-layout {
     grid-template-columns: 1fr;
-    gap: 20px;
+    gap: 48px;
+  }
+
+  .ubio-origin-left {
+    text-align: center;
+    align-items: center;
+  }
+
+  .ubio-origin-badge {
+    align-self: center;
+  }
+
+  .ubio-ring-stage {
+    padding: 0 0 16px 0;
   }
 
   .ubio-origin-section {
     padding: 72px 20px;
   }
-
-  .ubio-origin-header {
-    margin-bottom: 44px;
-  }
-
-  .ubio-origin-quote-card {
-    padding: 24px 20px;
-  }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 640px) {
   .ubio-origin-section {
     padding: 56px 16px;
   }
 
-  .ubio-origin-badge {
-    font-size: 11.5px;
-    padding: 5px 12px;
+  .ubio-origin-title {
+    font-size: clamp(21px, 5.8vw, 25px);
+    line-height: 1.25;
+    word-break: break-word;
+    hyphens: auto;
+    padding: 0 4px;
+    margin-bottom: 14px;
   }
 
-  .ubio-invitation-card {
-    padding: 24px 20px;
+  .ubio-origin-lead {
+    font-size: 14.5px;
+    line-height: 1.6;
+    text-wrap: balance;
+    padding: 0 4px;
+    margin-bottom: 24px;
+  }
+
+  .ubio-ring-stage {
+    padding: 0;
+    max-height: 220px;
+  }
+
+  .ubio-ring-img {
+    max-width: 195px;
+  }
+
+  .ubio-ring-ambient-glow {
+    width: 200px;
+    height: 200px;
+  }
+
+  .ubio-origin-white-card {
+    padding: 26px 18px 28px 18px;
+    border-radius: 18px;
+  }
+
+  .carousel-tabs {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+    padding: 3px;
+    margin-bottom: 16px;
+  }
+
+  .carousel-tab-btn {
+    justify-content: center;
+    padding: 7px 6px;
+    font-size: 11.5px;
+    gap: 4px;
+  }
+
+  .tab-pill-number {
+    width: 16px;
+    height: 16px;
+    font-size: 10px;
+  }
+
+  .carousel-track-viewport {
+    background: transparent;
+    border: none;
+    padding: 8px 0 0 0;
+    min-height: auto;
+  }
+
+  .role-title {
+    font-size: 17px;
+  }
+
+  .role-desc {
+    font-size: 13.5px;
+    line-height: 1.55;
+    margin-bottom: 16px;
+  }
+
+  .role-cta-btn {
+    padding: 8px 16px;
+    font-size: 13px;
+  }
+
+  .carousel-dots-wrapper {
+    margin-top: 22px;
+    margin-bottom: 4px;
   }
 }

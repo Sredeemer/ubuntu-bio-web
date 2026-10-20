@@ -65,4 +65,28 @@ describe("DatasetTreePage", () => {
       expect.stringContaining("xet:sha256:")
     );
   });
+
+  it("copies ubio download CLI command to clipboard", async () => {
+    const writeTextMock = vi.fn().mockResolvedValue(undefined);
+    Object.assign(navigator, {
+      clipboard: {
+        writeText: writeTextMock,
+      },
+    });
+
+    render(
+      <DatasetTreePage
+        dataset={sampleDataset}
+        namespace="pasteur-dakar"
+        datasetId="lassa-surveillance-2026"
+      />
+    );
+
+    const copyCliBtn = screen.getByTitle(/Copy CLI command/i);
+    fireEvent.click(copyCliBtn);
+
+    expect(writeTextMock).toHaveBeenCalledWith(
+      expect.stringContaining("ubio download")
+    );
+  });
 });

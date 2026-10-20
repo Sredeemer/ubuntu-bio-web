@@ -62,4 +62,11 @@ describe("DatasetsCatalogPage", () => {
 
     expect(writeTextMock).toHaveBeenCalledWith(expect.stringContaining("ubio download"));
   });
+
+  it("renders dataset description snippet and metrics chip in catalog card", () => {
+    render(<DatasetsCatalogPage />);
+    const descriptions = screen.getAllByText(/surveillance/i);
+    expect(descriptions.length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/samples|callset/i).length).toBeGreaterThan(0);
+  });
 });

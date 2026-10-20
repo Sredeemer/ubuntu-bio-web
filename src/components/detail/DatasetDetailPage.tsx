@@ -88,7 +88,8 @@ export function DatasetDetailPage({ dataset, namespace, datasetId }: DatasetDeta
         <div className="ubio-detail-header-badges">
           <span className="badge-country">
             <span className="flag-code">{dataset.countryCode}</span>
-            {dataset.countryName} (AU Member State)
+            <span className="country-name">{dataset.countryName}</span>
+            <span className="country-au-tag"> (AU Member State)</span>
           </span>
           <span className={`badge-type badge-${dataset.pathogenType.toLowerCase()}`}>
             {dataset.pathogenType}
@@ -96,7 +97,7 @@ export function DatasetDetailPage({ dataset, namespace, datasetId }: DatasetDeta
           <span className={`badge-bsl badge-${dataset.biocontainment.toLowerCase()}`}>
             {dataset.biocontainment}
           </span>
-          <span className="badge-gate">
+          <span className="badge-gate badge-gate-desktop">
             <ShieldCheck size={13} />
             Open Sovereign Access
           </span>
@@ -110,7 +111,7 @@ export function DatasetDetailPage({ dataset, namespace, datasetId }: DatasetDeta
             <span className="meta-label">Lead Institution</span>
             <span className="meta-value">{dataset.leadInstitution}</span>
           </div>
-          <div className="meta-block">
+          <div className="meta-block meta-block-desktop-only">
             <span className="meta-label">Taxon ID</span>
             <span className="meta-value font-mono">
               NCBI:{dataset.taxonId} (<em>{dataset.taxonName}</em>)
@@ -120,7 +121,7 @@ export function DatasetDetailPage({ dataset, namespace, datasetId }: DatasetDeta
             <span className="meta-label">Total Volume</span>
             <span className="meta-value font-mono">{formattedSize}</span>
           </div>
-          <div className="meta-block">
+          <div className="meta-block meta-block-desktop-only">
             <span className="meta-label">Last Updated</span>
             <span className="meta-value font-mono">{dataset.updatedAt}</span>
           </div>
@@ -140,7 +141,7 @@ export function DatasetDetailPage({ dataset, namespace, datasetId }: DatasetDeta
               className={`detail-tab ${activeTab === "overview" ? "active" : ""}`}
               onClick={() => setActiveTab("overview")}
             >
-              <Info size={15} /> Overview & MIxS Specs
+              <Info size={15} className="detail-tab-icon" /> <span>Overview & MIxS Specs</span>
             </button>
             <button
               type="button"
@@ -149,7 +150,7 @@ export function DatasetDetailPage({ dataset, namespace, datasetId }: DatasetDeta
               className={`detail-tab ${activeTab === "files" ? "active" : ""}`}
               onClick={() => setActiveTab("files")}
             >
-              <Layers size={15} /> Files Manifest ({dataset.files.length})
+              <Layers size={15} className="detail-tab-icon" /> <span>Files Manifest ({dataset.files.length})</span>
             </button>
             <button
               type="button"
@@ -158,7 +159,7 @@ export function DatasetDetailPage({ dataset, namespace, datasetId }: DatasetDeta
               className={`detail-tab ${activeTab === "citation" ? "active" : ""}`}
               onClick={() => setActiveTab("citation")}
             >
-              <BookOpen size={15} /> Citation & Provenance
+              <BookOpen size={15} className="detail-tab-icon" /> <span>Citation & Provenance</span>
             </button>
           </div>
 
