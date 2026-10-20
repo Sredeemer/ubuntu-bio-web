@@ -19,11 +19,12 @@ import { createRepository } from "../../lib/api";
 import { useAuth } from "../../context/AuthContext";
 
 export function SubmitDatasetPage() {
-  const { token } = useAuth();
+  const { user, isAuthenticated, token } = useAuth();
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
 
   // Form State
   const [namespace, setNamespace] = useState("");
+  const [isCustomNamespace, setIsCustomNamespace] = useState(false);
   const [datasetId, setDatasetId] = useState("");
   const [name, setName] = useState("");
   const [leadInstitution, setLeadInstitution] = useState("");
@@ -47,14 +48,27 @@ export function SubmitDatasetPage() {
   const [copiedCli, setCopiedCli] = useState(false);
   const [copiedManifest, setCopiedManifest] = useState(false);
 
+  // Auto-detect personal namespace when authenticated user is loaded
+  const userNamespace =
+    user?.username ||
+    (user?.name ? user.name.toLowerCase().replace(/[^a-z0-9]/g, "-").replace(/-+/g, "-") : "");
+
+  React.useEffect(() => {
+    if (isAuthenticated && userNamespace && !isCustomNamespace && !namespace) {
+      setNamespace(userNamespace);
+    }
+  }, [isAuthenticated, userNamespace, isCustomNamespace, namespace]);
+
   // Validation checks
   const isHumanTaxon =
     parseInt(taxonId, 10) === PROHIBITED_HUMAN_TAXON_ID ||
     taxonName.toLowerCase().includes("homo sapiens") ||
     taxonName.toLowerCase().includes("human");
 
+  const effectiveNamespace = namespace || (isAuthenticated ? userNamespace : "");
+
   const isStep1Valid =
-    namespace.trim().length >= 2 &&
+    effectiveNamespace.trim().length >= 2 &&
     datasetId.trim().length >= 2 &&
     name.trim().length >= 5 &&
     leadInstitution.trim().length >= 3;
@@ -69,13 +83,16 @@ export function SubmitDatasetPage() {
 
   const selectedCountryObj = AU_COUNTRIES.find((c) => c.code === countryCode);
 
-  const generatedCliCmd = `ubio create ${namespace || "namespace"}/${datasetId || "dataset-id"} --domain ${(pathogenType || "virus").toLowerCase()}\nubio upload ${namespace || "namespace"}/${datasetId || "dataset-id"} ./data --message "Initial dataset upload"`;
+  const displayNamespace = effectiveNamespace || "namespace";
+  const displayDatasetSlug = datasetId || "dataset-slug";
+
+  const generatedCliCmd = `ubio create ${displayNamespace}/${displayDatasetSlug} --domain ${(pathogenType || "virus").toLowerCase()}\nubio upload ${displayNamespace}/${displayDatasetSlug} ./data --message "Initial dataset upload"`;
 
   const manifestJson = JSON.stringify(
     {
       schema: "ubuntubio.org/v1",
-      namespace: namespace || "my-institution",
-      datasetId: datasetId || "sample-study",
+      namespace: displayNamespace,
+      datasetId: displayDatasetSlug,
       name: name || "Genomic Study",
       leadInstitution: leadInstitution || "Lead Research Institution",
       description: description || "Pathogen surveillance cohort",
@@ -119,7 +136,7 @@ export function SubmitDatasetPage() {
     try {
       const res = await createRepository(
         {
-          owner_slug: namespace.trim().toLowerCase(),
+          owner_slug: effectiveNamespace.trim().toLowerCase(),
           name: datasetId.trim().toLowerCase(),
           description: description.trim(),
           domain: pathogenType.toLowerCase(),
@@ -141,81 +158,134 @@ export function SubmitDatasetPage() {
 
   return (
     <div className="ubio-submit-container">
-      {/* Submit Hero Header */}
+      {/* Background Decorative SVG Watermark */}
+      <div className="ubio-submit-bg-art" aria-hidden="true">
+        <img src="/img/mesh-globe.svg" alt="" className="submit-art-img" />
+      </div>
+
+      {/* Submit Hero Header (Without the two removed invariant pills) */}
       <div className="ubio-submit-hero">
         <div className="submit-badge">
-          <UploadCloud size={14} /> Sovereign Genomic Ingest Assistant
+          <UploadCloud size={14} /> Sovereign Genomic Ingestion
         </div>
         <h1 className="ubio-submit-title">Submit African Genomic Dataset</h1>
         <p className="ubio-submit-subtitle">
           Register sovereign pathogen or biodiversity data for sub-50ms search indexing,
-          fast sequence synchronization, and African Union member state federation.
+          content-addressed deduplication, and African Union member state federation.
         </p>
-
-        {/* Invariant Banner */}
-        <div className="invariants-callout">
-          <div className="invariant-badge-pill">
-            <ShieldCheck size={14} className="text-green" />
-            <span>54 AU Member States Supported</span>
-          </div>
-          <div className="invariant-badge-pill prohibited-pill">
-            <ShieldAlert size={14} className="text-amber" />
-            <span>NCBI Taxon 9606 (Human) Strictly Prohibited</span>
-          </div>
-        </div>
       </div>
 
-      {/* Progress Steps */}
-      <div className="submit-stepper-wrapper">
-        <div className={`stepper-step ${currentStep >= 1 ? "active" : ""} ${currentStep > 1 ? "completed" : ""}`}>
-          <div className="step-circle">{currentStep > 1 ? <Check size={14} /> : "1"}</div>
-          <span className="step-label">Identification</span>
-        </div>
-        <div className="step-line" />
-        <div className={`stepper-step ${currentStep >= 2 ? "active" : ""} ${currentStep > 2 ? "completed" : ""}`}>
-          <div className="step-circle">{currentStep > 2 ? <Check size={14} /> : "2"}</div>
-          <span className="step-label">Taxonomy & Safety</span>
-        </div>
-        <div className="step-line" />
-        <div className={`stepper-step ${currentStep >= 3 ? "active" : ""} ${currentStep > 3 ? "completed" : ""}`}>
-          <div className="step-circle">{currentStep > 3 ? <Check size={14} /> : "3"}</div>
-          <span className="step-label">Sovereign Specs</span>
-        </div>
-        <div className="step-line" />
-        <div className={`stepper-step ${currentStep >= 4 ? "active" : ""}`}>
-          <div className="step-circle">4</div>
-          <span className="step-label">Ingest & Push</span>
-        </div>
-      </div>
+      {/* Reorganized Main Layout: Wizard Column + Live Guidance Rail */}
+      <div className="ubio-submit-layout-grid">
+        <div className="ubio-submit-main-col">
+          {/* Progress Stepper */}
+          <div className="submit-stepper-wrapper">
+            <div className={`stepper-step ${currentStep >= 1 ? "active" : ""} ${currentStep > 1 ? "completed" : ""}`}>
+              <div className="step-circle">{currentStep > 1 ? <Check size={14} /> : "1"}</div>
+              <span className="step-label">Identification</span>
+            </div>
+            <div className="step-line" />
+            <div className={`stepper-step ${currentStep >= 2 ? "active" : ""} ${currentStep > 2 ? "completed" : ""}`}>
+              <div className="step-circle">{currentStep > 2 ? <Check size={14} /> : "2"}</div>
+              <span className="step-label">Taxonomy & Safety</span>
+            </div>
+            <div className="step-line" />
+            <div className={`stepper-step ${currentStep >= 3 ? "active" : ""} ${currentStep > 3 ? "completed" : ""}`}>
+              <div className="step-circle">{currentStep > 3 ? <Check size={14} /> : "3"}</div>
+              <span className="step-label">Sovereign Specs</span>
+            </div>
+            <div className="step-line" />
+            <div className={`stepper-step ${currentStep >= 4 ? "active" : ""}`}>
+              <div className="step-circle">4</div>
+              <span className="step-label">Ingest & Push</span>
+            </div>
+          </div>
 
-      {/* Main Wizard Form Card */}
-      <div className="submit-card">
-        {/* Step 1: Identification */}
-        {currentStep === 1 && (
-          <div className="step-content">
-            <h2 className="step-heading">Step 1: Dataset Namespace & Metadata</h2>
-            <p className="step-subheading">
-              Identify your research organization or namespace and provide the formal title for this genomic dataset.
-            </p>
+          {/* Main Wizard Form Card */}
+          <div className="submit-card">
+            {/* Step 1: Identification */}
+            {currentStep === 1 && (
+              <div className="step-content">
+                <h2 className="step-heading">Step 1: Dataset Namespace & Metadata</h2>
+                <p className="step-subheading">
+                  Identify your verified researcher namespace and provide the formal title for this genomic dataset.
+                </p>
 
-            <div className="form-grid">
-              <div className="form-field">
-                <label htmlFor="input-namespace" className="form-label">
-                  Namespace Identifier <span className="req">*</span>
-                </label>
-                <div className="input-group">
-                  <span className="input-prefix">ubio.org/</span>
-                  <input
-                    id="input-namespace"
-                    type="text"
-                    className="form-input font-mono"
-                    placeholder="e.g. acegid, pasteur-dakar, kemri"
-                    value={namespace}
-                    onChange={(e) => setNamespace(e.target.value.toLowerCase().replace(/[^a-z0-9-_]/g, ""))}
-                  />
-                </div>
-                <span className="field-hint">Lowercase letters, numbers, hyphens only.</span>
-              </div>
+                <div className="form-grid">
+                  {/* Auto-detected Namespace Field */}
+                  <div className="form-field">
+                    <div className="form-label-row">
+                      <label htmlFor="input-namespace" className="form-label">
+                        Namespace Identifier <span className="req">*</span>
+                      </label>
+                      {isAuthenticated && userNamespace && !isCustomNamespace && (
+                        <button
+                          type="button"
+                          className="btn-switch-namespace"
+                          onClick={() => {
+                            setIsCustomNamespace(true);
+                            setNamespace("");
+                          }}
+                        >
+                          Switch to organization
+                        </button>
+                      )}
+                      {isAuthenticated && userNamespace && isCustomNamespace && (
+                        <button
+                          type="button"
+                          className="btn-switch-namespace"
+                          onClick={() => {
+                            setIsCustomNamespace(false);
+                            setNamespace(userNamespace);
+                          }}
+                        >
+                          Use personal (@{userNamespace})
+                        </button>
+                      )}
+                      {!isAuthenticated && (
+                        <a href="/login?redirect=/submit" className="login-hint-link">
+                          Sign in to auto-detect &rarr;
+                        </a>
+                      )}
+                    </div>
+
+                    {isAuthenticated && userNamespace && !isCustomNamespace ? (
+                      <div className="detected-namespace-box">
+                        <div className="detected-badge-left">
+                          <ShieldCheck size={18} className="text-green" />
+                          <div>
+                            <div className="detected-slug font-mono">ubio.org/@{namespace || userNamespace}</div>
+                            <div className="detected-label">Verified Personal Namespace (@{userNamespace})</div>
+                          </div>
+                        </div>
+                        <span className="detected-tag">Auto-detected</span>
+                        <input
+                          id="input-namespace"
+                          type="text"
+                          className="visually-hidden-input"
+                          value={namespace || userNamespace}
+                          readOnly
+                        />
+                      </div>
+                    ) : (
+                      <div className="input-group">
+                        <span className="input-prefix">ubio.org/</span>
+                        <input
+                          id="input-namespace"
+                          type="text"
+                          className="form-input font-mono"
+                          placeholder="e.g. acegid, pasteur-dakar, kemri"
+                          value={namespace}
+                          onChange={(e) => setNamespace(e.target.value.toLowerCase().replace(/[^a-z0-9-_]/g, ""))}
+                        />
+                      </div>
+                    )}
+                    <span className="field-hint">
+                      {isAuthenticated && !isCustomNamespace
+                        ? `Publishing under your verified personal namespace @${userNamespace}.`
+                        : "Lowercase letters, numbers, hyphens only."}
+                    </span>
+                  </div>
 
               <div className="form-field">
                 <label htmlFor="input-dataset-id" className="form-label">
@@ -638,5 +708,81 @@ export function SubmitDatasetPage() {
         )}
       </div>
     </div>
-  );
+
+    {/* Right Rail: Real-time Ingestion Preview & Guidance */}
+    <aside className="ubio-submit-sidebar-rail" aria-label="Ingestion Summary">
+      {/* Live Target Repository Card */}
+      <div className="submit-rail-card">
+        <div className="submit-rail-header">
+          <span className="rail-header-badge">
+            <Terminal size={13} className="text-green" /> Ingest Target
+          </span>
+          <span className="rail-step-badge">Step {currentStep} of 4</span>
+        </div>
+
+        <div className="rail-target-slug font-mono">
+          <span className="slug-prefix">ubio.org/</span>
+          <span className="slug-owner">{displayNamespace}</span>
+          <span className="slug-slash">/</span>
+          <span className="slug-name">{displayDatasetSlug}</span>
+        </div>
+
+        <div className="rail-specs-list">
+          <div className="rail-spec-item">
+            <span className="spec-label">Domain</span>
+            <span className="spec-val badge-domain">{pathogenType}</span>
+          </div>
+          <div className="rail-spec-item">
+            <span className="spec-label">AU Origin</span>
+            <span className="spec-val font-mono">{countryCode} ({selectedCountryObj?.name || "AU"})</span>
+          </div>
+          <div className="rail-spec-item">
+            <span className="spec-label">Biosafety</span>
+            <span className="spec-val badge-bsl">{biocontainment}</span>
+          </div>
+          <div className="rail-spec-item">
+            <span className="spec-label">Platform</span>
+            <span className="spec-val text-truncate">{seqPlatform}</span>
+          </div>
+        </div>
+
+        {/* Live Invariant Validation Signals */}
+        <div className="rail-checklist">
+          <div className="rail-check-item passed">
+            <Check size={14} className="text-green" />
+            <span>African Union Member State Origin</span>
+          </div>
+          <div className={`rail-check-item ${isHumanTaxon ? "failed" : "passed"}`}>
+            {isHumanTaxon ? (
+              <AlertTriangle size={14} className="text-red" />
+            ) : (
+              <Check size={14} className="text-green" />
+            )}
+            <span>Strict Non-Human Invariant (No 9606)</span>
+          </div>
+          <div className="rail-check-item passed">
+            <Check size={14} className="text-green" />
+            <span>OpenXet Deduplication Ready</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Terminal Alternative Card */}
+      <div className="submit-rail-card cli-rail-card">
+        <div className="submit-rail-header">
+          <span className="rail-header-badge">
+            <UploadCloud size={13} /> Terminal CLI Push
+          </span>
+        </div>
+        <p className="cli-rail-desc">
+          Push directly from your compute cluster or pipeline:
+        </p>
+        <div className="cli-rail-code">
+          <code>$ ubio sync {displayNamespace}/{displayDatasetSlug} ./data</code>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+);
 }

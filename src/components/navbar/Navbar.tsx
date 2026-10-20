@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { Menu, X, User, Settings, LogOut, FileText, UploadCloud, ChevronDown } from "lucide-react";
+import { NotificationBanner } from "../common/NotificationBanner";
 import { UbuntuBioLogo } from "../icons/UbuntuBioLogo";
 import { useAuth } from "../../context/AuthContext";
 
@@ -36,6 +37,7 @@ export function Navbar() {
 
   return (
     <header className="ubio-navbar-header">
+      <NotificationBanner />
       <div className="ubio-navbar-container">
         {/* Brand Identity */}
         <a href="/" className="ubio-brand-link" aria-label="UbuntuBio Home">
@@ -73,11 +75,11 @@ export function Navbar() {
                 className="ubio-profile-btn"
                 onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
                 aria-expanded={profileDropdownOpen}
-                aria-label="User Profile Menu"
+                aria-label={`User profile menu for ${user.name}`}
                 id="btn-user-profile"
+                title={user.name}
               >
                 <div className="ubio-avatar-circle">{getInitials(user.name)}</div>
-                <span className="ubio-profile-btn-name">{user.name}</span>
                 <ChevronDown size={14} color="#9ca3af" />
               </button>
 

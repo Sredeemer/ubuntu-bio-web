@@ -1,0 +1,136 @@
+/* Top Announcement Banner — Replicating MongoDB Style for llms.txt & Agent Docs */
+.ubio-announcement-banner {
+  background: linear-gradient(90deg, #012b1d 0%, #003b29 50%, #012b1d 100%);
+  border-bottom: 1px solid rgba(0, 237, 100, 0.18);
+  color: #ffffff;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  position: relative;
+  z-index: 60;
+}
+
+.ubio-announcement-container {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 8px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.ubio-announcement-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: #f1f5f9;
+  text-decoration: none;
+  flex: 1;
+  min-width: 0;
+  transition: opacity 0.15s ease;
+}
+
+.ubio-announcement-link:hover {
+  opacity: 0.95;
+}
+
+.ubio-announcement-badge {
+  display: inline-flex;
+  align-items: center;
+  background-color: #bbf426;
+  color: #021a11;
+  font-family: var(--font-condensed), -apple-system, sans-serif;
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 2px 9px;
+  border-radius: 9999px;
+  flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.ubio-announcement-text {
+  color: #f1f5f9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 400;
+}
+
+.ubio-announcement-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #ffffff;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.ubio-announcement-action .inline-arrow {
+  transition: transform 0.15s ease;
+}
+
+.ubio-announcement-link:hover .ubio-announcement-action .inline-arrow {
+  transform: translateX(2px);
+}
+
+.ubio-announcement-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.ubio-announcement-nav-btn,
+.ubio-announcement-dismiss-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  padding: 4px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.ubio-announcement-nav-btn:hover,
+.ubio-announcement-dismiss-btn:hover {
+  color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+@media (max-width: 768px) {
+  .ubio-announcement-container {
+    padding: 6px 12px;
+    gap: 8px;
+  }
+
+  .ubio-announcement-badge {
+    font-size: 0.625rem;
+    padding: 2px 7px;
+  }
+
+  .ubio-announcement-text {
+    font-size: 0.75rem;
+  }
+
+  .ubio-announcement-action {
+    font-size: 0.75rem;
+  }
+}
+
+@media (max-width: 540px) {
+  .ubio-announcement-text {
+    display: none; /* Hide long text on extra small mobile to prevent wrapping */
+  }
+
+  .ubio-announcement-action {
+    font-size: 0.75rem;
+  }
+}

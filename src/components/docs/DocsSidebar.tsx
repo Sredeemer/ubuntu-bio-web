@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { BookOpen, Terminal, Code2, ShieldCheck, ArrowLeft, ExternalLink } from "lucide-react";
+import { BookOpen, Terminal, Code2, ShieldCheck, ArrowLeft, ExternalLink, Bot } from "lucide-react";
 
 interface DocsSidebarProps {
   currentPath: string;
@@ -57,6 +57,22 @@ export function DocsSidebar({ currentPath }: DocsSidebarProps) {
               </a>
             );
           })}
+        </div>
+
+        <div className="docs-nav-group mt-6">
+          <span className="docs-group-label">AI & Agents</span>
+          <a
+            href="/llms.txt"
+            target="_blank"
+            rel="noreferrer"
+            className="docs-nav-item external"
+          >
+            <div className="docs-nav-item-left">
+              <Bot size={16} className="docs-nav-icon" />
+              <span>llms.txt for Agents</span>
+            </div>
+            <ExternalLink size={13} />
+          </a>
         </div>
 
         <div className="docs-nav-group mt-6">

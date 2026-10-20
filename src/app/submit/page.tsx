@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 
 export default function Page() {
   return (
-    <div className="ubio-landing-wrapper">
+    <div className="ubio-landing-wrapper ubio-band-light ubio-submit-white-wrapper">
       <Navbar />
       <main id="main-content">
         <SubmitDatasetPage />

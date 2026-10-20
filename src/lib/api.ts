@@ -448,6 +448,7 @@ export interface UserProfile {
   id: string;
   name: string;
   orcid_id: string;
+  username?: string;
   email?: string;
   avatar?: string;
 }
