@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { BookOpen, Terminal, Code2, ShieldCheck, ArrowLeft, ExternalLink, Bot } from "lucide-react";
+import { BookOpen, Terminal, Code2, ShieldCheck, ArrowLeft, ExternalLink, Bot, UploadCloud } from "lucide-react";
 
 interface DocsSidebarProps {
   currentPath: string;
@@ -13,6 +13,11 @@ export function DocsSidebar({ currentPath }: DocsSidebarProps) {
       title: "Overview & Quickstart",
       href: "/docs",
       icon: BookOpen,
+    },
+    {
+      title: "Dataset Submission & Schema",
+      href: "/docs/submission",
+      icon: UploadCloud,
     },
     {
       title: "CLI Command Reference",

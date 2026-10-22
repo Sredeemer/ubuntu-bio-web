@@ -12,6 +12,7 @@ export const metadata: Metadata = {
 };
 
 const TOC_ITEMS: TocItem[] = [
+  { id: "origin", label: "Founding & WACCBIP Heritage", level: 2 },
   { id: "invariants", label: "Non-Negotiable Invariants", level: 2 },
   { id: "nagoya", label: "Nagoya Protocol (ABS)", level: 2 },
   { id: "licensing", label: "Open Sovereign Licensing", level: 2 },
@@ -42,6 +43,21 @@ export default function DocsGovernancePage() {
           African Union, Africa CDC, and the United Nations Convention on Biological Diversity.
         </p>
 
+        {/* Section 0: Founding & WACCBIP Heritage */}
+        <section className="docs-section" id="origin">
+          <h2>Founding &amp; WACCBIP Heritage</h2>
+          <p>
+            UbuntuBio was born at the <strong>West African Centre for Cell Biology of Infectious Pathogens (WACCBIP)</strong>,
+            University of Ghana, Legon. It was founded by <strong>Ghana’s first cohort of bioinformatics MSc scholars</strong>,
+            who experienced firsthand how African pathogen and biodiversity datasets are scattered abroad across disparate
+            global databases without sovereign governance.
+          </p>
+          <p>
+            The project exists to provide African researchers, ministries of health, and reference laboratories with an
+            independent, continental open data infrastructure that guarantees scientific attribution and regional data ownership.
+          </p>
+        </section>
+
         {/* Section 1: Non-Negotiable Invariants */}
         <section className="docs-section" id="invariants">
           <h2>Non-Negotiable System Invariants</h2>
@@ -51,6 +67,14 @@ export default function DocsGovernancePage() {
               In v1, UbuntuBio strictly prohibits human genomic data. Submissions containing human DNA,
               RNA, or variant calls (Taxon 9606) are blocked at the validator layer and will fail ingest.
               The platform is dedicated exclusively to pathogen surveillance, veterinary genomics, and crop biodiversity.
+            </p>
+          </DocsCallout>
+
+          <DocsCallout type="note" title="Biological Screening Guardrails">
+            <p>
+              To prevent accidental submission of un-depleted human clinical host reads, the <code>ubio check</code> validator
+              and server-side pre-receive git hooks screen sequence headers for human chromosomal references (<code>chr1</code>..<code>chr22</code>,
+              <code>GRCh38</code>) and test for canonical human 25-mer rRNA and mtDNA marker signatures.
             </p>
           </DocsCallout>
 

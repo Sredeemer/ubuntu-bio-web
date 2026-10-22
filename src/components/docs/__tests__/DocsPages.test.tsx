@@ -19,10 +19,22 @@ describe("DocsLayout & Navigation", () => {
     expect(docHeadings.length).toBeGreaterThanOrEqual(1);
 
     expect(screen.getAllByText(/Overview/i).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText(/Dataset Submission & Schema/i).length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText(/CLI/i).length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText(/REST & CAS API/i).length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText(/AU Sovereignty & Governance/i).length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText(/Docs Content Here/i)).toBeDefined();
+  });
+
+  it("renders DocsSubmissionPage with YAML schema and sequence sniffer sections", async () => {
+    const DocsSubmissionPage = (await import("../../../app/docs/submission/page")).default;
+    render(<DocsSubmissionPage />);
+
+    expect(screen.getByRole("heading", { name: /Dataset Submission & Schema Specification/i })).toBeDefined();
+    expect(screen.getAllByText(/The sequencing: Block/i).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText(/Two-Way File Parity/i).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText(/Sequence Sniffer/i).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText(/Sovereign Invariants/i).length).toBeGreaterThanOrEqual(1);
   });
 
   it("renders NotificationBanner with llms.txt announcement and controls", () => {

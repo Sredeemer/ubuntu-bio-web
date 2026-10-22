@@ -80,7 +80,7 @@ describe("DeviceVerificationPage", () => {
     const input = screen.getByLabelText(/one-time code/i) as HTMLInputElement;
     expect(input.value).toBe("UBIO-8492-AF");
 
-    const submitBtn = screen.getByRole("button", { name: /authorize terminal/i });
+    const submitBtn = screen.getByRole("button", { name: /authorize terminal/i }) as HTMLButtonElement;
     expect(submitBtn.disabled).toBe(false);
 
     fireEvent.click(submitBtn);

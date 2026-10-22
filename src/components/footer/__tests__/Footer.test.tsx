@@ -34,7 +34,7 @@ describe("Footer Component", () => {
     // WACCBIP link to https://www.waccbip.org/
     const waccbipLinks = screen.getAllByRole("link", { name: /WACCBIP/i });
     expect(waccbipLinks.length).toBeGreaterThan(0);
-    expect(waccbipLinks[0].getAttribute("href")).toBe("https://www.waccbip.org/");
+    expect(waccbipLinks[0]?.getAttribute("href")).toBe("https://www.waccbip.org/");
 
     // No GitHub repository link
     expect(screen.queryByText(/GitHub Repository/i)).toBeNull();

@@ -26,21 +26,33 @@ describe("SubmitDatasetPage", () => {
       target: { value: "ACEGID Redeemer's University" },
     });
 
-    const nextBtn = screen.getByRole("button", { name: /Proceed to Taxonomy & Safety/i }) as HTMLButtonElement;
+    const nextBtn = screen.getByRole("button", {
+      name: /Proceed to Taxonomy & Safety/i,
+    }) as HTMLButtonElement;
     expect(nextBtn.disabled).toBe(false);
     fireEvent.click(nextBtn);
 
-    expect(screen.getByText(/Step 2: Taxonomy & Strict Human Exclusion Verification/i)).toBeDefined();
+    expect(
+      screen.getByText(/Step 2: Taxonomy & Strict Human Exclusion Verification/i)
+    ).toBeDefined();
   });
 
   it("CRITICAL INVARIANT: Blocks submission when NCBI Taxon ID 9606 (Homo sapiens) is entered", () => {
     render(<SubmitDatasetPage />);
 
     // Complete step 1
-    fireEvent.change(screen.getByLabelText(/Namespace Identifier/i), { target: { value: "test-institute" } });
-    fireEvent.change(screen.getByLabelText(/Dataset Slug ID/i), { target: { value: "test-study" } });
-    fireEvent.change(screen.getByLabelText(/Formal Dataset Name/i), { target: { value: "Human Blood Samples" } });
-    fireEvent.change(screen.getByLabelText(/Contributing Institution/i), { target: { value: "Test Institute" } });
+    fireEvent.change(screen.getByLabelText(/Namespace Identifier/i), {
+      target: { value: "test-institute" },
+    });
+    fireEvent.change(screen.getByLabelText(/Dataset Slug ID/i), {
+      target: { value: "test-study" },
+    });
+    fireEvent.change(screen.getByLabelText(/Formal Dataset Name/i), {
+      target: { value: "Human Blood Samples" },
+    });
+    fireEvent.change(screen.getByLabelText(/Contributing Institution/i), {
+      target: { value: "Test Institute" },
+    });
     fireEvent.click(screen.getByRole("button", { name: /Proceed to Taxonomy & Safety/i }));
 
     // In Step 2, enter Taxon 9606
@@ -56,40 +68,73 @@ describe("SubmitDatasetPage", () => {
     expect(screen.getByText(/Human genomic data .* is strictly prohibited/i)).toBeDefined();
 
     // Next button must be disabled
-    const continueBtn = screen.getByRole("button", { name: /Continue to Sovereign Specs/i }) as HTMLButtonElement;
+    const continueBtn = screen.getByRole("button", {
+      name: /Continue to Sequencing Specs/i,
+    }) as HTMLButtonElement;
     expect(continueBtn.disabled).toBe(true);
   });
 
-  it("allows non-human pathogen taxon and generates CLI push command in Step 4", () => {
+  it("allows non-human pathogen taxon and traverses all 5 steps to generate README.md and CLI push", () => {
     render(<SubmitDatasetPage />);
 
-    // Step 1
-    fireEvent.change(screen.getByLabelText(/Namespace Identifier/i), { target: { value: "inrb-kinshasa" } });
-    fireEvent.change(screen.getByLabelText(/Dataset Slug ID/i), { target: { value: "ebola-drc-2026" } });
-    fireEvent.change(screen.getByLabelText(/Formal Dataset Name/i), { target: { value: "Ebola Virus Outbreak" } });
-    fireEvent.change(screen.getByLabelText(/Contributing Institution/i), { target: { value: "INRB Kinshasa" } });
+    // Step 1: Identification
+    fireEvent.change(screen.getByLabelText(/Namespace Identifier/i), {
+      target: { value: "inrb-kinshasa" },
+    });
+    fireEvent.change(screen.getByLabelText(/Dataset Slug ID/i), {
+      target: { value: "ebola-drc-2026" },
+    });
+    fireEvent.change(screen.getByLabelText(/Formal Dataset Name/i), {
+      target: { value: "Ebola Virus Outbreak" },
+    });
+    fireEvent.change(screen.getByLabelText(/Contributing Institution/i), {
+      target: { value: "INRB Kinshasa" },
+    });
     fireEvent.click(screen.getByRole("button", { name: /Proceed to Taxonomy & Safety/i }));
 
-    // Step 2
+    // Step 2: Taxonomy
     fireEvent.change(screen.getByLabelText(/NCBI Taxonomy ID/i), { target: { value: "186538" } });
-    fireEvent.change(screen.getByLabelText(/Scientific Name/i), { target: { value: "Zaire ebolavirus" } });
+    fireEvent.change(screen.getByLabelText(/Scientific Name/i), {
+      target: { value: "Zaire ebolavirus" },
+    });
     expect(screen.getByText(/Verified: Non-Human Organism/i)).toBeDefined();
 
-    const continueBtn = screen.getByRole("button", { name: /Continue to Sovereign Specs/i }) as HTMLButtonElement;
-    expect(continueBtn.disabled).toBe(false);
-    fireEvent.click(continueBtn);
+    const step2NextBtn = screen.getByRole("button", {
+      name: /Continue to Sequencing Specs/i,
+    }) as HTMLButtonElement;
+    expect(step2NextBtn.disabled).toBe(false);
+    fireEvent.click(step2NextBtn);
 
-    // Step 3
-    expect(screen.getByText(/Step 3: Sovereign Provenance & MIxS Specifications/i)).toBeDefined();
+    // Step 3: Sequencing Specs & Sovereign Provenance
+    expect(screen.getByText(/Step 3: Sequencing Technology & Protocol Specs/i)).toBeDefined();
     const nagoyaCheckbox = screen.getByRole("checkbox");
     fireEvent.click(nagoyaCheckbox);
 
-    const step3NextBtn = screen.getByRole("button", { name: /Review & Generate Ingest Command/i }) as HTMLButtonElement;
+    const step3NextBtn = screen.getByRole("button", {
+      name: /Continue to Runs & Sequence Files/i,
+    }) as HTMLButtonElement;
     expect(step3NextBtn.disabled).toBe(false);
     fireEvent.click(step3NextBtn);
 
-    // Step 4
-    expect(screen.getByText(/Step 4: Dataset Manifest & UbuntuBio CLI Push/i)).toBeDefined();
-    expect(screen.getByText(/ubio create inrb-kinshasa\/ebola-drc-2026/i)).toBeDefined();
+    // Step 4: Runs & Sequence Files
+    expect(screen.getByText(/Step 4: Sequencing Runs & Sequence Files/i)).toBeDefined();
+    expect(screen.getByText(/Run #1: RUN001/i)).toBeDefined();
+
+    // Verify adding a second run
+    const addRunBtn = screen.getByRole("button", { name: /Add Sequencing Run/i });
+    fireEvent.click(addRunBtn);
+    expect(screen.getByText(/Run #2: RUN002/i)).toBeDefined();
+
+    const step4NextBtn = screen.getByRole("button", {
+      name: /Review & Ingest Dataset/i,
+    }) as HTMLButtonElement;
+    expect(step4NextBtn.disabled).toBe(false);
+    fireEvent.click(step4NextBtn);
+
+    // Step 5: Review, README.md & Ingest
+    expect(screen.getByText(/Step 5: Review, README.md & UbuntuBio Push/i)).toBeDefined();
+    expect(screen.getAllByText(/inrb-kinshasa\/ebola-drc-2026/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/Generated README.md/i)).toBeDefined();
+    expect(screen.getAllByText(/Terminal CLI Push/i).length).toBeGreaterThan(0);
   });
 });

@@ -110,7 +110,7 @@ describe("UbuntuBio API Client (FastAPI Integration)", () => {
       const result = await searchDatasets("cholera");
       expect(result.isLive).toBe(true);
       expect(result.items.length).toBeGreaterThanOrEqual(1);
-      expect(result.items[0].countryCode).toBe("KE");
+      expect(result.items[0]?.countryCode).toBe("KE");
     });
 
     it("falls back to local curated data when search endpoint fails", async () => {
@@ -119,7 +119,7 @@ describe("UbuntuBio API Client (FastAPI Integration)", () => {
       const result = await searchDatasets("lassa");
       expect(result.isLive).toBe(false);
       expect(result.items.length).toBeGreaterThan(0);
-      expect(result.items[0].id).toContain("lassa");
+      expect(result.items[0]?.id).toContain("lassa");
     });
   });
 
@@ -147,7 +147,7 @@ describe("UbuntuBio API Client (FastAPI Integration)", () => {
 
       const repos = await fetchRepositories();
       expect(repos.length).toBe(1);
-      expect(repos[0].id).toBe("test-org/ebola-study");
+      expect(repos[0]?.id).toBe("test-org/ebola-study");
     });
 
     it("falls back to default curated list on network failure", async () => {
@@ -186,7 +186,7 @@ describe("UbuntuBio API Client (FastAPI Integration)", () => {
 
       const items = await fetchRepoTree("test-org", "test-repo", "main");
       expect(items.length).toBe(1);
-      expect(items[0].path).toBe("README.md");
+      expect(items[0]?.path).toBe("README.md");
     });
   });
 

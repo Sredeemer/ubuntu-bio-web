@@ -6,7 +6,7 @@ import { WaccbipOriginSection } from "../WaccbipOriginSection";
 describe("WaccbipOriginSection Component", () => {
   it("renders the WACCBIP founding heading and University of Ghana badge", () => {
     render(<WaccbipOriginSection />);
-    expect(screen.getByRole("heading", { name: /Founded at WACCBIP/i })).toBeDefined();
+    expect(screen.getByRole("heading", { name: /Founded at WACCBIP by Ghana[’']s First Cohort of Bioinformatics/i })).toBeDefined();
     expect(screen.getAllByText(/University of Ghana/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/First cohort of bioinformatics/i).length).toBeGreaterThan(0);
   });
@@ -40,23 +40,25 @@ describe("WaccbipOriginSection Component", () => {
     // Click Next
     fireEvent.click(nextBtn);
     const tabs = screen.getAllByRole("tab");
-    expect(tabs[1].getAttribute("aria-selected")).toBe("true");
+    expect(tabs[1]?.getAttribute("aria-selected")).toBe("true");
 
     // Click Tab 3
-    fireEvent.click(tabs[2]);
-    expect(tabs[2].getAttribute("aria-selected")).toBe("true");
+    if (tabs[2]) {
+      fireEvent.click(tabs[2]);
+      expect(tabs[2].getAttribute("aria-selected")).toBe("true");
+    }
 
     // Click Prev
     fireEvent.click(prevBtn);
-    expect(tabs[1].getAttribute("aria-selected")).toBe("true");
+    expect(tabs[1]?.getAttribute("aria-selected")).toBe("true");
   });
 
   it("renders explicit tab labels with Labs for the third tab instead of truncated text", () => {
     render(<WaccbipOriginSection />);
     const tabs = screen.getAllByRole("tab");
-    expect(tabs[0].textContent).toContain("Donors");
-    expect(tabs[1].textContent).toContain("Curators");
-    expect(tabs[2].textContent).toContain("Labs");
-    expect(tabs[2].textContent).not.toBe("3 African");
+    expect(tabs[0]?.textContent).toContain("Donors");
+    expect(tabs[1]?.textContent).toContain("Curators");
+    expect(tabs[2]?.textContent).toContain("Labs");
+    expect(tabs[2]?.textContent).not.toBe("3 African");
   });
 });

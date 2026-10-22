@@ -10,6 +10,8 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@radix-ui/react-tabs": "^1.2.1",
+    "@radix-ui/react-tooltip": "^1.4.1",
     "cobe": "^2.0.1",
     "country-flag-icons": "^1.6.20",
     "lucide-react": "^1.59.0",
@@ -17,7 +19,9 @@
     "next": "^15.0.0",
     "pmtiles": "^3.2.0",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "react-dropzone": "^20.1.4",
+    "sonner": "^2.0.8"
   },
   "devDependencies": {
     "@testing-library/dom": "^10.4.2",

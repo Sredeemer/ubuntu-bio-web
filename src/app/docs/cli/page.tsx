@@ -17,7 +17,9 @@ const TOC_ITEMS: TocItem[] = [
   { id: "cmd-login", label: "ubio login", level: 2 },
   { id: "cmd-whoami", label: "ubio whoami", level: 2 },
   { id: "cmd-create", label: "ubio create", level: 2 },
-  { id: "cmd-upload", label: "ubio upload", level: 2 },
+  { id: "cmd-init", label: "ubio init", level: 2 },
+  { id: "cmd-check", label: "ubio check", level: 2 },
+  { id: "cmd-push", label: "ubio push (upload)", level: 2 },
   { id: "cmd-search", label: "ubio search", level: 2 },
   { id: "cmd-download", label: "ubio download", level: 2 },
 ];
@@ -145,29 +147,97 @@ ubio create pasteur-dakar/cholera-2026 --domain bacteria --access public --descr
           </ul>
         </section>
 
-        {/* Command: ubio upload */}
-        <section className="docs-section" id="cmd-upload">
-          <h2><code>ubio upload</code></h2>
+        {/* Command: ubio init */}
+        <section className="docs-section" id="cmd-init">
+          <h2><code>ubio init</code></h2>
           <p>
-            Walks a local folder and uploads FASTA sequences, BAM alignments, and metadata to the target repository.
+            Scaffolds a compliant dataset directory, automatically scans for local FASTQ reads in <code>reads/</code> or the working directory, and interactively builds a canonical <code>README.md</code> with full sequencing experiment metadata.
+          </p>
+          <DocsCodeBlock
+            title="ubio init"
+            language="bash"
+            code={`# Interactive initialization wizard (prompts for title, taxon, platform)
+ubio init pasteur-dakar/cholera-2026
+
+# Non-interactive scaffolding with CLI flags
+ubio init inrb-kinshasa/ebola-drc-2026 \\
+  --title "Ebola Surveillance in Equateur Province" \\
+  --domain virus \\
+  --country CD \\
+  --taxon-id 186538 \\
+  --scientific-name "Zaire ebolavirus" \\
+  --platform ILLUMINA \\
+  --layout PAIRED \\
+  --non-interactive`}
+          />
+          <h4>Options:</h4>
+          <ul>
+            <li><code>--title</code>, <code>-t</code>: Formal publication / study title</li>
+            <li><code>--domain</code>, <code>-d</code>: Biological domain (<code>virus</code>, <code>bacteria</code>, <code>vector</code>, etc.)</li>
+            <li><code>--country</code>, <code>-c</code>: ISO-3166-1 alpha-2 code of African Union member state</li>
+            <li><code>--taxon-id</code>: NCBI Taxonomy numeric ID (Taxon 9606 is prohibited)</li>
+            <li><code>--scientific-name</code>: Pathogen binomial nomenclature</li>
+            <li><code>--platform</code>: Sequencing platform (<code>ILLUMINA</code>, <code>OXFORD_NANOPORE</code>, <code>PACBIO</code>, <code>MGI</code>)</li>
+            <li><code>--layout</code>: <code>PAIRED</code> or <code>SINGLE</code></li>
+            <li><code>--non-interactive</code>: Skip prompts and use defaults/flags</li>
+          </ul>
+        </section>
+
+        {/* Command: ubio check */}
+        <section className="docs-section" id="cmd-check">
+          <h2><code>ubio check</code></h2>
+          <p>
+            Local offline diagnostic and biological quality validator. Validates <code>README.md</code> frontmatter schema, checks two-way file parity (ensuring declared reads exist and unmapped disk reads are flagged), and streams sequences through the biological sniffer.
+          </p>
+          <DocsCodeBlock
+            title="ubio check"
+            language="bash"
+            code={`# Validate current directory dataset
+ubio check .
+
+# Enable strict mode (treats warnings as errors)
+ubio check ./my-dataset --strict
+
+# Machine-readable output for CI/CD test runners
+ubio check . --json`}
+          />
+          <h4>Diagnostics Performed:</h4>
+          <ul>
+            <li><strong>YAML Frontmatter Schema</strong>: Verifies mandatory fields, ISO AU country codes, and non-human taxon ID.</li>
+            <li><strong>Two-Way Read File Parity</strong>: Ensures declared forward/reverse reads exist on disk and all local FASTQ files are declared.</li>
+            <li><strong>Sequence Format Sniffing</strong>: Checks Gzip, BAM, and FASTQ magic bytes and verifies 4-line record structural synchronization.</li>
+            <li><strong>Phred Quality Scale</strong>: Classifies Phred+33 vs legacy Phred+64 encoding.</li>
+            <li><strong>Human Host Contamination Screening</strong>: Screens headers and 25-mer markers for accidental human clinical sequence.</li>
+          </ul>
+        </section>
+
+        {/* Command: ubio push (upload) */}
+        <section className="docs-section" id="cmd-push">
+          <h2><code>ubio push</code> (alias: <code>ubio upload</code>)</h2>
+          <p>
+            Runs pre-push validation and synchronizes dataset sequence reads, BAM alignments, and metadata to OpenXet Content-Addressed Storage (CAS) on the UbuntuBio Hub.
           </p>
 
-          <DocsCallout type="warning" title="Strict Non-Human Data Policy">
+          <DocsCallout type="warning" title="Strict Non-Human Invariant">
             <p>
-              In compliance with UbuntuBio v1 data governance, human genomic data (NCBI Taxon ID 9606) is strictly prohibited.
-              Metadata with Taxon ID 9606 or containing human identifiable markers will be rejected at commit pre-validation.
+              In compliance with UbuntuBio v1 sovereign genomic privacy invariants, human genomic data (NCBI Taxon ID 9606 / <em>Homo sapiens</em>) is strictly prohibited. Submissions with Taxon ID 9606 or containing human chromosomal reference contigs are blocked at pre-validation.
             </p>
           </DocsCallout>
 
           <DocsCodeBlock
-            title="ubio upload"
+            title="ubio push"
             language="bash"
-            code={`ubio upload pasteur-dakar/cholera-2026 ./data-dir --message "Initial release of consensus assemblies"`}
+            code={`# Push dataset directory to remote repository
+ubio push pasteur-dakar/cholera-2026 . --message "Initial release of consensus assemblies"
+
+# Dry run pre-validation without network transfer
+ubio push pasteur-dakar/cholera-2026 . --dry-run`}
           />
           <h4>Options:</h4>
           <ul>
             <li><code>--message</code>, <code>-m</code>: Git commit message [default: "Upload dataset"]</li>
             <li><code>--branch</code>, <code>-b</code>: Destination branch [default: "main"]</li>
+            <li><code>--dry-run</code>: Validate locally and inspect chunk hashes without pushing</li>
           </ul>
         </section>
 

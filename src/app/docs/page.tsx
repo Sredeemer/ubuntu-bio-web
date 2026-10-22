@@ -18,8 +18,9 @@ const TOC_ITEMS: TocItem[] = [
   { id: "architecture", label: "Core Architecture", level: 2 },
   { id: "quickstart", label: "Quickstart", level: 2 },
   { id: "step-install", label: "Install CLI", level: 3 },
-  { id: "step-search", label: "Search Datasets", level: 3 },
-  { id: "step-download", label: "Download Snapshot", level: 3 },
+  { id: "step-init", label: "Init & Scaffold", level: 3 },
+  { id: "step-check", label: "Validate & Screen", level: 3 },
+  { id: "step-push", label: "Push to Hub", level: 3 },
   { id: "guides", label: "Developer Guides", level: 2 },
 ];
 
@@ -94,9 +95,9 @@ export default function DocsOverviewPage() {
 
         {/* Streamlined Quickstart */}
         <section className="docs-section" id="quickstart">
-          <h2>Quickstart</h2>
+          <h2>Publishing &amp; Submission Quickstart</h2>
           <p>
-            Install the official <code>ubio</code> CLI to discover, stream, and publish genomic datasets from your terminal or compute cluster.
+            Install the official <code>ubio</code> CLI to scaffold, validate, and publish sovereign genomic datasets directly from your terminal or sequencing instrument cluster.
           </p>
 
           <h3 className="docs-step-heading" id="step-install">
@@ -111,36 +112,52 @@ export default function DocsOverviewPage() {
 uv add ubuntu-bio`}
           />
 
-          <h3 className="docs-step-heading" id="step-search">
+          <h3 className="docs-step-heading" id="step-init">
             <span className="docs-step-number">2</span>
-            <span>Search Datasets</span>
+            <span>Initialize &amp; Scaffold Dataset</span>
           </h3>
           <DocsCodeBlock
             title="Terminal"
             language="bash"
-            code={`# Search Lassa fever surveillance records in Senegal
-ubio search "Lassa" -c SN --domain virus`}
+            code={`# Auto-detects local FASTQ files and interactively scaffolds README.md
+ubio init pasteur-dakar/cholera-2026 --domain bacteria --country SN`}
           />
 
-          <h3 className="docs-step-heading" id="step-download">
+          <h3 className="docs-step-heading" id="step-check">
             <span className="docs-step-number">3</span>
-            <span>Download Snapshot</span>
+            <span>Validate &amp; Screen Biological Reads</span>
           </h3>
           <DocsCodeBlock
             title="Terminal"
             language="bash"
-            code={`# Download dataset snapshot with local chunk caching
-ubio download pasteur-dakar/lassa-surveillance-2026 --output-dir ./lassa-data`}
+            code={`# Inspects YAML frontmatter schema, two-way file parity, and streams sequence files
+ubio check .`}
+          />
+
+          <h3 className="docs-step-heading" id="step-push">
+            <span className="docs-step-number">4</span>
+            <span>Push to Sovereign Hub</span>
+          </h3>
+          <DocsCodeBlock
+            title="Terminal"
+            language="bash"
+            code={`# Deduplicates and pushes verified sequence chunks to OpenXet CAS
+ubio push pasteur-dakar/cholera-2026 . --message "Initial verified release"`}
           />
         </section>
 
         {/* Developer Guides Navigation */}
         <section className="docs-section" id="guides">
-          <h2>Developer Guides</h2>
+          <h2>Developer &amp; Researcher Guides</h2>
           <div className="docs-next-links">
+            <a href="/docs/submission" className="docs-next-card">
+              <span className="next-card-title">Dataset Submission &amp; Schema Guide</span>
+              <span className="next-card-desc">Canonical README.md schema, sequencing: block, two-way parity, and sequence sniffer</span>
+              <ArrowRight size={14} className="next-card-arrow" />
+            </a>
             <a href="/docs/cli" className="docs-next-card">
               <span className="next-card-title">CLI Command Reference</span>
-              <span className="next-card-desc">Detailed syntax for login, upload, download, and search</span>
+              <span className="next-card-desc">Complete syntax for login, init, check, push, search, and download</span>
               <ArrowRight size={14} className="next-card-arrow" />
             </a>
             <a href="/docs/api" className="docs-next-card">
@@ -150,7 +167,7 @@ ubio download pasteur-dakar/lassa-surveillance-2026 --output-dir ./lassa-data`}
             </a>
             <a href="/docs/governance" className="docs-next-card">
               <span className="next-card-title">AU Governance &amp; Nagoya Protocol</span>
-              <span className="next-card-desc">African Union sovereignty invariants and strict human data exclusion</span>
+              <span className="next-card-desc">African Union sovereignty invariants, strict human exclusion, and WACCBIP origin</span>
               <ArrowRight size={14} className="next-card-arrow" />
             </a>
             <a href="/llms.txt" target="_blank" rel="noreferrer" className="docs-next-card">
