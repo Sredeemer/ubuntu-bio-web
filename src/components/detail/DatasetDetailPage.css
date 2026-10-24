@@ -491,29 +491,32 @@
 
 .cli-code-box {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   background: rgba(0, 20, 30, 0.95);
   border: 1px solid var(--hairline-subtle);
   border-radius: 8px;
-  padding: 8px 12px;
+  padding: 10px 12px;
   margin-bottom: 16px;
+  gap: 8px;
 }
 
 .cli-prompt {
   color: var(--brand-green);
   font-family: var(--font-mono);
   font-weight: 700;
-  margin-right: 8px;
   user-select: none;
+  flex-shrink: 0;
+  line-height: 1.45;
 }
 
 .cli-cmd {
   font-family: var(--font-mono);
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   color: var(--text-on-dark);
   flex-grow: 1;
-  overflow-x: auto;
-  white-space: nowrap;
+  word-break: break-all;
+  white-space: pre-wrap;
+  line-height: 1.45;
 }
 
 .btn-copy-cli {
@@ -521,10 +524,11 @@
   border: none;
   color: var(--text-on-dark-dim);
   cursor: pointer;
-  padding: 4px;
+  padding: 2px 4px;
   display: flex;
   align-items: center;
   transition: color 0.15s ease;
+  flex-shrink: 0;
 }
 
 .btn-copy-cli:hover {

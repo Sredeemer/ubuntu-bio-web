@@ -146,7 +146,9 @@ export function repoToDatasetItem(repo: RepoResponse | SearchHit): DatasetItem {
   const domain = ("domain" in repo ? repo.domain : "virus") || "virus";
   let pathogenType: "Virus" | "Bacteria" | "Vector" | "Fungus" = "Virus";
   const dLower = domain.toLowerCase();
-  if (dLower.includes("bacteri") || dLower.includes("tb") || dLower.includes("cholera")) {
+  const textToScan = `${slug} ${repo.name || ""} ${repo.description || ""}`.toLowerCase();
+
+  if (dLower.includes("bacteri") || dLower.includes("tb") || dLower.includes("cholera") || textToScan.includes("coli") || textToScan.includes("bacteria")) {
     pathogenType = "Bacteria";
   } else if (dLower.includes("vector") || dLower.includes("anopheles") || dLower.includes("mosquito")) {
     pathogenType = "Vector";
@@ -156,24 +158,73 @@ export function repoToDatasetItem(repo: RepoResponse | SearchHit): DatasetItem {
 
   // Determine country
   let countryCode = "NG";
-  if ("countries" in repo && Array.isArray(repo.countries)) {
-    const c0 = repo.countries[0];
-    if (c0) {
-      countryCode = c0.toUpperCase();
+  if ("countries" in repo && Array.isArray(repo.countries) && repo.countries[0]) {
+    countryCode = repo.countries[0].toUpperCase();
+  } else {
+    // Intelligent heuristic scanning for African Union countries
+    for (const c of AU_COUNTRIES) {
+      if (
+        textToScan.includes(c.name.toLowerCase()) ||
+        textToScan.includes(`-${c.code.toLowerCase()}-`) ||
+        textToScan.includes(`/${c.code.toLowerCase()}-`) ||
+        textToScan.startsWith(`${c.code.toLowerCase()}-`)
+      ) {
+        countryCode = c.code;
+        break;
+      }
     }
   }
   const countryMatch = AU_COUNTRIES.find((c) => c.code === countryCode);
   const countryName = countryMatch?.name || "African Union Sovereign Node";
 
   let taxonId = 0;
-  if ("taxon_ids" in repo && Array.isArray(repo.taxon_ids)) {
-    const t0 = repo.taxon_ids[0];
-    if (typeof t0 === "number") {
-      taxonId = t0;
+  let taxonName = repo.name || "Unknown Isolate";
+
+  if ("taxon_ids" in repo && Array.isArray(repo.taxon_ids) && typeof repo.taxon_ids[0] === "number" && repo.taxon_ids[0] > 0) {
+    taxonId = repo.taxon_ids[0];
+    if (taxonId === 562) taxonName = "Escherichia coli";
+  } else {
+    // Pathogen taxon inference
+    if (textToScan.includes("escherichia coli") || textToScan.includes("e. coli") || textToScan.includes("ecoli")) {
+      taxonId = 562;
+      taxonName = "Escherichia coli";
+    } else if (textToScan.includes("vibrio cholerae") || textToScan.includes("cholera")) {
+      taxonId = 666;
+      taxonName = "Vibrio cholerae";
+    } else if (textToScan.includes("mycobacterium tuberculosis") || textToScan.includes("tuberculosis") || textToScan.includes("tb")) {
+      taxonId = 1773;
+      taxonName = "Mycobacterium tuberculosis";
+    } else if (textToScan.includes("lassa")) {
+      taxonId = 11620;
+      taxonName = "Lassa mammarenavirus";
+    } else if (textToScan.includes("mpox") || textToScan.includes("monkeypox")) {
+      taxonId = 10244;
+      taxonName = "Monkeypox virus";
+    } else if (textToScan.includes("marburg")) {
+      taxonId = 11269;
+      taxonName = "Marburg virus";
+    } else if (textToScan.includes("ebola")) {
+      taxonId = 186538;
+      taxonName = "Zaire ebolavirus";
     }
   }
 
-  const totalBytes = ("total_size_bytes" in repo && typeof repo.total_size_bytes === "number")
+  // Sequencing platforms inference
+  const seqPlatforms: string[] = [];
+  if (textToScan.includes("miseq")) seqPlatforms.push("Illumina MiSeq");
+  if (textToScan.includes("novaseq")) seqPlatforms.push("Illumina NovaSeq");
+  if (textToScan.includes("nextseq")) seqPlatforms.push("Illumina NextSeq");
+  if (textToScan.includes("nanopore") || textToScan.includes("ont")) seqPlatforms.push("Oxford Nanopore");
+  if (textToScan.includes("pacbio")) seqPlatforms.push("PacBio Revio");
+  if (seqPlatforms.length === 0) {
+    if (textToScan.includes("illumina")) {
+      seqPlatforms.push("Illumina MiSeq");
+    } else {
+      seqPlatforms.push("Illumina MiSeq", "Oxford Nanopore");
+    }
+  }
+
+  const totalBytes = ("total_size_bytes" in repo && typeof repo.total_size_bytes === "number" && repo.total_size_bytes > 0)
     ? repo.total_size_bytes
     : 104857600;
 
@@ -185,9 +236,9 @@ export function repoToDatasetItem(repo: RepoResponse | SearchHit): DatasetItem {
     countryCode,
     countryName,
     taxonId,
-    taxonName: repo.name,
+    taxonName,
     pathogenType,
-    samplesCount: ("samples_count" in repo && typeof repo.samples_count === "number") ? repo.samples_count : 1,
+    samplesCount: ("samples_count" in repo && typeof repo.samples_count === "number" && repo.samples_count > 0) ? repo.samples_count : 1,
     totalSizeMb: Math.round(totalBytes / (1024 * 1024)),
     biocontainment: "BSL-3",
     accessGate: (repo.access === "gated" ? "gated" : "public"),
@@ -199,7 +250,7 @@ export function repoToDatasetItem(repo: RepoResponse | SearchHit): DatasetItem {
     updatedAt: (("updated_at" in repo && repo.updated_at) ? repo.updated_at.split("T")[0] : null) ??
       (new Date().toISOString().split("T")[0] ?? "2026-10-18"),
     license: ("license" in repo && repo.license) ? repo.license : "CC-BY-4.0",
-    seqPlatforms: ["Oxford Nanopore", "Illumina NovaSeq"],
+    seqPlatforms,
     citation: `${namespace}. (2026). ${repo.name}. UbuntuBio Data Hub.`,
     files: [],
   };
@@ -264,13 +315,80 @@ export async function fetchRepository(
     const res = await fetch(`${API_BASE_URL}/api/repos/${owner}/${name}`, {
       method: "GET",
       headers: { Accept: "application/json" },
-      next: { revalidate: 30 },
+      next: { revalidate: 0 },
     });
     if (!res.ok) {
       return local || null;
     }
     const repo: RepoResponse = await res.json();
-    return repoToDatasetItem(repo);
+    const item = repoToDatasetItem(repo);
+
+    // Fetch live Git tree to populate the file manifest
+    try {
+      const treeItems = await fetchRepoTree(owner, name);
+      if (treeItems && treeItems.length > 0) {
+        const files: DatasetFile[] = treeItems.map((t) => {
+          const sizeMb = t.size ? Math.max(0.1, Number((t.size / (1024 * 1024)).toFixed(2))) : 0.1;
+          let format = "Binary";
+          if (t.name.endsWith(".fastq.gz") || t.name.endsWith(".fq.gz")) format = "FASTQ.GZ";
+          else if (t.name.endsWith(".fasta.gz") || t.name.endsWith(".fa.gz")) format = "FASTA.GZ";
+          else if (t.name.endsWith(".tsv")) format = "TSV";
+          else if (t.name.endsWith(".md")) format = "Markdown";
+
+          return {
+            name: t.name,
+            path: t.path || t.name,
+            sizeMb,
+            sha256: t.oid,
+            chunksCount: Math.max(1, Math.ceil((t.size || 65536) / (64 * 1024))),
+            format,
+          };
+        });
+
+        item.files = files;
+        const totalCalculatedMb = Math.round(files.reduce((acc, f) => acc + f.sizeMb, 0));
+        if (totalCalculatedMb > 0) {
+          item.totalSizeMb = totalCalculatedMb;
+        }
+
+        const fastqFiles = files.filter((f) => f.name.includes(".fastq") || f.name.includes(".fq"));
+        if (fastqFiles.length >= 2 && item.samplesCount <= 1) {
+          item.samplesCount = Math.floor(fastqFiles.length / 2);
+        }
+      }
+    } catch {
+      // Tree fallback graceful
+    }
+
+    // Merge search index metadata if available
+    try {
+      const searchRes = await fetch(`${API_BASE_URL}/api/search/datasets?q=${encodeURIComponent(name)}`, {
+        method: "GET",
+        headers: { Accept: "application/json" },
+        next: { revalidate: 0 },
+      });
+      if (searchRes.ok) {
+        const sdata = await searchRes.json();
+        const hit = sdata.hits?.find((h: any) => h.slug === `${owner}/${name}` || h.name === name);
+        if (hit) {
+          if (hit.countries && hit.countries.length > 0) {
+            item.countryCode = hit.countries[0].toUpperCase();
+            const cm = AU_COUNTRIES.find((c) => c.code === item.countryCode);
+            if (cm) item.countryName = cm.name;
+          }
+          if (hit.taxon_ids && hit.taxon_ids.length > 0 && hit.taxon_ids[0] > 0) {
+            item.taxonId = hit.taxon_ids[0];
+          }
+          if (hit.samples_count && hit.samples_count > 0) {
+            item.samplesCount = hit.samples_count;
+          }
+        }
+      }
+    } catch {
+      // Search fallback graceful
+    }
+
+    return item;
   } catch {
     return local || null;
   }
