@@ -12,7 +12,8 @@ import {
   ShieldCheck,
   Binary,
   Layers,
-  ChevronRight
+  ChevronRight,
+  Download,
 } from "lucide-react";
 import { DatasetItem, DatasetFile } from "../../data/datasets";
 import { fetchRepoTree, TreeItem } from "../../lib/api";
@@ -23,6 +24,36 @@ interface DatasetTreePageProps {
   datasetId: string;
 }
 
+function detectFormat(filePath: string): DatasetFile["format"] {
+  const lower = filePath.toLowerCase();
+  if (
+    lower.endsWith(".fastq.gz") ||
+    lower.endsWith(".fq.gz") ||
+    lower.endsWith(".fastq") ||
+    lower.endsWith(".fq")
+  ) {
+    return "FASTQ";
+  }
+  if (
+    lower.endsWith(".fasta.gz") ||
+    lower.endsWith(".fa.gz") ||
+    lower.endsWith(".fasta") ||
+    lower.endsWith(".fa")
+  ) {
+    return "FASTA";
+  }
+  if (lower.endsWith(".vcf.gz") || lower.endsWith(".vcf")) {
+    return "VCF";
+  }
+  if (lower.endsWith(".bam")) {
+    return "BAM";
+  }
+  if (lower.endsWith(".json")) {
+    return "JSON";
+  }
+  return "TSV";
+}
+
 export function DatasetTreePage({ dataset, namespace, datasetId }: DatasetTreePageProps) {
   const [fileList, setFileList] = useState<DatasetFile[]>(dataset?.files || []);
   const [selectedFile, setSelectedFile] = useState<DatasetFile | null>(() => {
@@ -31,6 +62,8 @@ export function DatasetTreePage({ dataset, namespace, datasetId }: DatasetTreePa
     }
     return null;
   });
+  const [livePreview, setLivePreview] = useState<string | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
   const [copiedHash, setCopiedHash] = useState(false);
   const [copiedCommand, setCopiedCommand] = useState(false);
   const [copiedHeader, setCopiedHeader] = useState(false);
@@ -40,26 +73,66 @@ export function DatasetTreePage({ dataset, namespace, datasetId }: DatasetTreePa
     fetchRepoTree(namespace, datasetId).then((items: TreeItem[]) => {
       if (items && items.length > 0) {
         const liveFiles: DatasetFile[] = items.map((item) => {
-          const ext = item.path.split(".").pop()?.toUpperCase() || "TSV";
-          const format = (["FASTQ", "BAM", "VCF", "FASTA", "TSV", "JSON"].includes(ext)
-            ? ext
-            : "TSV") as DatasetFile["format"];
+          const filePath = item.path || item.name || "file";
+          const fileName = filePath.split("/").pop() || filePath;
+          const format = detectFormat(filePath);
           return {
-            name: item.path.split("/").pop() || item.path,
-            path: item.path,
+            name: fileName,
+            path: filePath,
             sizeBytes: item.size || 1024,
             format,
-            casHash: `git:${item.oid}`,
-            chunksCount: 1,
+            casHash: item.oid
+              ? item.oid.startsWith("sha256:")
+                ? item.oid
+                : `git:${item.oid}`
+              : "0000000000000000000000000000000000000000",
+            chunksCount: Math.max(1, Math.ceil((item.size || 65536) / (64 * 1024))),
           };
         });
         setFileList(liveFiles);
-        if (!selectedFile && liveFiles.length > 0) {
-          setSelectedFile(liveFiles[0] ?? null);
-        }
+        // Synchronize selectedFile with liveFiles to eliminate stale format badges
+        setSelectedFile((prev) => {
+          if (!prev) return liveFiles[0] ?? null;
+          const match = liveFiles.find((f) => f.path === prev.path);
+          return match ?? liveFiles[0] ?? null;
+        });
       }
     });
   }, [namespace, datasetId]);
+
+  // Attempt live sequence/text fetch for small human-readable files
+  useEffect(() => {
+    if (!selectedFile) {
+      setLivePreview(null);
+      return;
+    }
+    const lower = selectedFile.name.toLowerCase();
+    const isTextReadable =
+      lower.endsWith(".fasta") ||
+      lower.endsWith(".fa") ||
+      lower.endsWith(".tsv") ||
+      lower.endsWith(".md") ||
+      lower.endsWith(".txt") ||
+      lower.endsWith(".json");
+
+    if (isTextReadable && selectedFile.sizeBytes < 5 * 1024 * 1024) {
+      setPreviewLoading(true);
+      fetch(`/api/repos/${namespace}/${datasetId}/raw/HEAD/${selectedFile.path}`)
+        .then(async (res) => {
+          if (res.ok) {
+            const text = await res.text();
+            const snippet = text.split("\n").slice(0, 16).join("\n");
+            setLivePreview(snippet);
+          } else {
+            setLivePreview(null);
+          }
+        })
+        .catch(() => setLivePreview(null))
+        .finally(() => setPreviewLoading(false));
+    } else {
+      setLivePreview(null);
+    }
+  }, [selectedFile?.path, namespace, datasetId]);
 
   if (!dataset) {
     return (
@@ -109,13 +182,18 @@ export function DatasetTreePage({ dataset, namespace, datasetId }: DatasetTreePa
   };
 
   const fallbackPreview = selectedFile
-    ? `>sequence_record_${selectedFile.name.replace(/[^a-zA-Z0-9]/g, "_")}\n` +
-      `ATGCGATCGATCGATCGATCGATCGATCGATCGATCGATCGA\n` +
-      `GCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGC\n` +
-      `CGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCG`
+    ? selectedFile.format === "FASTQ"
+      ? `@${selectedFile.name.replace(/[^a-zA-Z0-9]/g, "_")}_read1 length=150\n` +
+        `GATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGA\n` +
+        `+\n` +
+        `IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII`
+      : `>sequence_record_${selectedFile.name.replace(/[^a-zA-Z0-9]/g, "_")}\n` +
+        `ATGCGATCGATCGATCGATCGATCGATCGATCGATCGATCGA\n` +
+        `GCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGC\n` +
+        `CGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCG`
     : "";
 
-  const previewText = selectedFile?.previewHeader || fallbackPreview;
+  const previewText = livePreview || selectedFile?.previewHeader || fallbackPreview;
 
   return (
     <div className="ubio-tree-container">
@@ -142,7 +220,10 @@ export function DatasetTreePage({ dataset, namespace, datasetId }: DatasetTreePa
         </div>
         <h1 className="ubio-tree-title">File Tree & Sequence Browser</h1>
         <p className="ubio-tree-subtitle">
-          {dataset.name} &bull; <span className="font-mono">{fileList.length} indexed files</span>
+          {dataset.name} &bull;{" "}
+          <span className="font-mono">
+            {fileList.length} indexed {fileList.length === 1 ? "file" : "files"}
+          </span>
         </p>
       </div>
 
@@ -154,7 +235,9 @@ export function DatasetTreePage({ dataset, namespace, datasetId }: DatasetTreePa
             <span className="tree-list-title">
               <FolderTree size={16} /> Repository File Index
             </span>
-            <span className="tree-list-count font-mono">{fileList.length} files</span>
+            <span className="tree-list-count font-mono">
+              {fileList.length} {fileList.length === 1 ? "file" : "files"}
+            </span>
           </div>
 
           <div className="tree-files-scroll" role="listbox" aria-label="Dataset files list">
@@ -203,22 +286,32 @@ export function DatasetTreePage({ dataset, namespace, datasetId }: DatasetTreePa
                   </span>
                   <h3 className="preview-filename font-mono">{selectedFile.name}</h3>
                 </div>
-                <button
-                  type="button"
-                  className="btn-copy-header"
-                  onClick={() => handleCopyHeader(previewText)}
-                  title="Copy header content"
-                >
-                  {copiedHeader ? (
-                    <>
-                      <Check size={14} className="text-green" /> Copied Header
-                    </>
-                  ) : (
-                    <>
-                      <Copy size={14} /> Copy Sequence
-                    </>
-                  )}
-                </button>
+                <div className="preview-actions">
+                  <a
+                    href={`/api/repos/${namespace}/${datasetId}/raw/HEAD/${selectedFile.path}`}
+                    download={selectedFile.name}
+                    className="btn-download-file"
+                    title={`Download ${selectedFile.name} to disk`}
+                  >
+                    <Download size={14} /> Download File
+                  </a>
+                  <button
+                    type="button"
+                    className="btn-copy-header"
+                    onClick={() => handleCopyHeader(previewText)}
+                    title="Copy preview content"
+                  >
+                    {copiedHeader ? (
+                      <>
+                        <Check size={14} className="text-green" /> Copied
+                      </>
+                    ) : (
+                      <>
+                        <Copy size={14} /> Copy Preview
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
 
               {/* File Meta Stats Strip */}
@@ -235,7 +328,9 @@ export function DatasetTreePage({ dataset, namespace, datasetId }: DatasetTreePa
                 </div>
                 <div className="meta-cell">
                   <span className="meta-lbl">Deduplication</span>
-                  <span className="meta-val font-mono">{selectedFile.chunksCount} CAS chunks</span>
+                  <span className="meta-val font-mono">
+                    {selectedFile.chunksCount} CAS {selectedFile.chunksCount === 1 ? "chunk" : "chunks"}
+                  </span>
                 </div>
               </div>
 
@@ -255,9 +350,19 @@ export function DatasetTreePage({ dataset, namespace, datasetId }: DatasetTreePa
                 <code className="hash-val font-mono">{selectedFile.casHash}</code>
               </div>
 
-              {/* CLI Command Box */}
+              {/* CLI Command & Direct Download Box */}
               <div className="preview-cli-block">
-                <span className="cli-hint">Download this dataset with UbuntuBio CLI:</span>
+                <div className="cli-hint-row">
+                  <span className="cli-hint">Download with UbuntuBio CLI or direct HTTP stream:</span>
+                  <a
+                    href={`/api/repos/${namespace}/${datasetId}/raw/HEAD/${selectedFile.path}`}
+                    download={selectedFile.name}
+                    className="direct-file-download-link"
+                    title={`Download ${selectedFile.name}`}
+                  >
+                    <Download size={13} /> Direct browser download ({selectedFile.name})
+                  </a>
+                </div>
                 <div className="cli-snippet">
                   <span className="cli-prompt">$</span>
                   <code className="font-mono">
@@ -284,7 +389,13 @@ export function DatasetTreePage({ dataset, namespace, datasetId }: DatasetTreePa
                   <span className="code-header-title">
                     <Eye size={14} /> Sequence & Header Inspection (First Records)
                   </span>
-                  <span className="code-header-badge font-mono">Live Ingest Sample</span>
+                  <span className={`code-header-badge font-mono ${livePreview ? "badge-live" : "badge-synthetic"}`}>
+                    {previewLoading
+                      ? "Loading stream..."
+                      : livePreview
+                      ? "Live Remote Payload"
+                      : "Sample Synthetic Header"}
+                  </span>
                 </div>
                 <pre className="preview-code-body font-mono">
                   {previewText}

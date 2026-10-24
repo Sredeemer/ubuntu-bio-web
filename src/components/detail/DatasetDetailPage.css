@@ -535,6 +535,75 @@
   color: var(--brand-green);
 }
 
+.btn-download-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(0, 237, 100, 0.1);
+  color: var(--brand-green, #00ed64);
+  border: 1px solid rgba(0, 237, 100, 0.3);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.btn-download-row:hover {
+  background: var(--brand-green, #00ed64);
+  color: #001e2b;
+  border-color: var(--brand-green, #00ed64);
+}
+
+.ubio-band-light .btn-download-row {
+  color: var(--brand-green-dark, #00684a);
+}
+
+.ubio-band-light .btn-download-row:hover {
+  color: #001e2b;
+}
+
+.cli-options-links {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.btn-pill-subtle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-on-dark, #ffffff);
+  border: 1px solid var(--hairline-subtle, rgba(255, 255, 255, 0.15));
+  padding: 8px 14px;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.btn-pill-subtle:hover {
+  background: rgba(0, 237, 100, 0.1);
+  border-color: var(--brand-green, #00ed64);
+  color: var(--brand-green, #00ed64);
+}
+
+.ubio-band-light .btn-pill-subtle {
+  background: var(--surface-light-soft, #f4f7f6);
+  color: var(--ink, #001e2b);
+  border-color: var(--hairline-light, #e1e5e8);
+}
+
+.ubio-band-light .btn-pill-subtle:hover {
+  background: rgba(0, 237, 100, 0.1);
+  color: var(--brand-green-dark, #00684a);
+  border-color: var(--brand-green);
+}
+
 .w-full {
   width: 100%;
   display: flex;

@@ -15,6 +15,7 @@ import {
   Layers,
   BookOpen,
   GitCommit,
+  Download,
 } from "lucide-react";
 import { DatasetItem, DatasetFile } from "../../data/datasets";
 import { fetchCommitHistory, fetchRepoTree, CommitLogItem } from "../../lib/api";
@@ -284,7 +285,7 @@ export function DatasetDetailPage({ dataset: initialDataset, namespace, datasetI
                     className="btn-tree-link"
                   >
                     <FolderTree size={16} />
-                    Explore all {dataset.files.length} files & sequence headers in Tree Browser
+                    Explore all {dataset.files.length} {dataset.files.length === 1 ? "file" : "files"} & sequence headers in Tree Browser
                   </a>
                 </div>
               </section>
@@ -319,6 +320,7 @@ export function DatasetDetailPage({ dataset: initialDataset, namespace, datasetI
                         <th>Size</th>
                         <th>CAS Chunks</th>
                         <th>Address Hash</th>
+                        <th style={{ textAlign: "right" }}>Action</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -336,6 +338,17 @@ export function DatasetDetailPage({ dataset: initialDataset, namespace, datasetI
                           <td className="font-mono">{file.chunksCount}</td>
                           <td className="font-mono cas-hash-cell" title={file.casHash}>
                             {file.casHash.substring(0, 22)}...
+                          </td>
+                          <td style={{ textAlign: "right" }}>
+                            <a
+                              href={`/api/repos/${dataset.namespace}/${dataset.datasetId}/raw/HEAD/${file.path}`}
+                              download={file.name}
+                              className="btn-download-row"
+                              title={`Download ${file.name} to disk`}
+                            >
+                              <Download size={13} />
+                              <span>Download</span>
+                            </a>
                           </td>
                         </tr>
                       ))}
@@ -420,6 +433,16 @@ export function DatasetDetailPage({ dataset: initialDataset, namespace, datasetI
               >
                 <FolderTree size={16} /> Browse File Tree & Headers
               </a>
+              {dataset.files[0] && (
+                <a
+                  href={`/api/repos/${dataset.namespace}/${dataset.datasetId}/raw/HEAD/${dataset.files[0].path}`}
+                  download={dataset.files[0].name}
+                  className="btn-pill-subtle w-full"
+                  title={`Direct browser download for ${dataset.files[0].name}`}
+                >
+                  <Download size={15} /> Direct Download ({dataset.files[0].name})
+                </a>
+              )}
             </div>
           </div>
 
@@ -432,12 +455,17 @@ export function DatasetDetailPage({ dataset: initialDataset, namespace, datasetI
             </div>
             <div className="sidebar-metric-row">
               <span className="sidebar-metric-label">Total Files</span>
-              <span className="sidebar-metric-val font-mono">{dataset.files.length} files</span>
+              <span className="sidebar-metric-val font-mono">
+                {dataset.files.length} {dataset.files.length === 1 ? "file" : "files"}
+              </span>
             </div>
             <div className="sidebar-metric-row">
               <span className="sidebar-metric-label">CAS Chunks</span>
               <span className="sidebar-metric-val font-mono">
-                {dataset.files.reduce((acc, f) => acc + f.chunksCount, 0)} chunks
+                {(() => {
+                  const chunks = dataset.files.reduce((acc, f) => acc + f.chunksCount, 0);
+                  return `${chunks} ${chunks === 1 ? "chunk" : "chunks"}`;
+                })()}
               </span>
             </div>
             <div className="sidebar-metric-row">

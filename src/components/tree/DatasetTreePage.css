@@ -229,6 +229,58 @@
   color: var(--text-on-dark);
 }
 
+.preview-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-download-file {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--brand-green, #00ed64);
+  color: #001e2b;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  text-decoration: none;
+  transition: all 0.15s ease;
+  box-shadow: 0 2px 6px rgba(0, 237, 100, 0.25);
+}
+
+.btn-download-file:hover {
+  background: #00d659;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 237, 100, 0.35);
+}
+
+.cli-hint-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.direct-file-download-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.78rem;
+  color: var(--brand-green-dark, #00684a);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color 0.15s ease;
+}
+
+.direct-file-download-link:hover {
+  color: var(--brand-green, #00ed64);
+}
+
 .btn-copy-header {
   display: inline-flex;
   align-items: center;
@@ -530,60 +582,56 @@
   color: var(--brand-green-dark, #00684a);
 }
 
-.ubio-band-light .tree-browser-card,
+.ubio-band-light .tree-list-card,
 .ubio-band-light .tree-preview-card {
   background: #ffffff;
   border-color: var(--hairline-light, #e1e5e8);
   box-shadow: 0 2px 8px rgba(0, 30, 43, 0.04);
 }
 
-.ubio-band-light .card-header-title {
-  color: var(--ink, #001e2b);
-}
-
-.ubio-band-light .card-header-badge {
-  color: var(--ink-muted, #5c6c75);
-}
-
-.ubio-band-light .browser-search-box {
+.ubio-band-light .tree-list-header {
   background: var(--surface-light-soft, #f4f7f6);
-  border-color: var(--hairline-light, #e1e5e8);
+  border-bottom-color: var(--hairline-light, #e1e5e8);
 }
 
-.ubio-band-light .browser-search-input {
+.ubio-band-light .tree-list-title {
   color: var(--ink, #001e2b);
 }
 
-.ubio-band-light .browser-search-input::placeholder {
-  color: var(--ink-muted, #5c6c75);
+.ubio-band-light .tree-list-count {
+  color: var(--brand-green-dark, #00684a);
+  background: rgba(0, 237, 100, 0.12);
+  border-color: rgba(0, 237, 100, 0.25);
 }
 
-.ubio-band-light .tree-dir-header {
-  background: var(--surface-light-soft, #f4f7f6);
-  border-color: var(--hairline-light, #e1e5e8);
-  color: var(--ink, #001e2b);
-}
-
-.ubio-band-light .tree-file-item {
+.ubio-band-light .tree-file-row {
   border-bottom-color: var(--hairline-light, #e1e5e8);
   color: var(--ink, #001e2b);
 }
 
-.ubio-band-light .tree-file-item:hover {
+.ubio-band-light .tree-file-row:hover {
   background: var(--surface-light-soft, #f4f7f6);
 }
 
-.ubio-band-light .tree-file-item.selected {
+.ubio-band-light .tree-file-row.selected {
   background: rgba(0, 237, 100, 0.08);
-  border-color: var(--brand-green);
+  border-left: 3px solid var(--brand-green, #00ed64);
 }
 
-.ubio-band-light .tree-file-name {
+.ubio-band-light .file-row-path {
   color: var(--ink, #001e2b);
 }
 
-.ubio-band-light .tree-file-meta {
+.ubio-band-light .file-row-size {
   color: var(--ink-muted, #5c6c75);
+}
+
+.ubio-band-light .ubio-tree-title {
+  color: var(--ink, #001e2b);
+}
+
+.ubio-band-light .ubio-tree-subtitle {
+  color: var(--ink-secondary, #3d4f58);
 }
 
 .ubio-band-light .preview-header {
