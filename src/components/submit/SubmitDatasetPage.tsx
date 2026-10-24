@@ -461,18 +461,9 @@ export function SubmitDatasetPage() {
 
                       {isAuthenticated && userNamespace && !isCustomNamespace ? (
                         <div className="detected-namespace-box">
-                          <div className="detected-badge-left">
-                            <ShieldCheck size={18} className="text-green flex-shrink-0" />
-                            <div>
-                              <div className="detected-slug font-mono">
-                                ubio.org/@{userNamespace}
-                              </div>
-                              <div className="detected-label">
-                                Verified Personal Namespace
-                              </div>
-                            </div>
-                          </div>
-                          <span className="detected-tag">Auto-detected</span>
+                          <span className="detected-slug font-mono">
+                            ubio.org/@{userNamespace}
+                          </span>
                           <input
                             id="input-namespace"
                             type="text"
@@ -516,11 +507,18 @@ export function SubmitDatasetPage() {
                           )}
                         </div>
                       )}
-                      <span className="field-hint">
-                        {isAuthenticated && !isCustomNamespace
-                          ? "Publishing under your verified personal namespace."
-                          : "Lowercase letters, numbers, hyphens only."}
-                      </span>
+                      {isAuthenticated && !isCustomNamespace ? (
+                        <div className="detected-hint-row">
+                          <span className="detected-tag">Auto-detected</span>
+                          <span className="detected-hint-text">
+                            Verified personal namespace
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="field-hint">
+                          Lowercase letters, numbers, hyphens only.
+                        </span>
+                      )}
                     </div>
 
                     <div className="form-field">
