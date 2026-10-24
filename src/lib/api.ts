@@ -225,10 +225,10 @@ export function repoToDatasetItem(repo: RepoResponse | SearchHit): DatasetItem {
   if (textToScan.includes("nanopore") || textToScan.includes("ont")) seqPlatforms.push("Oxford Nanopore");
   if (textToScan.includes("pacbio")) seqPlatforms.push("PacBio Revio");
   if (seqPlatforms.length === 0) {
-    if (textToScan.includes("illumina")) {
+    if (textToScan.includes("illumina") || dLower.includes("bacteri") || textToScan.includes("coli")) {
       seqPlatforms.push("Illumina MiSeq");
     } else {
-      seqPlatforms.push("Illumina MiSeq", "Oxford Nanopore");
+      seqPlatforms.push("Oxford Nanopore");
     }
   }
 
