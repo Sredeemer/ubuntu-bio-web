@@ -14,23 +14,30 @@ import {
   Terminal,
   Check,
   ArrowRight,
+  ExternalLink,
+  FolderTree,
+  FileText,
+  Sparkles,
+  Database,
+  Layers,
 } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Dataset Submission & Schema Specification — UbuntuBio Docs",
   description:
-    "Complete specification for submitting African genomic datasets to UbuntuBio via the 5-step Web UI Wizard or the ubio CLI.",
+    "Complete walkthrough tutorial and specification for submitting African genomic datasets via the 5-step Web UI Wizard or the ubio CLI.",
 };
 
 const TOC_ITEMS: TocItem[] = [
   { id: "overview", label: "Submission Overview", level: 2 },
   { id: "pathways", label: "Submission Pathways", level: 2 },
+  { id: "walkthrough-ui", label: "Tutorial: Web UI Wizard", level: 2 },
+  { id: "walkthrough-cli", label: "Tutorial: Terminal CLI", level: 2 },
   { id: "schema-spec", label: "README.md YAML Schema", level: 2 },
   { id: "sequencing-block", label: "The sequencing: Block", level: 3 },
   { id: "two-way-parity", label: "Two-Way File Parity", level: 2 },
   { id: "sequence-sniffer", label: "Sequence Sniffer & Screening", level: 2 },
   { id: "sovereign-invariants", label: "Sovereign Invariants", level: 2 },
-  { id: "cli-workflow", label: "CLI Step-by-Step Guide", level: 2 },
 ];
 
 export default function DocsSubmissionPage() {
@@ -47,57 +54,531 @@ export default function DocsSubmissionPage() {
         {/* Title Header */}
         <div className="docs-header-title-row" id="overview">
           <div>
-            <div className="docs-badge">Specification &amp; Guide</div>
+            <div className="docs-badge">Step-by-Step Tutorials &amp; Schema</div>
             <h1 className="docs-page-title">Dataset Submission &amp; Schema Specification</h1>
           </div>
           <DocsCopyButton pageTitle="UbuntuBio Dataset Submission & Schema Specification" />
         </div>
 
         <p className="docs-page-lead">
-          UbuntuBio uses a single source of truth for dataset metadata: canonical{" "}
-          <code>README.md</code> YAML frontmatter versioned directly alongside sequence read files in
-          Git and OpenXet content-addressed storage.
+          UbuntuBio provides two official submission pathways to publish sovereign African genomic
+          datasets: an interactive <strong>5-step Web UI Wizard</strong> for bench scientists and a{" "}
+          <strong>Terminal CLI (<code>ubio</code>)</strong> for automated sequencer pipelines.
         </p>
 
-        {/* Submission Pathways */}
+        {/* Submission Pathways Fast-Jumper */}
         <section className="docs-section" id="pathways">
-          <h2>Submission Pathways</h2>
+          <h2>Choose Your Submission Pathway</h2>
           <p>
-            Researchers and bioinformatics teams can submit and synchronize datasets through two
-            standard pathways:
+            Both pathways enforce identical schema validation, non-human safety checks, and two-way
+            file parity invariants:
           </p>
 
-          <div className="docs-pillars-grid">
-            <div className="docs-pillar-item">
-              <div className="docs-pillar-header">
-                <UploadCloud size={16} className="docs-pillar-icon" />
-                <h3 className="docs-pillar-title">Web UI Guided Wizard</h3>
+          <div className="docs-walkthrough-nav">
+            <a href="#walkthrough-ui" className="docs-pathway-card">
+              <div>
+                <span className="docs-pathway-badge">
+                  <UploadCloud size={14} /> Pathway A &bull; Browser
+                </span>
+                <h3 className="docs-pathway-title">5-Step Web UI Wizard</h3>
+                <p className="docs-pathway-desc">
+                  Zero local installation required. Drag-and-drop raw reads with client-side FASTQ
+                  sniffing, instant frontmatter generation, and 1-click publishing at <code>/submit</code>.
+                </p>
               </div>
-              <p className="docs-pillar-desc">
-                An interactive 5-step visual wizard at{" "}
-                <a href="/submit" className="text-green font-medium">
-                  <code>/submit</code>
-                </a>{" "}
-                featuring real-time validation, client-side FASTQ sniffing, live frontmatter preview,
-                and one-click repository creation.
-              </p>
-            </div>
+              <span className="docs-pathway-action">
+                Start Web UI Tutorial <ArrowRight size={14} />
+              </span>
+            </a>
 
-            <div className="docs-pillar-item">
-              <div className="docs-pillar-header">
-                <Terminal size={16} className="docs-pillar-icon" />
-                <h3 className="docs-pillar-title">Command-Line Interface</h3>
+            <a href="#walkthrough-cli" className="docs-pathway-card">
+              <div>
+                <span className="docs-pathway-badge">
+                  <Terminal size={14} /> Pathway B &bull; Terminal
+                </span>
+                <h3 className="docs-pathway-title">Terminal CLI Workflow (<code>ubio</code>)</h3>
+                <p className="docs-pathway-desc">
+                  Scriptable Python CLI for cluster pipelines (Nextflow/Snakemake), headless lab
+                  nodes, and automated high-throughput data sync directly from sequencer outputs.
+                </p>
               </div>
-              <p className="docs-pillar-desc">
-                Automated terminal tools (<code>ubio init</code>, <code>ubio check</code>,{" "}
-                <code>ubio push</code>) for scripting, cluster job pipelines, and headless laboratory
-                sequencer integration.
-              </p>
-            </div>
+              <span className="docs-pathway-action">
+                Start CLI Tutorial <ArrowRight size={14} />
+              </span>
+            </a>
           </div>
         </section>
 
-        {/* Canonical README.md YAML Schema */}
+        {/* ------------------------------------------------------------- */}
+        {/* TUTORIAL A: WEB UI 5-STEP WIZARD */}
+        {/* ------------------------------------------------------------- */}
+        <section className="docs-section" id="walkthrough-ui">
+          <div className="docs-badge">Walkthrough Tutorial A</div>
+          <h2>Step-by-Step Guide: Submitting via the Web UI Wizard</h2>
+          <p>
+            The Web UI submission wizard at{" "}
+            <a href="/submit" className="text-green font-medium">
+              <code>/submit</code>
+            </a>{" "}
+            walks you through five visual steps to register your dataset. It performs zero-upload
+            client-side biological sequence inspection in your browser before transmitting any data.
+          </p>
+
+          {/* Wizard Step 1 */}
+          <div className="docs-walkthrough-card">
+            <div className="docs-walkthrough-header">
+              <div className="docs-walkthrough-title-wrap">
+                <span className="docs-step-pill green">Step 01</span>
+                <h4>Identification &amp; Project Metadata</h4>
+              </div>
+              <span className="docs-tag">Project Scaffolding</span>
+            </div>
+            <p>
+              Define your repository namespace, machine-readable dataset identifier (slug), human-readable title,
+              and research institute context:
+            </p>
+            <table className="docs-fields-table">
+              <thead>
+                <tr>
+                  <th>Field</th>
+                  <th>Description</th>
+                  <th>Example Input</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>Namespace</code></td>
+                  <td>Your personal username or registered African laboratory team slug.</td>
+                  <td><code>pasteur-dakar</code> or <code>amara-okafor</code></td>
+                </tr>
+                <tr>
+                  <td><code>Dataset Slug</code></td>
+                  <td>URL-safe identifier using lowercase alphanumeric characters and hyphens.</td>
+                  <td><code>malawi-amr-ecoli</code></td>
+                </tr>
+                <tr>
+                  <td><code>Dataset Title</code></td>
+                  <td>Full descriptive research title displayed on the hub and search index.</td>
+                  <td><code>Whole Genome AMR Surveillance of Clinical E. coli in Lilongwe</code></td>
+                </tr>
+                <tr>
+                  <td><code>Lead Institution</code></td>
+                  <td>Primary African research organization or university conducting the study.</td>
+                  <td><code>Malawi-Liverpool-Wellcome Trust / KUHeS</code></td>
+                </tr>
+                <tr>
+                  <td><code>Description</code></td>
+                  <td>Surveillance abstract detailing study aims, pathogen epidemiology, and context.</td>
+                  <td><code>Genomic epidemiology investigating ESBL plasmid transfer...</code></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          {/* Wizard Step 2 */}
+          <div className="docs-walkthrough-card">
+            <div className="docs-walkthrough-header">
+              <div className="docs-walkthrough-title-wrap">
+                <span className="docs-step-pill green">Step 02</span>
+                <h4>Taxonomy &amp; Non-Human Biological Verification</h4>
+              </div>
+              <span className="docs-tag">Safety Screening</span>
+            </div>
+            <p>
+              Specify the target biological organism. UbuntuBio enforces strict sovereignty and safety controls:
+            </p>
+            <table className="docs-fields-table">
+              <thead>
+                <tr>
+                  <th>Field</th>
+                  <th>Description</th>
+                  <th>Example Input</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>Pathogen Type</code></td>
+                  <td>Select Virus, Bacteria, Fungus, or Vector.</td>
+                  <td><code>Bacteria</code></td>
+                </tr>
+                <tr>
+                  <td><code>NCBI Taxon ID</code></td>
+                  <td>Standard NCBI taxonomy numerical identifier.</td>
+                  <td><code>562</code> (for <em>Escherichia coli</em>)</td>
+                </tr>
+                <tr>
+                  <td><code>Scientific Name</code></td>
+                  <td>Canonical scientific species name.</td>
+                  <td><code>Escherichia coli</code></td>
+                </tr>
+                <tr>
+                  <td><code>Host Species &amp; ID</code></td>
+                  <td>Source host from which the sample was isolated (optional host provenance).</td>
+                  <td><code>Homo sapiens</code> (Taxon <code>9606</code>) or <code>Mastomys natalensis</code></td>
+                </tr>
+                <tr>
+                  <td><code>Sample Type</code></td>
+                  <td>Clinical specimen or environmental isolate source.</td>
+                  <td><code>Urine specimen</code> or <code>Blood culture</code></td>
+                </tr>
+              </tbody>
+            </table>
+
+            <DocsCallout type="warning" title="Non-Negotiable Rule: Prohibited Human Taxon ID (9606)">
+              <p>
+                Human genomic sequencing data (NCBI Taxon ID <code>9606</code>) as the target dataset
+                is strictly prohibited in UbuntuBio v1. The wizard actively validates this and will block
+                progression if <code>9606</code> is entered as the target organism taxon ID.
+              </p>
+            </DocsCallout>
+          </div>
+
+          {/* Wizard Step 3 */}
+          <div className="docs-walkthrough-card">
+            <div className="docs-walkthrough-header">
+              <div className="docs-walkthrough-title-wrap">
+                <span className="docs-step-pill green">Step 03</span>
+                <h4>Sequencing Technology &amp; Sovereign Specifications</h4>
+              </div>
+              <span className="docs-tag">Hardware &amp; AU Governance</span>
+            </div>
+            <p>
+              Declare the sequencing hardware, library preparation assay, and geographic origin under the
+              Nagoya Protocol on Access and Benefit Sharing (ABS):
+            </p>
+            <table className="docs-fields-table">
+              <thead>
+                <tr>
+                  <th>Field</th>
+                  <th>Options</th>
+                  <th>Example Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>AU Member State</code></td>
+                  <td>1 of the 54 recognized African Union member states (ISO-3166-1 alpha-2).</td>
+                  <td><code>MW</code> (Malawi) or <code>NG</code> (Nigeria)</td>
+                </tr>
+                <tr>
+                  <td><code>Platform</code></td>
+                  <td><code>ILLUMINA</code>, <code>OXFORD_NANOPORE</code>, <code>PACBIO</code>, <code>MGI</code></td>
+                  <td><code>ILLUMINA</code></td>
+                </tr>
+                <tr>
+                  <td><code>Instrument Model</code></td>
+                  <td>Exact sequencer model name.</td>
+                  <td><code>Illumina NovaSeq 6000</code></td>
+                </tr>
+                <tr>
+                  <td><code>Library Layout</code></td>
+                  <td><code>PAIRED</code> (forward and reverse reads) or <code>SINGLE</code>.</td>
+                  <td><code>PAIRED</code></td>
+                </tr>
+                <tr>
+                  <td><code>Library Strategy</code></td>
+                  <td><code>WGS</code>, <code>AMPLICON</code>, <code>TARGETED-CAPTURE</code>, <code>RNA-SEQ</code></td>
+                  <td><code>WGS</code></td>
+                </tr>
+                <tr>
+                  <td><code>Biosafety Level</code></td>
+                  <td>Biocontainment rating (<code>BSL-1</code>, <code>BSL-2</code>, <code>BSL-3</code>).</td>
+                  <td><code>BSL-2</code></td>
+                </tr>
+              </tbody>
+            </table>
+            <p className="text-sm text-slate-500">
+              You must also check the <strong>Nagoya Protocol ABS Acknowledgment</strong> confirming
+              prior informed consent and legal compliance with national sovereign biodata policies.
+            </p>
+          </div>
+
+          {/* Wizard Step 4 */}
+          <div className="docs-walkthrough-card">
+            <div className="docs-walkthrough-header">
+              <div className="docs-walkthrough-title-wrap">
+                <span className="docs-step-pill green">Step 04</span>
+                <h4>Sequencing Runs &amp; In-Browser File Sniffing</h4>
+              </div>
+              <span className="docs-tag">Zero-Network Client Sniffer</span>
+            </div>
+            <p>
+              In Step 4, declare your run records (Run ID, Flowcell ID, Lane) and drag your raw reads
+              (<code>.fastq.gz</code> or <code>.fasta.gz</code>) directly into the interactive dropzone.
+            </p>
+            <div className="docs-callout docs-callout-tip">
+              <div className="docs-callout-header">
+                <Sparkles size={16} className="docs-callout-icon" />
+                <span className="docs-callout-title">How Client-Side Sniffing Protects Your Bandwidth</span>
+              </div>
+              <div className="docs-callout-body">
+                <p>
+                  Before transmitting large gigabyte files, the browser uses a Web Streams decompression
+                  pipeline to read the first 64 KB locally. It parses the four-line FASTQ structure, verifies
+                  Phred+33 ASCII quality score integrity, samples read lengths, computes SHA-256 checksums,
+                  and validates that R1 and R2 filenames match your declared run layout.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Wizard Step 5 */}
+          <div className="docs-walkthrough-card">
+            <div className="docs-walkthrough-header">
+              <div className="docs-walkthrough-title-wrap">
+                <span className="docs-step-pill green">Step 05</span>
+                <h4>Review, Ingestion &amp; Live Repository Publication</h4>
+              </div>
+              <span className="docs-tag">One-Click Publish</span>
+            </div>
+            <p>
+              Review the live generated <code>README.md</code> YAML frontmatter and <code>samples.tsv</code>{" "}
+              manifest side-by-side. When ready, click <strong>Ingest Dataset</strong>:
+            </p>
+            <ul className="docs-check-list">
+              <li className="docs-check-item">
+                <Check size={16} className="docs-check-icon" />
+                <span>
+                  The backend registers the repository in the Git tree and OpenXet content-addressed CAS store.
+                </span>
+              </li>
+              <li className="docs-check-item">
+                <Check size={16} className="docs-check-icon" />
+                <span>
+                  Meilisearch indexes biological taxonomy, country tags, and gene references in under 50ms.
+                </span>
+              </li>
+              <li className="docs-check-item">
+                <Check size={16} className="docs-check-icon" />
+                <span>
+                  You are instantly redirected to your live dataset repository page (e.g.{" "}
+                  <code>/datasets/pasteur-dakar/malawi-amr-ecoli</code>) where your interactive file tree
+                  and direct download buttons are immediately accessible.
+                </span>
+              </li>
+            </ul>
+          </div>
+        </section>
+
+        {/* ------------------------------------------------------------- */}
+        {/* TUTORIAL B: TERMINAL CLI (ubio) */}
+        {/* ------------------------------------------------------------- */}
+        <section className="docs-section" id="walkthrough-cli">
+          <div className="docs-badge">Walkthrough Tutorial B</div>
+          <h2>Step-by-Step Guide: Submitting via the Terminal CLI (<code>ubio</code>)</h2>
+          <p>
+            The official <code>ubio</code> CLI tool is optimized for command-line users, HPC compute nodes,
+            and automated lab sequencer drops. Follow this complete end-to-end tutorial to submit your
+            first dataset from your terminal.
+          </p>
+
+          {/* CLI Step 1 */}
+          <div className="docs-walkthrough-card">
+            <div className="docs-walkthrough-header">
+              <div className="docs-walkthrough-title-wrap">
+                <span className="docs-step-pill green">Step 01</span>
+                <h4>Install &amp; Authenticate the CLI</h4>
+              </div>
+              <span className="docs-tag">Setup &amp; Keys</span>
+            </div>
+            <p>
+              Install <code>ubuntu-bio</code> via <code>pip</code> and authenticate with your user or
+              machine token:
+            </p>
+            <DocsCodeBlock
+              title="Terminal — Installation & Authentication"
+              language="bash"
+              code={`# 1. Install the official Python package
+pip install ubuntu-bio
+
+# 2. Authenticate using your interactive browser or API token
+ubio login
+
+# Alternatively, set your token via environment variable:
+export UBIO_TOKEN="ubio_live_abcdef1234567890"
+
+# 3. Confirm your authenticated profile
+ubio whoami`}
+            />
+            <div className="docs-terminal-output">
+              <span className="term-dim">$ ubio whoami</span>
+              <br />
+              <span className="term-ok">✓ Authenticated as:</span> Dr. Amara Okafor (<code>amara-okafor</code>)
+              <br />
+              <span className="term-info">Affiliation:</span> ACEGID, Redeemer&apos;s University
+              <br />
+              <span className="term-info">Namespaces:</span> amara-okafor, acegid, pasteur-dakar
+            </div>
+          </div>
+
+          {/* CLI Step 2 */}
+          <div className="docs-walkthrough-card">
+            <div className="docs-walkthrough-header">
+              <div className="docs-walkthrough-title-wrap">
+                <span className="docs-step-pill green">Step 02</span>
+                <h4>Organize Your Local Sequencing Directory</h4>
+              </div>
+              <span className="docs-tag">File System Layout</span>
+            </div>
+            <p>
+              Place your paired or single-end sequencing reads under a local directory. We recommend placing
+              raw read files in a <code>reads/</code> subdirectory:
+            </p>
+            <DocsCodeBlock
+              title="Directory Hierarchy"
+              language="text"
+              code={`malawi-amr-ecoli/
+└── reads/
+    ├── sample01_R1.fastq.gz
+    └── sample01_R2.fastq.gz`}
+            />
+            <p className="text-sm text-slate-500">
+              Raw sequencing files must be compressed (<code>.fastq.gz</code> or <code>.fasta.gz</code>).
+              Do not decompress files before upload; content-addressed chunking handles compressed files directly.
+            </p>
+          </div>
+
+          {/* CLI Step 3 */}
+          <div className="docs-walkthrough-card">
+            <div className="docs-walkthrough-header">
+              <div className="docs-walkthrough-title-wrap">
+                <span className="docs-step-pill green">Step 03</span>
+                <h4>Scaffold Metadata with <code>ubio init</code></h4>
+              </div>
+              <span className="docs-tag">README Scaffolding</span>
+            </div>
+            <p>
+              Run <code>ubio init</code> inside your dataset directory. The CLI will inspect your local files,
+              pair <code>_R1</code> and <code>_R2</code> reads, and generate a valid <code>README.md</code>:
+            </p>
+            <DocsCodeBlock
+              title="Terminal — Scaffolding"
+              language="bash"
+              code={`# Change into your dataset directory
+cd malawi-amr-ecoli
+
+# Scaffold README.md with sovereign metadata flags
+ubio init pasteur-dakar/malawi-amr-ecoli \\
+  --domain bacteria \\
+  --taxon-id 562 \\
+  --organism "Escherichia coli" \\
+  --country MW \\
+  --platform ILLUMINA \\
+  --instrument "Illumina NovaSeq 6000" \\
+  --layout PAIRED`}
+            />
+            <p>
+              <code>ubio init</code> scans <code>reads/</code>, pairs the FASTQ files, writes the YAML
+              frontmatter, and generates a markdown template ready for study context.
+            </p>
+          </div>
+
+          {/* CLI Step 4 */}
+          <div className="docs-walkthrough-card">
+            <div className="docs-walkthrough-header">
+              <div className="docs-walkthrough-title-wrap">
+                <span className="docs-step-pill green">Step 04</span>
+                <h4>Run Local Pre-Flight Check with <code>ubio check</code></h4>
+              </div>
+              <span className="docs-tag">Pre-Flight Invariants</span>
+            </div>
+            <p>
+              Before uploading any data, run <code>ubio check</code>. This executes all server-side validation
+              rules on your local machine:
+            </p>
+            <DocsCodeBlock
+              title="Terminal — Local Pre-Flight Check"
+              language="bash"
+              code={`ubio check .`}
+            />
+            <div className="docs-terminal-output">
+              <span className="term-dim">$ ubio check .</span>
+              <br />
+              <span className="term-ok">[✓]</span> Validating README.md YAML schema... <span className="term-ok">OK</span>
+              <br />
+              <span className="term-ok">[✓]</span> Checking AU Member State (&apos;MW&apos;)... <span className="term-ok">OK (Malawi)</span>
+              <br />
+              <span className="term-ok">[✓]</span> Human Genomic Exclusion Check (Taxon 562 != 9606)... <span className="term-ok">OK</span>
+              <br />
+              <span className="term-ok">[✓]</span> Checking Two-Way File Parity (2 declared, 2 on disk)... <span className="term-ok">OK</span>
+              <br />
+              <span className="term-ok">[✓]</span> Streaming Biological Sniffer (reads/sample01_R1.fastq.gz)... <span className="term-ok">FASTQ (Phred+33, 150bp)</span>
+              <br />
+              <span className="term-ok">[✓]</span> Streaming Biological Sniffer (reads/sample01_R2.fastq.gz)... <span className="term-ok">FASTQ (Phred+33, 150bp)</span>
+              <br />
+              <span className="term-ok">Pre-flight verification passed! Ready for push to UbuntuBio Hub.</span>
+            </div>
+          </div>
+
+          {/* CLI Step 5 */}
+          <div className="docs-walkthrough-card">
+            <div className="docs-walkthrough-header">
+              <div className="docs-walkthrough-title-wrap">
+                <span className="docs-step-pill green">Step 05</span>
+                <h4>Push &amp; Ingest to UbuntuBio Hub with <code>ubio push</code></h4>
+              </div>
+              <span className="docs-tag">CAS Push &amp; Ingestion</span>
+            </div>
+            <p>
+              Push your dataset to the Hub. <code>ubio push</code> splits files into content-addressed chunks,
+              deduplicates data, and creates an immutable Git commit:
+            </p>
+            <DocsCodeBlock
+              title="Terminal — Uploading & Ingesting"
+              language="bash"
+              code={`ubio push pasteur-dakar/malawi-amr-ecoli . --message "Initial African E. coli AMR surveillance cohort"`}
+            />
+            <div className="docs-terminal-output">
+              <span className="term-dim">$ ubio push pasteur-dakar/malawi-amr-ecoli . --message &quot;Initial African E. coli AMR cohort&quot;</span>
+              <br />
+              <span className="term-info">Scanning repository tree:</span> 3 files detected (1 README.md, 2 reads)
+              <br />
+              <span className="term-info">Chunking with OpenXet CAS:</span> [====================] 100% (2 chunks)
+              <br />
+              <span className="term-ok">✓ Upload complete:</span> 2 chunks pushed to OpenXet CAS
+              <br />
+              <span className="term-ok">✓ Commit created:</span> 7e3f892 &quot;Initial African E. coli AMR surveillance cohort&quot;
+              <br />
+              <span className="term-ok">✓ Repository live at:</span> https://ubuntu-bio-web.vercel.app/datasets/pasteur-dakar/malawi-amr-ecoli
+            </div>
+          </div>
+
+          {/* CLI Step 6 */}
+          <div className="docs-walkthrough-card">
+            <div className="docs-walkthrough-header">
+              <div className="docs-walkthrough-title-wrap">
+                <span className="docs-step-pill green">Step 06</span>
+                <h4>Verify on the Hub &amp; Explore in Browser</h4>
+              </div>
+              <span className="docs-tag">Search &amp; Access</span>
+            </div>
+            <p>
+              Your dataset is now immediately queryable via full-text search and browseable in the web portal:
+            </p>
+            <DocsCodeBlock
+              title="Terminal — Verification & Search"
+              language="bash"
+              code={`# Search for your newly indexed dataset
+ubio search "Malawi AMR E. coli"`}
+            />
+            <p>
+              Or open{" "}
+              <a
+                href="/datasets/pasteur-dakar/malawi-amr-ecoli"
+                target="_blank"
+                rel="noreferrer"
+                className="text-green font-medium"
+              >
+                <code>https://ubuntu-bio-web.vercel.app/datasets/pasteur-dakar/malawi-amr-ecoli</code>
+              </a>{" "}
+              in your browser to view the interactive file tree, download files, and explore genomic annotations.
+            </p>
+          </div>
+        </section>
+
+        {/* ------------------------------------------------------------- */}
+        {/* CANONICAL README.md YAML SCHEMA SPECIFICATION */}
+        {/* ------------------------------------------------------------- */}
         <section className="docs-section" id="schema-spec">
           <h2>Canonical README.md Frontmatter Specification</h2>
           <p>
@@ -313,50 +794,26 @@ Surveillance cohort investigating genomic epidemiology and transmission dynamics
           </DocsCallout>
         </section>
 
-        {/* CLI Step-by-Step Guide */}
-        <section className="docs-section" id="cli-workflow">
-          <h2>CLI Step-by-Step Submission Guide</h2>
+        {/* Next Steps & Related Documentation */}
+        <section className="docs-section" id="next-steps">
+          <h2>Next Steps &amp; Related Documentation</h2>
+          <div className="docs-next-links">
+            <a href="/docs/cli" className="docs-next-card">
+              <span className="next-label">Reference</span>
+              <span className="next-title">CLI Command Reference &rarr;</span>
+              <span className="next-desc">
+                Detailed flag options and machine-readable JSON flags for all <code>ubio</code> subcommands.
+              </span>
+            </a>
 
-          <h3 className="docs-step-heading">
-            <span className="docs-step-number">1</span>
-            <span>Initialize &amp; Scaffold Dataset</span>
-          </h3>
-          <p>
-            Run <code>ubio init</code> in your sequencing directory. The CLI will detect local FASTQ
-            files and interactively scaffold a valid <code>README.md</code>:
-          </p>
-          <DocsCodeBlock
-            title="Terminal"
-            language="bash"
-            code={`ubio init pasteur-dakar/cholera-2026 --domain bacteria --country SN`}
-          />
-
-          <h3 className="docs-step-heading">
-            <span className="docs-step-number">2</span>
-            <span>Verify Locally With ubio check</span>
-          </h3>
-          <p>
-            Run <code>ubio check</code> to inspect YAML frontmatter schema, two-way file parity, and
-            stream sequence files through the biological sniffer:
-          </p>
-          <DocsCodeBlock
-            title="Terminal"
-            language="bash"
-            code={`ubio check .`}
-          />
-
-          <h3 className="docs-step-heading">
-            <span className="docs-step-number">3</span>
-            <span>Push Dataset to UbuntuBio Hub</span>
-          </h3>
-          <p>
-            Once validation passes with zero errors, push the dataset to OpenXet CAS:
-          </p>
-          <DocsCodeBlock
-            title="Terminal"
-            language="bash"
-            code={`ubio push pasteur-dakar/cholera-2026 . --message "Initial verified release"`}
-          />
+            <a href="/docs/api" className="docs-next-card">
+              <span className="next-label">Architecture</span>
+              <span className="next-title">REST &amp; CAS API Reference &rarr;</span>
+              <span className="next-desc">
+                Learn how Git and OpenXet content-addressed storage coordinate underlying file distribution.
+              </span>
+            </a>
+          </div>
         </section>
       </div>
     </DocsLayout>

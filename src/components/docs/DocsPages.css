@@ -850,6 +850,223 @@
   font-size: 0.75rem;
 }
 
+/* --- Walkthrough Step Cards & Field Tables --- */
+.docs-walkthrough-nav {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin: 16px 0 24px;
+}
+
+.docs-pathway-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 18px 20px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  text-decoration: none;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.docs-pathway-card:hover {
+  border-color: #15803d;
+  box-shadow: 0 4px 12px rgba(21, 128, 61, 0.08);
+  transform: translateY(-2px);
+}
+
+.docs-pathway-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #15803d;
+  margin-bottom: 8px;
+}
+
+.docs-pathway-title {
+  font-family: var(--font-sans), var(--font-display), -apple-system, sans-serif;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0 0 6px;
+}
+
+.docs-pathway-desc {
+  font-size: 0.85rem;
+  color: #64748b;
+  line-height: 1.5;
+  margin: 0 0 14px;
+}
+
+.docs-pathway-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #15803d;
+}
+
+.docs-walkthrough-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 22px 24px;
+  margin: 20px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.docs-walkthrough-card:hover {
+  border-color: #cbd5e1;
+}
+
+.docs-walkthrough-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.docs-walkthrough-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.docs-step-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: #f1f5f9;
+  color: #0f172a;
+  border: 1px solid #cbd5e1;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.docs-step-pill.green {
+  background: #f0fdf4;
+  color: #166534;
+  border-color: #bbf7d0;
+}
+
+.docs-walkthrough-card h4 {
+  font-family: var(--font-sans), var(--font-display), -apple-system, sans-serif;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0;
+}
+
+.docs-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  background: #f8fafc;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+}
+
+.docs-fields-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+  margin: 8px 0;
+}
+
+.docs-fields-table th {
+  text-align: left;
+  padding: 8px 12px;
+  background: #f8fafc;
+  color: #475569;
+  font-weight: 600;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.docs-fields-table td {
+  padding: 9px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #334155;
+  vertical-align: top;
+}
+
+.docs-fields-table tr:last-child td {
+  border-bottom: none;
+}
+
+.docs-fields-table code {
+  color: #0f172a;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  background: #f1f5f9;
+  padding: 2px 5px;
+  border-radius: 4px;
+}
+
+.docs-terminal-output {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  padding: 14px 18px;
+  border-radius: 8px;
+  border: 1px solid #1e293b;
+  overflow-x: auto;
+  margin: 6px 0 12px;
+}
+
+.docs-terminal-output .term-ok {
+  color: #86efac;
+}
+
+.docs-terminal-output .term-info {
+  color: #93c5fd;
+}
+
+.docs-terminal-output .term-dim {
+  color: #64748b;
+}
+
+.docs-check-list {
+  list-style: none;
+  padding: 0;
+  margin: 6px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.docs-check-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.875rem;
+  color: #334155;
+  line-height: 1.5;
+}
+
+.docs-check-icon {
+  color: #15803d;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
 /* --- Responsive Breakpoints (Mobile First) --- */
 @media (max-width: 1024px) {
   .ubio-docs-container.has-right-rail {

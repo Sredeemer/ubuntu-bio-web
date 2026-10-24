@@ -35,6 +35,22 @@ describe("DocsLayout & Navigation", () => {
     expect(screen.getAllByText(/Two-Way File Parity/i).length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText(/Sequence Sniffer/i).length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText(/Sovereign Invariants/i).length).toBeGreaterThanOrEqual(1);
+
+    // Verify Walkthrough Tutorial A (Web UI 5-Step Wizard)
+    expect(screen.getByRole("heading", { name: /Submitting via the Web UI Wizard/i })).toBeDefined();
+    expect(screen.getByText(/Identification & Project Metadata/i)).toBeDefined();
+    expect(screen.getByText(/Taxonomy & Non-Human Biological Verification/i)).toBeDefined();
+    expect(screen.getByText(/Sequencing Technology & Sovereign Specifications/i)).toBeDefined();
+    expect(screen.getByText(/Sequencing Runs & In-Browser File Sniffing/i)).toBeDefined();
+    expect(screen.getByText(/Review, Ingestion & Live Repository Publication/i)).toBeDefined();
+
+    // Verify Walkthrough Tutorial B (Terminal CLI ubio)
+    expect(screen.getByRole("heading", { name: /Submitting via the Terminal CLI/i })).toBeDefined();
+    expect(screen.getByText(/Install & Authenticate the CLI/i)).toBeDefined();
+    expect(screen.getByText(/Organize Your Local Sequencing Directory/i)).toBeDefined();
+    expect(screen.getByRole("heading", { name: /Scaffold Metadata with ubio init/i })).toBeDefined();
+    expect(screen.getByRole("heading", { name: /Run Local Pre-Flight Check with ubio check/i })).toBeDefined();
+    expect(screen.getByRole("heading", { name: /Push & Ingest to UbuntuBio Hub with ubio push/i })).toBeDefined();
   });
 
   it("renders NotificationBanner with llms.txt announcement and controls", () => {
