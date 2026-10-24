@@ -16,8 +16,8 @@ import {
   BookOpen,
   GitCommit,
 } from "lucide-react";
-import { DatasetItem } from "../../data/datasets";
-import { fetchCommitHistory, CommitLogItem } from "../../lib/api";
+import { DatasetItem, DatasetFile } from "../../data/datasets";
+import { fetchCommitHistory, fetchRepoTree, CommitLogItem } from "../../lib/api";
 
 interface DatasetDetailPageProps {
   dataset?: DatasetItem | null | undefined;
@@ -25,15 +25,60 @@ interface DatasetDetailPageProps {
   datasetId: string;
 }
 
-export function DatasetDetailPage({ dataset, namespace, datasetId }: DatasetDetailPageProps) {
+export function DatasetDetailPage({ dataset: initialDataset, namespace, datasetId }: DatasetDetailPageProps) {
+  const [dataset, setDataset] = useState<DatasetItem | null>(initialDataset ?? null);
   const [copiedPull, setCopiedPull] = useState(false);
   const [copiedCitation, setCopiedCitation] = useState(false);
   const [activeTab, setActiveTab] = useState<"overview" | "files" | "citation">("overview");
   const [commits, setCommits] = useState<CommitLogItem[]>([]);
 
   useEffect(() => {
+    if (initialDataset) setDataset(initialDataset);
+  }, [initialDataset]);
+
+  useEffect(() => {
     fetchCommitHistory(namespace, datasetId).then((res) => {
       if (res && res.length > 0) setCommits(res);
+    });
+
+    fetchRepoTree(namespace, datasetId).then((treeItems) => {
+      if (treeItems && treeItems.length > 0) {
+        setDataset((prev) => {
+          if (!prev) return prev;
+          const files: DatasetFile[] = treeItems.map((t) => {
+            const filePath = t.path || t.name || "file";
+            const fileName = t.name || filePath.split("/").pop() || filePath;
+            let format: DatasetFile["format"] = "FASTQ";
+            if (fileName.endsWith(".fastq.gz") || fileName.endsWith(".fq.gz")) format = "FASTQ";
+            else if (fileName.endsWith(".fasta.gz") || fileName.endsWith(".fa.gz")) format = "FASTA";
+            else if (fileName.endsWith(".tsv")) format = "TSV";
+            else if (fileName.endsWith(".bam")) format = "BAM";
+            else if (fileName.endsWith(".vcf") || fileName.endsWith(".vcf.gz")) format = "VCF";
+            else if (fileName.endsWith(".json")) format = "JSON";
+
+            return {
+              name: fileName,
+              path: filePath,
+              sizeBytes: t.size || 0,
+              casHash: t.oid || "0000000000000000000000000000000000000000",
+              chunksCount: Math.max(1, Math.ceil((t.size || 65536) / (64 * 1024))),
+              format,
+            };
+          });
+
+          const totalBytes = files.reduce((acc, f) => acc + f.sizeBytes, 0);
+          const totalSizeMb = Math.max(1, Math.round(totalBytes / (1024 * 1024)));
+          const fastqFiles = files.filter((f) => f.name.includes(".fastq") || f.name.includes(".fq"));
+          const samplesCount = fastqFiles.length >= 2 ? Math.floor(fastqFiles.length / 2) : prev.samplesCount;
+
+          return {
+            ...prev,
+            files,
+            totalSizeMb,
+            samplesCount: Math.max(prev.samplesCount, samplesCount),
+          };
+        });
+      }
     });
   }, [namespace, datasetId]);
 

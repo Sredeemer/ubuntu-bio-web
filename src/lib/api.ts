@@ -185,12 +185,22 @@ export function repoToDatasetItem(repo: RepoResponse | SearchHit): DatasetItem {
   const countryMatch = AU_COUNTRIES.find((c) => c.code === countryCode);
   const countryName = countryMatch?.name || "African Union Sovereign Node";
 
+  const TAXON_NAMES: Record<number, string> = {
+    562: "Escherichia coli",
+    666: "Vibrio cholerae",
+    1773: "Mycobacterium tuberculosis",
+    11620: "Lassa mammarenavirus",
+    10244: "Monkeypox virus",
+    11269: "Marburg virus",
+    186538: "Zaire ebolavirus",
+  };
+
   let taxonId = 0;
-  let taxonName = repo.name || "Unknown Isolate";
+  let taxonName = "Unknown Isolate";
 
   if ("taxon_ids" in repo && Array.isArray(repo.taxon_ids) && typeof repo.taxon_ids[0] === "number" && repo.taxon_ids[0] > 0) {
     taxonId = repo.taxon_ids[0];
-    if (taxonId === 562) taxonName = "Escherichia coli";
+    taxonName = TAXON_NAMES[taxonId] || repo.name || "Unknown Isolate";
   } else {
     // Pathogen taxon inference
     if (textToScan.includes("escherichia coli") || textToScan.includes("e. coli") || textToScan.includes("ecoli")) {
@@ -214,7 +224,14 @@ export function repoToDatasetItem(repo: RepoResponse | SearchHit): DatasetItem {
     } else if (textToScan.includes("ebola")) {
       taxonId = 186538;
       taxonName = "Zaire ebolavirus";
+    } else {
+      taxonName = repo.name || "Unknown Isolate";
     }
+  }
+
+  const resolvedTaxonName = TAXON_NAMES[taxonId];
+  if (resolvedTaxonName) {
+    taxonName = resolvedTaxonName;
   }
 
   // Sequencing platforms inference
@@ -338,27 +355,28 @@ export async function fetchRepository(
         const files: DatasetFile[] = treeItems.map((t) => {
           const filePath = t.path || t.name || "file";
           const fileName = t.name || filePath.split("/").pop() || filePath;
-          const sizeMb = t.size ? Math.max(0.01, Number((t.size / (1024 * 1024)).toFixed(2))) : 0.01;
-          let format = "Binary";
-          if (fileName.endsWith(".fastq.gz") || fileName.endsWith(".fq.gz")) format = "FASTQ.GZ";
-          else if (fileName.endsWith(".fasta.gz") || fileName.endsWith(".fa.gz")) format = "FASTA.GZ";
+          let format: DatasetFile["format"] = "FASTQ";
+          if (fileName.endsWith(".fastq.gz") || fileName.endsWith(".fq.gz")) format = "FASTQ";
+          else if (fileName.endsWith(".fasta.gz") || fileName.endsWith(".fa.gz")) format = "FASTA";
           else if (fileName.endsWith(".tsv")) format = "TSV";
-          else if (fileName.endsWith(".md")) format = "Markdown";
+          else if (fileName.endsWith(".bam")) format = "BAM";
+          else if (fileName.endsWith(".vcf") || fileName.endsWith(".vcf.gz")) format = "VCF";
+          else if (fileName.endsWith(".json")) format = "JSON";
 
           return {
             name: fileName,
             path: filePath,
-            sizeMb,
-            sha256: t.oid,
+            sizeBytes: t.size || 0,
+            casHash: t.oid || "0000000000000000000000000000000000000000",
             chunksCount: Math.max(1, Math.ceil((t.size || 65536) / (64 * 1024))),
             format,
           };
         });
 
         item.files = files;
-        const totalCalculatedMb = Math.round(files.reduce((acc, f) => acc + f.sizeMb, 0));
-        if (totalCalculatedMb > 0) {
-          item.totalSizeMb = totalCalculatedMb;
+        const totalCalculatedBytes = files.reduce((acc, f) => acc + f.sizeBytes, 0);
+        if (totalCalculatedBytes > 0) {
+          item.totalSizeMb = Math.max(1, Math.round(totalCalculatedBytes / (1024 * 1024)));
         }
 
         const fastqFiles = files.filter((f) => f.name.includes(".fastq") || f.name.includes(".fq"));
@@ -388,6 +406,19 @@ export async function fetchRepository(
           }
           if (hit.taxon_ids && hit.taxon_ids.length > 0 && hit.taxon_ids[0] > 0) {
             item.taxonId = hit.taxon_ids[0];
+            const TAXON_MAP: Record<number, string> = {
+              562: "Escherichia coli",
+              666: "Vibrio cholerae",
+              1773: "Mycobacterium tuberculosis",
+              11620: "Lassa mammarenavirus",
+              10244: "Monkeypox virus",
+              11269: "Marburg virus",
+              186538: "Zaire ebolavirus",
+            };
+            const resolvedHitName = TAXON_MAP[item.taxonId];
+            if (resolvedHitName) {
+              item.taxonName = resolvedHitName;
+            }
           }
           if (hit.samples_count && hit.samples_count > 0) {
             item.samplesCount = hit.samples_count;
@@ -478,6 +509,8 @@ export async function fetchRepoTree(
       {
         method: "GET",
         headers: { Accept: "application/json" },
+        cache: "no-store",
+        next: { revalidate: 0 },
       }
     );
     if (!res.ok) return [];
