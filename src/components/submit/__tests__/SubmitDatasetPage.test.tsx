@@ -137,4 +137,61 @@ describe("SubmitDatasetPage", () => {
     expect(screen.getByText(/Generated README.md/i)).toBeDefined();
     expect(screen.getAllByText(/Terminal CLI Push/i).length).toBeGreaterThan(0);
   });
+
+  it("displays inline validation errors and blocks Step 2 when clicking Proceed with empty fields", () => {
+    render(<SubmitDatasetPage />);
+
+    // Click Proceed with empty form
+    const proceedBtn = screen.getByRole("button", { name: /Proceed to Taxonomy & Safety/i });
+    fireEvent.click(proceedBtn);
+
+    // Verify inline errors appear
+    expect(screen.getByText(/Namespace is required/i)).toBeDefined();
+    expect(screen.getByText(/Dataset Slug ID is required/i)).toBeDefined();
+    expect(screen.getByText(/Formal Dataset Name is required/i)).toBeDefined();
+    expect(screen.getByText(/Contributing Institution is required/i)).toBeDefined();
+
+    // Verify user remains on Step 1
+    expect(screen.getByText(/Step 1: Dataset Namespace & Metadata/i)).toBeDefined();
+    expect(screen.queryByText(/Step 2: Taxonomy & Strict Human Exclusion Verification/i)).toBeNull();
+  });
+
+  it("accepts short pathogen names (>= 3 chars) and short institution abbreviations (>= 2 chars)", () => {
+    render(<SubmitDatasetPage />);
+
+    fireEvent.change(screen.getByLabelText(/Namespace Identifier/i), {
+      target: { value: "acegid" },
+    });
+    fireEvent.change(screen.getByLabelText(/Dataset Slug ID/i), {
+      target: { value: "rsv-surv" },
+    });
+    // 3 characters name
+    fireEvent.change(screen.getByLabelText(/Formal Dataset Name/i), {
+      target: { value: "RSV" },
+    });
+    // 2 characters institution
+    fireEvent.change(screen.getByLabelText(/Contributing Institution/i), {
+      target: { value: "IP" },
+    });
+
+    const proceedBtn = screen.getByRole("button", { name: /Proceed to Taxonomy & Safety/i });
+    fireEvent.click(proceedBtn);
+
+    // Successfully advanced to Step 2
+    expect(
+      screen.getByText(/Step 2: Taxonomy & Strict Human Exclusion Verification/i)
+    ).toBeDefined();
+  });
+
+  it("renders pending state badges on sidebar rail on Step 1", () => {
+    render(<SubmitDatasetPage />);
+
+    // Rail specs should show pending for steps not yet configured
+    expect(screen.getByText(/Pending Step 2/i)).toBeDefined();
+    expect(screen.getAllByText(/Pending Step 3/i).length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByText(/Pending Step 4/i)).toBeDefined();
+
+    // Slug placeholder should appear when dataset ID is empty
+    expect(screen.getByText(/your-dataset-slug/i)).toBeDefined();
+  });
 });

@@ -5,6 +5,7 @@ import {
   ShieldAlert,
   ShieldCheck,
   AlertTriangle,
+  AlertCircle,
   Check,
   Copy,
   Terminal,
@@ -107,19 +108,84 @@ export function SubmitDatasetPage() {
     }
   };
 
+  // Step 1 Validation & Touch Tracking
+  const [step1Attempted, setStep1Attempted] = useState(false);
+  const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
+
+  const markTouched = (fieldName: string) => {
+    setTouchedFields((prev) => ({ ...prev, [fieldName]: true }));
+  };
+
   // Validation checks
   const isHumanTaxon =
     parseInt(taxonId, 10) === PROHIBITED_HUMAN_TAXON_ID ||
     taxonName.toLowerCase().includes("homo sapiens") ||
     taxonName.toLowerCase().includes("human");
 
-  const effectiveNamespace = namespace || (isAuthenticated ? userNamespace : "");
+  // Effective namespace logic:
+  // If user explicitly switched to custom (org) namespace, strictly use typed namespace.
+  // Otherwise if authenticated and personal namespace is detected, use userNamespace.
+  // Otherwise fallback to whatever manual namespace is typed.
+  const effectiveNamespace =
+    isCustomNamespace
+      ? namespace.trim()
+      : isAuthenticated && userNamespace
+      ? userNamespace
+      : namespace.trim();
+
+  const step1Errors = {
+    namespace:
+      effectiveNamespace.length === 0
+        ? "Namespace is required."
+        : effectiveNamespace.length < 2
+        ? "Namespace must be at least 2 characters."
+        : null,
+    datasetId:
+      datasetId.trim().length === 0
+        ? "Dataset Slug ID is required."
+        : datasetId.trim().length < 2
+        ? "Dataset Slug ID must be at least 2 characters."
+        : null,
+    name:
+      name.trim().length === 0
+        ? "Formal Dataset Name is required."
+        : name.trim().length < 3
+        ? "Formal Dataset Name must be at least 3 characters."
+        : null,
+    leadInstitution:
+      leadInstitution.trim().length === 0
+        ? "Contributing Institution is required."
+        : leadInstitution.trim().length < 2
+        ? "Contributing Institution must be at least 2 characters."
+        : null,
+  };
 
   const isStep1Valid =
-    effectiveNamespace.trim().length >= 2 &&
-    datasetId.trim().length >= 2 &&
-    name.trim().length >= 5 &&
-    leadInstitution.trim().length >= 3;
+    !step1Errors.namespace &&
+    !step1Errors.datasetId &&
+    !step1Errors.name &&
+    !step1Errors.leadInstitution;
+
+  const handleProceedToStep2 = () => {
+    setStep1Attempted(true);
+    if (!isStep1Valid) {
+      if (step1Errors.namespace) {
+        document.getElementById("input-namespace")?.focus();
+        toast.error(step1Errors.namespace);
+      } else if (step1Errors.datasetId) {
+        document.getElementById("input-dataset-id")?.focus();
+        toast.error(step1Errors.datasetId);
+      } else if (step1Errors.name) {
+        document.getElementById("input-dataset-name")?.focus();
+        toast.error(step1Errors.name);
+      } else if (step1Errors.leadInstitution) {
+        document.getElementById("input-lead-inst")?.focus();
+        toast.error(step1Errors.leadInstitution);
+      }
+      return;
+    }
+    setCurrentStep(2);
+  };
 
   const isStep2Valid =
     taxonId.trim().length > 0 &&
@@ -396,13 +462,13 @@ export function SubmitDatasetPage() {
                       {isAuthenticated && userNamespace && !isCustomNamespace ? (
                         <div className="detected-namespace-box">
                           <div className="detected-badge-left">
-                            <ShieldCheck size={18} className="text-green" />
+                            <ShieldCheck size={18} className="text-green flex-shrink-0" />
                             <div>
                               <div className="detected-slug font-mono">
-                                ubio.org/@{namespace || userNamespace}
+                                ubio.org/@{userNamespace}
                               </div>
                               <div className="detected-label">
-                                Verified Personal Namespace (@{userNamespace})
+                                Verified Personal Namespace
                               </div>
                             </div>
                           </div>
@@ -411,28 +477,48 @@ export function SubmitDatasetPage() {
                             id="input-namespace"
                             type="text"
                             className="visually-hidden-input"
-                            value={namespace || userNamespace}
+                            value={userNamespace}
                             readOnly
                           />
                         </div>
                       ) : (
-                        <div className="input-group">
-                          <span className="input-prefix">ubio.org/</span>
-                          <input
-                            id="input-namespace"
-                            type="text"
-                            className="form-input font-mono"
-                            placeholder="e.g. acegid, pasteur-dakar, kemri"
-                            value={namespace}
-                            onChange={(e) =>
-                              setNamespace(e.target.value.toLowerCase().replace(/[^a-z0-9-_]/g, ""))
-                            }
-                          />
+                        <div className="input-group-wrapper">
+                          <div
+                            className={`input-group ${
+                              (step1Attempted || touchedFields.namespace) && step1Errors.namespace
+                                ? "input-error"
+                                : ""
+                            }`}
+                          >
+                            <span className="input-prefix">ubio.org/</span>
+                            <input
+                              id="input-namespace"
+                              type="text"
+                              className="form-input font-mono"
+                              placeholder="e.g. acegid, pasteur-dakar, kemri"
+                              value={namespace}
+                              onBlur={() => markTouched("namespace")}
+                              onChange={(e) =>
+                                setNamespace(e.target.value.toLowerCase().replace(/[^a-z0-9-_]/g, ""))
+                              }
+                              aria-invalid={Boolean((step1Attempted || touchedFields.namespace) && step1Errors.namespace)}
+                              aria-describedby={
+                                (step1Attempted || touchedFields.namespace) && step1Errors.namespace
+                                  ? "error-namespace"
+                                  : undefined
+                              }
+                            />
+                          </div>
+                          {(step1Attempted || touchedFields.namespace) && step1Errors.namespace && (
+                            <span className="field-error-msg" id="error-namespace">
+                              <AlertCircle size={13} /> {step1Errors.namespace}
+                            </span>
+                          )}
                         </div>
                       )}
                       <span className="field-hint">
                         {isAuthenticated && !isCustomNamespace
-                          ? `Publishing under your verified personal namespace @${userNamespace}.`
+                          ? "Publishing under your verified personal namespace."
                           : "Lowercase letters, numbers, hyphens only."}
                       </span>
                     </div>
@@ -444,14 +530,31 @@ export function SubmitDatasetPage() {
                       <input
                         id="input-dataset-id"
                         type="text"
-                        className="form-input font-mono"
+                        className={`form-input font-mono ${
+                          (step1Attempted || touchedFields.datasetId) && step1Errors.datasetId
+                            ? "input-error"
+                            : ""
+                        }`}
                         placeholder="e.g. lassa-surveillance-2026"
                         value={datasetId}
+                        onBlur={() => markTouched("datasetId")}
                         onChange={(e) =>
                           setDatasetId(e.target.value.toLowerCase().replace(/[^a-z0-9-_]/g, ""))
                         }
+                        aria-invalid={Boolean((step1Attempted || touchedFields.datasetId) && step1Errors.datasetId)}
+                        aria-describedby={
+                          (step1Attempted || touchedFields.datasetId) && step1Errors.datasetId
+                            ? "error-dataset-id"
+                            : undefined
+                        }
                       />
-                      <span className="field-hint">Unique identifier within your namespace.</span>
+                      {(step1Attempted || touchedFields.datasetId) && step1Errors.datasetId ? (
+                        <span className="field-error-msg" id="error-dataset-id">
+                          <AlertCircle size={13} /> {step1Errors.datasetId}
+                        </span>
+                      ) : (
+                        <span className="field-hint">Unique identifier within your namespace.</span>
+                      )}
                     </div>
 
                     <div className="form-field full-width">
@@ -461,11 +564,27 @@ export function SubmitDatasetPage() {
                       <input
                         id="input-dataset-name"
                         type="text"
-                        className="form-input"
+                        className={`form-input ${
+                          (step1Attempted || touchedFields.name) && step1Errors.name
+                            ? "input-error"
+                            : ""
+                        }`}
                         placeholder="e.g. Lassa Mammarenavirus Genomic Surveillance (West Africa)"
                         value={name}
+                        onBlur={() => markTouched("name")}
                         onChange={(e) => setName(e.target.value)}
+                        aria-invalid={Boolean((step1Attempted || touchedFields.name) && step1Errors.name)}
+                        aria-describedby={
+                          (step1Attempted || touchedFields.name) && step1Errors.name
+                            ? "error-dataset-name"
+                            : undefined
+                        }
                       />
+                      {(step1Attempted || touchedFields.name) && step1Errors.name && (
+                        <span className="field-error-msg" id="error-dataset-name">
+                          <AlertCircle size={13} /> {step1Errors.name}
+                        </span>
+                      )}
                     </div>
 
                     <div className="form-field full-width">
@@ -475,11 +594,27 @@ export function SubmitDatasetPage() {
                       <input
                         id="input-lead-inst"
                         type="text"
-                        className="form-input"
+                        className={`form-input ${
+                          (step1Attempted || touchedFields.leadInstitution) && step1Errors.leadInstitution
+                            ? "input-error"
+                            : ""
+                        }`}
                         placeholder="e.g. ACEGID Redeemer's University, Ede, Nigeria"
                         value={leadInstitution}
+                        onBlur={() => markTouched("leadInstitution")}
                         onChange={(e) => setLeadInstitution(e.target.value)}
+                        aria-invalid={Boolean((step1Attempted || touchedFields.leadInstitution) && step1Errors.leadInstitution)}
+                        aria-describedby={
+                          (step1Attempted || touchedFields.leadInstitution) && step1Errors.leadInstitution
+                            ? "error-lead-inst"
+                            : undefined
+                        }
                       />
+                      {(step1Attempted || touchedFields.leadInstitution) && step1Errors.leadInstitution && (
+                        <span className="field-error-msg" id="error-lead-inst">
+                          <AlertCircle size={13} /> {step1Errors.leadInstitution}
+                        </span>
+                      )}
                     </div>
 
                     <div className="form-field full-width">
@@ -501,8 +636,7 @@ export function SubmitDatasetPage() {
                     <button
                       type="button"
                       className="btn-pill-primary"
-                      disabled={!isStep1Valid}
-                      onClick={() => setCurrentStep(2)}
+                      onClick={handleProceedToStep2}
                     >
                       Proceed to Taxonomy & Safety <ArrowRight size={16} />
                     </button>
@@ -1296,52 +1430,97 @@ export function SubmitDatasetPage() {
 
               <div className="rail-target-slug font-mono">
                 <span className="slug-prefix">ubio.org/</span>
+                <wbr />
                 <span className="slug-owner">{displayNamespace}</span>
+                <wbr />
                 <span className="slug-slash">/</span>
-                <span className="slug-name">{displayDatasetSlug}</span>
+                <wbr />
+                {datasetId ? (
+                  <span className="slug-name">{datasetId}</span>
+                ) : (
+                  <span className="slug-placeholder">your-dataset-slug</span>
+                )}
               </div>
 
               <div className="rail-specs-list">
                 <div className="rail-spec-item">
-                  <span className="spec-label">Domain</span>
-                  <span className="spec-val badge-domain">{pathogenType}</span>
+                  <span className="rail-spec-label">Domain</span>
+                  {currentStep >= 2 || (taxonId && taxonName) ? (
+                    <span className="rail-spec-val badge-domain">{pathogenType}</span>
+                  ) : (
+                    <span className="rail-spec-val text-muted">Pending Step 2</span>
+                  )}
                 </div>
                 <div className="rail-spec-item">
-                  <span className="spec-label">AU Origin</span>
-                  <span className="spec-val font-mono">
-                    {countryCode} ({selectedCountryObj?.name || "AU"})
-                  </span>
+                  <span className="rail-spec-label">AU Origin</span>
+                  {currentStep >= 3 ? (
+                    <span className="rail-spec-val font-mono">
+                      {countryCode} ({selectedCountryObj?.name || "AU"})
+                    </span>
+                  ) : (
+                    <span className="rail-spec-val text-muted">Pending Step 3</span>
+                  )}
                 </div>
                 <div className="rail-spec-item">
-                  <span className="spec-label">Biosafety</span>
-                  <span className="spec-val badge-bsl">{biocontainment}</span>
+                  <span className="rail-spec-label">Biosafety</span>
+                  {currentStep >= 3 ? (
+                    <span className="rail-spec-val badge-bsl">{biocontainment}</span>
+                  ) : (
+                    <span className="rail-spec-val text-muted">Pending Step 3</span>
+                  )}
                 </div>
                 <div className="rail-spec-item">
-                  <span className="spec-label">Platform</span>
-                  <span className="spec-val text-truncate">{platformId}</span>
+                  <span className="rail-spec-label">Platform</span>
+                  {currentStep >= 3 ? (
+                    <span className="rail-spec-val text-truncate">{platformId}</span>
+                  ) : (
+                    <span className="rail-spec-val text-muted">Pending Step 3</span>
+                  )}
                 </div>
                 <div className="rail-spec-item">
-                  <span className="spec-label">Runs</span>
-                  <span className="spec-val font-mono">{runs.length} declared</span>
+                  <span className="rail-spec-label">Runs</span>
+                  {currentStep >= 4 ? (
+                    <span className="rail-spec-val font-mono">{runs.length} declared</span>
+                  ) : (
+                    <span className="rail-spec-val text-muted">Pending Step 4</span>
+                  )}
                 </div>
               </div>
 
               {/* Live Invariant Validation Signals */}
               <div className="rail-checklist">
-                <div className="rail-check-item passed">
-                  <Check size={14} className="text-green" />
+                <div className={`rail-check-item ${currentStep >= 3 ? "passed" : "pending"}`}>
+                  {currentStep >= 3 ? (
+                    <Check size={14} className="text-green" />
+                  ) : (
+                    <span className="check-dot-pending" aria-hidden="true" />
+                  )}
                   <span>African Union Member State Origin</span>
                 </div>
-                <div className={`rail-check-item ${isHumanTaxon ? "failed" : "passed"}`}>
+                <div
+                  className={`rail-check-item ${
+                    isHumanTaxon
+                      ? "failed"
+                      : taxonId.trim().length > 0 && parseInt(taxonId, 10) > 0
+                      ? "passed"
+                      : "pending"
+                  }`}
+                >
                   {isHumanTaxon ? (
                     <AlertTriangle size={14} className="text-red" />
-                  ) : (
+                  ) : taxonId.trim().length > 0 && parseInt(taxonId, 10) > 0 ? (
                     <Check size={14} className="text-green" />
+                  ) : (
+                    <span className="check-dot-pending" aria-hidden="true" />
                   )}
                   <span>Strict Non-Human Invariant (No 9606)</span>
                 </div>
-                <div className="rail-check-item passed">
-                  <Check size={14} className="text-green" />
+                <div className={`rail-check-item ${currentStep >= 4 ? "passed" : "pending"}`}>
+                  {currentStep >= 4 ? (
+                    <Check size={14} className="text-green" />
+                  ) : (
+                    <span className="check-dot-pending" aria-hidden="true" />
+                  )}
                   <span>OpenXet Deduplication Ready</span>
                 </div>
               </div>
@@ -1353,10 +1532,23 @@ export function SubmitDatasetPage() {
                 <span className="rail-header-badge">
                   <UploadCloud size={13} /> Terminal CLI Push
                 </span>
+                <button
+                  type="button"
+                  className="btn-copy-sm"
+                  onClick={() =>
+                    handleCopy(
+                      `ubio push ${displayNamespace}/${datasetId || "<dataset-slug>"} ./data`,
+                      "CLI push command"
+                    )
+                  }
+                >
+                  <Copy size={12} />
+                  <span>Copy</span>
+                </button>
               </div>
               <p className="cli-rail-desc">Push directly from your compute cluster or pipeline:</p>
               <div className="cli-rail-code">
-                <code>$ ubio push {displayNamespace}/{displayDatasetSlug} ./data</code>
+                <code>$ ubio push {displayNamespace}/{datasetId || "<dataset-slug>"} ./data</code>
               </div>
             </div>
           </aside>
