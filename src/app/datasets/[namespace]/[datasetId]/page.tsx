@@ -5,6 +5,9 @@ import { Footer } from "../../../../components/footer/Footer";
 import { DatasetDetailPage } from "../../../../components/detail/DatasetDetailPage";
 import { fetchRepository } from "../../../../lib/api";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 interface PageProps {
   params: Promise<{
     namespace: string;
