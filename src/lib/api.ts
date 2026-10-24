@@ -57,6 +57,13 @@ export interface RepoResponse {
   is_verified_african: boolean;
   created_at: string;
   updated_at: string;
+  countries?: string[];
+  taxon_ids?: number[];
+  genus?: string[];
+  family?: string[];
+  samples_count?: number;
+  total_size_bytes?: number;
+  files_count?: number;
 }
 
 export interface CommitLogItem {
@@ -72,6 +79,7 @@ export interface TreeItem {
   oid: string;
   size: number | null;
   path: string;
+  name?: string;
 }
 
 export interface TreeResponse {
@@ -328,16 +336,18 @@ export async function fetchRepository(
       const treeItems = await fetchRepoTree(owner, name);
       if (treeItems && treeItems.length > 0) {
         const files: DatasetFile[] = treeItems.map((t) => {
-          const sizeMb = t.size ? Math.max(0.1, Number((t.size / (1024 * 1024)).toFixed(2))) : 0.1;
+          const filePath = t.path || t.name || "file";
+          const fileName = t.name || filePath.split("/").pop() || filePath;
+          const sizeMb = t.size ? Math.max(0.01, Number((t.size / (1024 * 1024)).toFixed(2))) : 0.01;
           let format = "Binary";
-          if (t.name.endsWith(".fastq.gz") || t.name.endsWith(".fq.gz")) format = "FASTQ.GZ";
-          else if (t.name.endsWith(".fasta.gz") || t.name.endsWith(".fa.gz")) format = "FASTA.GZ";
-          else if (t.name.endsWith(".tsv")) format = "TSV";
-          else if (t.name.endsWith(".md")) format = "Markdown";
+          if (fileName.endsWith(".fastq.gz") || fileName.endsWith(".fq.gz")) format = "FASTQ.GZ";
+          else if (fileName.endsWith(".fasta.gz") || fileName.endsWith(".fa.gz")) format = "FASTA.GZ";
+          else if (fileName.endsWith(".tsv")) format = "TSV";
+          else if (fileName.endsWith(".md")) format = "Markdown";
 
           return {
-            name: t.name,
-            path: t.path || t.name,
+            name: fileName,
+            path: filePath,
             sizeMb,
             sha256: t.oid,
             chunksCount: Math.max(1, Math.ceil((t.size || 65536) / (64 * 1024))),
