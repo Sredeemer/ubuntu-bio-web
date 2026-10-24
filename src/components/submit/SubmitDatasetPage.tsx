@@ -37,6 +37,14 @@ import { SequenceDropzone } from "./SequenceDropzone";
 import { generateDatasetReadme, SequencingRunEntry } from "../../lib/readmeGenerator";
 import { WebSequenceInspectionResult } from "../../lib/sequenceSnifferWeb";
 
+const WIZARD_STEPS = [
+  { step: 1 as const, num: "01", label: "Identification & Metadata" },
+  { step: 2 as const, num: "02", label: "Taxonomy & Human Exclusion" },
+  { step: 3 as const, num: "03", label: "Sequencing Specifications" },
+  { step: 4 as const, num: "04", label: "Runs & Sequence Files" },
+  { step: 5 as const, num: "05", label: "Review & Ingest Dataset" },
+];
+
 export function SubmitDatasetPage() {
   const { user, isAuthenticated, token } = useAuth();
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4 | 5>(1);
@@ -367,50 +375,6 @@ export function SubmitDatasetPage() {
         {/* Reorganized Main Layout: Wizard Column + Live Guidance Rail */}
         <div className="ubio-submit-layout-grid">
           <div className="ubio-submit-main-col">
-            {/* 5-Step Progress Stepper */}
-            <div className="submit-stepper-wrapper">
-              <div
-                className={`stepper-step ${currentStep >= 1 ? "active" : ""} ${
-                  currentStep > 1 ? "completed" : ""
-                }`}
-              >
-                <div className="step-circle">{currentStep > 1 ? <Check size={14} /> : "1"}</div>
-                <span className="step-label">Identification</span>
-              </div>
-              <div className="step-line" />
-              <div
-                className={`stepper-step ${currentStep >= 2 ? "active" : ""} ${
-                  currentStep > 2 ? "completed" : ""
-                }`}
-              >
-                <div className="step-circle">{currentStep > 2 ? <Check size={14} /> : "2"}</div>
-                <span className="step-label">Taxonomy & Safety</span>
-              </div>
-              <div className="step-line" />
-              <div
-                className={`stepper-step ${currentStep >= 3 ? "active" : ""} ${
-                  currentStep > 3 ? "completed" : ""
-                }`}
-              >
-                <div className="step-circle">{currentStep > 3 ? <Check size={14} /> : "3"}</div>
-                <span className="step-label">Sequencing Specs</span>
-              </div>
-              <div className="step-line" />
-              <div
-                className={`stepper-step ${currentStep >= 4 ? "active" : ""} ${
-                  currentStep > 4 ? "completed" : ""
-                }`}
-              >
-                <div className="step-circle">{currentStep > 4 ? <Check size={14} /> : "4"}</div>
-                <span className="step-label">Runs & Files</span>
-              </div>
-              <div className="step-line" />
-              <div className={`stepper-step ${currentStep >= 5 ? "active" : ""}`}>
-                <div className="step-circle">5</div>
-                <span className="step-label">Review & Ingest</span>
-              </div>
-            </div>
-
             {/* Main Wizard Form Card */}
             <div className="submit-card">
               {/* Step 1: Identification */}
@@ -444,12 +408,13 @@ export function SubmitDatasetPage() {
                           <button
                             type="button"
                             className="btn-switch-namespace"
+                            title={`Use personal (@${userNamespace})`}
                             onClick={() => {
                               setIsCustomNamespace(false);
                               setNamespace(userNamespace);
                             }}
                           >
-                            Use personal (@{userNamespace})
+                            &larr; Use personal
                           </button>
                         )}
                         {!isAuthenticated && (
@@ -486,7 +451,7 @@ export function SubmitDatasetPage() {
                               id="input-namespace"
                               type="text"
                               className="form-input font-mono"
-                              placeholder="e.g. acegid, pasteur-dakar, kemri"
+                              placeholder="e.g. acegid, kemri"
                               value={namespace}
                               onBlur={() => markTouched("namespace")}
                               onChange={(e) =>
@@ -1417,13 +1382,72 @@ export function SubmitDatasetPage() {
 
           {/* Right Rail: Real-time Ingestion Preview & Guidance */}
           <aside className="ubio-submit-sidebar-rail" aria-label="Ingestion Summary">
-            {/* Live Target Repository Card */}
+            {/* 1. Ingestion Progress Tracker Card (Option B) */}
+            <div className="submit-rail-card rail-stepper-card">
+              <div className="rail-stepper-header">
+                <span className="rail-stepper-title">Ingestion Progress</span>
+                <span className="rail-step-badge font-mono">Step {currentStep} of 5</span>
+              </div>
+              <ol className="rail-vertical-steps" aria-label="Submission Steps">
+                {WIZARD_STEPS.map((s) => {
+                  const isCompleted = currentStep > s.step;
+                  const isActive = currentStep === s.step;
+                  return (
+                    <li
+                      key={s.step}
+                      className={`rail-step-item ${isActive ? "active" : ""} ${
+                        isCompleted ? "completed clickable" : ""
+                      }`}
+                      onClick={() => {
+                        if (isCompleted) setCurrentStep(s.step);
+                      }}
+                      role={isCompleted ? "button" : undefined}
+                      tabIndex={isCompleted ? 0 : undefined}
+                      onKeyDown={(e) => {
+                        if (isCompleted && (e.key === "Enter" || e.key === " ")) {
+                          e.preventDefault();
+                          setCurrentStep(s.step);
+                        }
+                      }}
+                      aria-current={isActive ? "step" : undefined}
+                    >
+                      <div className="rail-step-indicator" aria-hidden="true">
+                        {isCompleted ? (
+                          <span className="rail-step-dot completed">
+                            <Check size={11} strokeWidth={3} />
+                          </span>
+                        ) : isActive ? (
+                          <span className="rail-step-dot active">
+                            <span className="rail-step-dot-inner" />
+                          </span>
+                        ) : (
+                          <span className="rail-step-dot pending">{s.step}</span>
+                        )}
+                        {s.step < 5 && (
+                          <div
+                            className={`rail-step-connector ${
+                              currentStep > s.step ? "connector-completed" : ""
+                            }`}
+                          />
+                        )}
+                      </div>
+                      <div className="rail-step-content">
+                        <span className="rail-step-num font-mono">STEP {s.num}</span>
+                        <span className="rail-step-label">{s.label}</span>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ol>
+            </div>
+
+            {/* 2. Live Target Repository Card */}
             <div className="submit-rail-card">
               <div className="submit-rail-header">
                 <span className="rail-header-badge">
                   <Terminal size={13} className="text-green" /> Ingest Target
                 </span>
-                <span className="rail-step-badge">Step {currentStep} of 5</span>
+                <span className="rail-live-badge">Live Preview</span>
               </div>
 
               <div className="rail-target-slug font-mono">
@@ -1436,7 +1460,7 @@ export function SubmitDatasetPage() {
                 {datasetId ? (
                   <span className="slug-name">{datasetId}</span>
                 ) : (
-                  <span className="slug-placeholder">your-dataset-slug</span>
+                  <span className="slug-placeholder">dataset-slug</span>
                 )}
               </div>
 

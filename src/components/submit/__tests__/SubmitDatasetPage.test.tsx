@@ -192,6 +192,14 @@ describe("SubmitDatasetPage", () => {
     expect(screen.getByText(/Pending Step 4/i)).toBeDefined();
 
     // Slug placeholder should appear when dataset ID is empty
-    expect(screen.getByText(/your-dataset-slug/i)).toBeDefined();
+    expect(screen.getAllByText(/dataset-slug/i).length).toBeGreaterThanOrEqual(1);
+
+    // Vertical stepper in sidebar should render all 5 steps
+    expect(screen.getByText(/Ingestion Progress/i)).toBeDefined();
+    expect(screen.getByText(/Identification & Metadata/i)).toBeDefined();
+    expect(screen.getByText(/Taxonomy & Human Exclusion/i)).toBeDefined();
+    expect(screen.getByText(/Sequencing Specifications/i)).toBeDefined();
+    expect(screen.getByText(/Runs & Sequence Files/i)).toBeDefined();
+    expect(screen.getByText(/Review & Ingest Dataset/i)).toBeDefined();
   });
 });

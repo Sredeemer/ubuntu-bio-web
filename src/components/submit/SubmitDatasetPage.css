@@ -229,6 +229,7 @@
   text-decoration: underline;
   text-underline-offset: 3px;
   transition: color 0.15s ease;
+  white-space: nowrap;
 }
 
 .btn-switch-namespace:hover {
@@ -771,6 +772,154 @@
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
 }
 
+/* Vertical Progress Tracker in Sidebar */
+.rail-stepper-card {
+  padding: 18px 20px 16px;
+}
+
+.rail-stepper-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.rail-stepper-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #0f172a;
+}
+
+.rail-vertical-steps {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.rail-step-item {
+  display: flex;
+  gap: 12px;
+  position: relative;
+}
+
+.rail-step-item.clickable {
+  cursor: pointer;
+}
+
+.rail-step-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 22px;
+  flex-shrink: 0;
+}
+
+.rail-step-dot {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  transition: all 0.2s ease;
+}
+
+.rail-step-dot.pending {
+  background: #f8fafc;
+  border: 1.5px solid #cbd5e1;
+  color: #94a3b8;
+}
+
+.rail-step-dot.active {
+  background: #f0fdf4;
+  border: 2px solid #15803d;
+  color: #15803d;
+  box-shadow: 0 0 0 3px rgba(21, 128, 61, 0.15);
+}
+
+.rail-step-dot-inner {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #15803d;
+}
+
+.rail-step-dot.completed {
+  background: #15803d;
+  border: 2px solid #15803d;
+  color: #ffffff;
+}
+
+.rail-step-connector {
+  width: 2px;
+  flex-grow: 1;
+  min-height: 16px;
+  background: #e2e8f0;
+  margin: 3px 0;
+  transition: background 0.2s ease;
+}
+
+.rail-step-connector.connector-completed {
+  background: #15803d;
+}
+
+.rail-step-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding-top: 1px;
+  padding-bottom: 12px;
+}
+
+.rail-step-num {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #94a3b8;
+  text-transform: uppercase;
+}
+
+.rail-step-item.active .rail-step-num {
+  color: #15803d;
+}
+
+.rail-step-label {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #64748b;
+  line-height: 1.35;
+  transition: color 0.15s ease;
+}
+
+.rail-step-item.active .rail-step-label {
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.rail-step-item.completed.clickable:hover .rail-step-label {
+  color: #15803d;
+}
+
+.rail-live-badge {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #15803d;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  padding: 2px 7px;
+  border-radius: 9999px;
+}
+
 .submit-rail-header {
   display: flex;
   align-items: center;
@@ -800,7 +949,7 @@
 }
 
 .rail-target-slug {
-  font-size: 0.84rem;
+  font-size: 0.82rem;
   background: #f8fafc;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
@@ -808,6 +957,8 @@
   overflow-wrap: break-word;
   word-break: normal;
   line-height: 1.45;
+  hyphens: none;
+  letter-spacing: -0.01em;
 }
 
 .slug-prefix {
@@ -917,7 +1068,8 @@
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  border: 1.5px dashed #94a3b8;
+  border: 1.5px dashed #64748b;
+  background: #f8fafc;
   display: inline-block;
   flex-shrink: 0;
 }
