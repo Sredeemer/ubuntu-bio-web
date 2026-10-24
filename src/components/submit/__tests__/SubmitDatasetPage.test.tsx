@@ -135,6 +135,7 @@ describe("SubmitDatasetPage", () => {
     expect(screen.getByText(/Step 5: Review, README.md & UbuntuBio Push/i)).toBeDefined();
     expect(screen.getAllByText(/inrb-kinshasa\/ebola-drc-2026/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/Generated README.md/i)).toBeDefined();
+    expect(screen.getByText(/samples\.tsv/i)).toBeDefined();
     expect(screen.getAllByText(/Terminal CLI Push/i).length).toBeGreaterThan(0);
   });
 

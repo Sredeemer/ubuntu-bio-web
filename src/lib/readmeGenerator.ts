@@ -1,6 +1,6 @@
 /**
- * Generates canonical README.md with YAML frontmatter conforming to
- * the UbuntuBio schema and server git-hook validation requirements.
+ * Generates canonical README.md and samples.tsv with YAML frontmatter conforming to
+ * the UbuntuBio schema, client-py validator, and server git-hook validation requirements.
  */
 
 export interface SequencingRunEntry {
@@ -37,48 +37,65 @@ export interface ReadmeGeneratorParams {
   libraryLayout: "PAIRED" | "SINGLE";
   runs: SequencingRunEntry[];
   description: string;
+  access?: "public" | "gated" | "private";
+  license?: string;
+  nominalLength?: number;
 }
 
 export function generateDatasetReadme(params: ReadmeGeneratorParams): string {
   const today = new Date().toISOString().split("T")[0] ?? "2026-10-22";
+  const layoutLower = params.libraryLayout.toLowerCase() as "paired" | "single";
+  const nominalLen = params.nominalLength || 500;
+  const accessTier = params.access || "public";
+  const licenseStr = params.license || "cc-by-4.0";
 
-  // Build runs yaml block
-  let runsYaml = "";
-  if (params.runs.length === 0) {
-    runsYaml = `    - run_id: "RUN001"
-      experiment_id: "EXP001"
-      forward_read: "reads/sample1_R1.fastq.gz"
-      reverse_read: "reads/sample1_R2.fastq.gz"`;
-  } else {
-    runsYaml = params.runs
-      .map((r) => {
-        let entry = `    - run_id: "${r.run_id}"\n      experiment_id: "${r.experiment_id}"`;
-        if (r.flowcell_id) entry += `\n      flowcell_id: "${r.flowcell_id}"`;
-        if (r.lane !== undefined) entry += `\n      lane: ${r.lane}`;
-        entry += `\n      forward_read: "${r.forward_read}"`;
-        if (params.libraryLayout === "PAIRED" && r.reverse_read) {
-          entry += `\n      reverse_read: "${r.reverse_read}"`;
-        }
-        if (r.read_count) entry += `\n      read_count: ${r.read_count}`;
-        if (r.base_count) entry += `\n      base_count: ${r.base_count}`;
-        if (r.checksum_sha256) entry += `\n      checksum_sha256: "${r.checksum_sha256}"`;
-        return entry;
-      })
-      .join("\n");
-  }
+  // Build canonical sequencing libraries block conforming to DatasetCard and client-py validator
+  const defaultRuns: SequencingRunEntry[] =
+    params.runs.length > 0
+      ? params.runs
+      : [
+          {
+            run_id: "RUN001",
+            experiment_id: "EXP001",
+            forward_read: "reads/sample1_R1.fastq.gz",
+            reverse_read: layoutLower === "paired" ? "reads/sample1_R2.fastq.gz" : undefined,
+          },
+        ];
+
+  const librariesYaml = defaultRuns
+    .map((r) => {
+      const sampleName = r.experiment_id || r.run_id;
+      const fileList =
+        layoutLower === "paired" && r.reverse_read
+          ? `        - "${r.forward_read}"\n        - "${r.reverse_read}"`
+          : `        - "${r.forward_read}"`;
+
+      return `    - library_id: "${r.run_id}"
+      sample_name: "${sampleName}"
+      title: "${params.libraryStrategy} sequencing library for ${sampleName}"
+      file_type: "FASTQ"
+      filenames:
+${fileList}`;
+    })
+    .join("\n");
+
+  const nominalLengthLine = layoutLower === "paired" ? `  nominal_length: ${nominalLen}\n` : "";
 
   const frontmatter = `---
 title: "${params.title || "Genomic Surveillance Cohort"}"
 domain: ${params.domain.toLowerCase()}
-accession: ""
-version: "1.0.0"
+access: ${accessTier}
+license: "${licenseStr.toLowerCase()}"
+countries:
+  - "${params.countryCode.toUpperCase()}"
+taxon_ids:
+  - ${params.taxonId || 0}
 date_created: "${today}"
-license: CC-BY-4.0
 authors:
   - name: "${params.authorName || "Principal Investigator"}"
     affiliation: "${params.authorAffiliation || params.institution || "Research Center"}"
 provenance:
-  country: "${params.countryCode}"
+  country: "${params.countryCode.toUpperCase()}"
   collecting_institution: "${params.institution || "National Surveillance Lab"}"
   collection_date: "${params.collectionDate || today}"
   sample_type: "${params.sampleType || "Blood swab"}"
@@ -88,14 +105,15 @@ taxonomy:
   tax_id: ${params.taxonId || 0}
   scientific_name: "${params.scientificName || "Pathogen"}"
 sequencing:
-  platform: "${params.platform}"
+  platform: "${params.platform.toUpperCase()}"
   instrument_model: "${params.instrumentModel}"
-  library_strategy: "${params.libraryStrategy}"
-  library_source: "${params.librarySource}"
-  library_selection: "${params.librarySelection}"
-  library_layout: "${params.libraryLayout}"
-  runs:
-${runsYaml}
+  library_strategy: "${params.libraryStrategy.toUpperCase()}"
+  library_source: "${params.librarySource.toUpperCase()}"
+  library_selection: "${params.librarySelection.toUpperCase()}"
+  library_layout: "${layoutLower}"
+${nominalLengthLine}  demultiplexed: true
+  libraries:
+${librariesYaml}
 ---`;
 
   const markdownBody = `
@@ -108,7 +126,7 @@ ${params.description || "Genomic surveillance and pathogen sequencing cohort."}
 
 - **Pathogen**: ${params.scientificName || "Taxon"} (NCBI Taxon ID: \`${params.taxonId}\`)
 - **Host**: ${params.hostSpecies || "N/A"}${params.hostTaxonId ? ` (NCBI Taxon ID: \`${params.hostTaxonId}\`)` : ""}
-- **Geographic Provenance**: ${params.countryName} (\`${params.countryCode}\`) — African Union Member State
+- **Geographic Provenance**: ${params.countryName} (\`${params.countryCode.toUpperCase()}\`) — African Union Member State
 - **Collection Date**: ${params.collectionDate || today}
 - **Specimen Source**: ${params.sampleType || "Swab / Blood specimen"}
 
@@ -117,7 +135,7 @@ ${params.description || "Genomic surveillance and pathogen sequencing cohort."}
 - **Platform**: ${params.platform}
 - **Instrument Model**: ${params.instrumentModel}
 - **Library Strategy**: ${params.libraryStrategy}
-- **Library Layout**: ${params.libraryLayout} (${params.runs.length} declared run${params.runs.length === 1 ? "" : "s"})
+- **Library Layout**: ${params.libraryLayout} (${defaultRuns.length} declared run${defaultRuns.length === 1 ? "" : "s"})
 
 ## Sovereign Data Governance & Ethics
 
@@ -125,4 +143,42 @@ Biological materials and digital sequence information (DSI) originate from **${p
 `;
 
   return frontmatter + markdownBody;
+}
+
+/**
+ * Generates canonical samples.tsv adhering strictly to the MIxS African schema.
+ * Header: sample_id\ttaxon_id\tcountry\tcollection_date\tlat\tlon\tadmin1\thost\tisolation_source
+ */
+export function generateDatasetSamplesTsv(params: ReadmeGeneratorParams): string {
+  const today = new Date().toISOString().split("T")[0] ?? "2026-10-22";
+  const header = "sample_id\ttaxon_id\tcountry\tcollection_date\tlat\tlon\tadmin1\thost\tisolation_source";
+
+  const defaultRuns =
+    params.runs.length > 0
+      ? params.runs
+      : [
+          {
+            run_id: "RUN001",
+            experiment_id: "EXP001",
+            forward_read: "reads/sample1_R1.fastq.gz",
+          },
+        ];
+
+  const uniqueSamples = new Map<string, SequencingRunEntry>();
+  for (const r of defaultRuns) {
+    const sid = r.experiment_id || r.run_id;
+    if (!uniqueSamples.has(sid)) {
+      uniqueSamples.set(sid, r);
+    }
+  }
+
+  const rows = [header];
+  for (const [sid] of uniqueSamples) {
+    const cDate = params.collectionDate || today;
+    const host = params.hostSpecies || "Homo sapiens";
+    const source = params.sampleType || "clinical specimen";
+    rows.push(`${sid}\t${params.taxonId}\t${params.countryCode.toUpperCase()}\t${cDate}\t\t\t\t${host}\t${source}`);
+  }
+
+  return rows.join("\n") + "\n";
 }

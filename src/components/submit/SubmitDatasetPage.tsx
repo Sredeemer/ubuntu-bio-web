@@ -17,6 +17,7 @@ import {
   Plus,
   Trash2,
   FileText,
+  FileSpreadsheet,
   Download,
   Dna,
 } from "lucide-react";
@@ -34,7 +35,7 @@ import {
 import { createRepository } from "../../lib/api";
 import { useAuth } from "../../context/AuthContext";
 import { SequenceDropzone } from "./SequenceDropzone";
-import { generateDatasetReadme, SequencingRunEntry } from "../../lib/readmeGenerator";
+import { generateDatasetReadme, generateDatasetSamplesTsv, SequencingRunEntry } from "../../lib/readmeGenerator";
 import { WebSequenceInspectionResult } from "../../lib/sequenceSnifferWeb";
 
 const WIZARD_STEPS = [
@@ -221,8 +222,7 @@ export function SubmitDatasetPage() {
 
   const generatedCliCmd = `ubio create ${displayNamespace}/${displayDatasetSlug} --domain ${(pathogenType || "virus").toLowerCase()}\nubio check .\nubio push ${displayNamespace}/${displayDatasetSlug} . --message "Initial sovereign dataset upload"`;
 
-  // Generate canonical README.md
-  const generatedReadme = generateDatasetReadme({
+  const readmeParams = {
     title: name || "Genomic Surveillance Cohort",
     domain: pathogenType.toLowerCase(),
     authorName: user?.name || "Principal Investigator",
@@ -244,7 +244,10 @@ export function SubmitDatasetPage() {
     libraryLayout,
     runs,
     description,
-  });
+  };
+
+  const generatedReadme = generateDatasetReadme(readmeParams);
+  const generatedSamplesTsv = generateDatasetSamplesTsv(readmeParams);
 
   // Handle files dropped in SequenceDropzone
   const handleFilesInspected = (inspected: WebSequenceInspectionResult[]) => {
@@ -320,6 +323,17 @@ export function SubmitDatasetPage() {
     link.click();
     URL.revokeObjectURL(url);
     toast.success("README.md downloaded");
+  };
+
+  const handleDownloadSamplesTsv = () => {
+    const blob = new Blob([generatedSamplesTsv], { type: "text/tab-separated-values;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "samples.tsv";
+    link.click();
+    URL.revokeObjectURL(url);
+    toast.success("samples.tsv downloaded");
   };
 
   const handleFinalSubmit = async (e: React.FormEvent) => {
@@ -1304,6 +1318,9 @@ export function SubmitDatasetPage() {
                           <Tabs.Trigger value="readme" className="tabs-btn">
                             <FileText size={14} /> Generated README.md
                           </Tabs.Trigger>
+                          <Tabs.Trigger value="samples" className="tabs-btn">
+                            <FileSpreadsheet size={14} /> samples.tsv
+                          </Tabs.Trigger>
                           <Tabs.Trigger value="cli" className="tabs-btn">
                             <Terminal size={14} /> Terminal CLI Push
                           </Tabs.Trigger>
@@ -1332,6 +1349,31 @@ export function SubmitDatasetPage() {
                             </div>
                           </div>
                           <pre className="manifest-code-body font-mono">{generatedReadme}</pre>
+                        </Tabs.Content>
+
+                        <Tabs.Content value="samples" className="tabs-panel">
+                          <div className="artifact-bar">
+                            <span className="artifact-bar-title font-mono">samples.tsv</span>
+                            <div className="artifact-actions">
+                              <button
+                                type="button"
+                                className="btn-copy-sm"
+                                onClick={() => handleCopy(generatedSamplesTsv, "samples.tsv")}
+                              >
+                                <Copy size={13} />
+                                <span>Copy TSV</span>
+                              </button>
+                              <button
+                                type="button"
+                                className="btn-copy-sm"
+                                onClick={handleDownloadSamplesTsv}
+                              >
+                                <Download size={13} />
+                                <span>Download samples.tsv</span>
+                              </button>
+                            </div>
+                          </div>
+                          <pre className="manifest-code-body font-mono">{generatedSamplesTsv}</pre>
                         </Tabs.Content>
 
                         <Tabs.Content value="cli" className="tabs-panel">
