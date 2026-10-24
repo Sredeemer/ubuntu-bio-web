@@ -1556,7 +1556,7 @@ export function SubmitDatasetPage() {
                 </span>
                 <button
                   type="button"
-                  className="btn-copy-sm"
+                  className="btn-copy-sm rail-copy-btn"
                   onClick={() =>
                     handleCopy(
                       `ubio push ${displayNamespace}/${datasetId || "<dataset-slug>"} ./data`,

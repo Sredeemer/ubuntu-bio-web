@@ -959,6 +959,7 @@
   line-height: 1.45;
   hyphens: none;
   letter-spacing: -0.01em;
+  margin-bottom: 16px;
 }
 
 .slug-prefix {
@@ -989,6 +990,7 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+  padding-top: 6px;
   padding-bottom: 16px;
   border-bottom: 1px solid #f1f5f9;
   margin-bottom: 16px;
@@ -1088,6 +1090,28 @@
   align-items: center;
   justify-content: space-between;
   margin-bottom: 8px;
+}
+
+.rail-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #15803d;
+  font-size: 0.725rem;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 6px;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  transition: all 0.15s ease;
+}
+
+.rail-copy-btn:hover {
+  background: #f0fdf4;
+  border-color: #86efac;
+  color: #166534;
 }
 
 .cli-rail-desc {
