@@ -306,20 +306,14 @@ export default function DocsSubmissionPage() {
               In Step 4, declare your run records (Run ID, Flowcell ID, Lane) and drag your raw reads
               (<code>.fastq.gz</code> or <code>.fasta.gz</code>) directly into the interactive dropzone.
             </p>
-            <div className="docs-callout docs-callout-tip">
-              <div className="docs-callout-header">
-                <Sparkles size={16} className="docs-callout-icon" />
-                <span className="docs-callout-title">How Client-Side Sniffing Protects Your Bandwidth</span>
-              </div>
-              <div className="docs-callout-body">
-                <p>
-                  Before transmitting large gigabyte files, the browser uses a Web Streams decompression
-                  pipeline to read the first 64 KB locally. It parses the four-line FASTQ structure, verifies
-                  Phred+33 ASCII quality score integrity, samples read lengths, computes SHA-256 checksums,
-                  and validates that R1 and R2 filenames match your declared run layout.
-                </p>
-              </div>
-            </div>
+            <DocsCallout type="tip" title="How Client-Side Sniffing Protects Your Bandwidth">
+              <p>
+                Before transmitting large gigabyte files, the browser uses a Web Streams decompression
+                pipeline to read the first 64 KB locally. It parses the four-line FASTQ structure, verifies
+                Phred+33 ASCII quality score integrity, samples read lengths, computes SHA-256 checksums,
+                and validates that R1 and R2 filenames match your declared run layout.
+              </p>
+            </DocsCallout>
           </div>
 
           {/* Wizard Step 5 */}
@@ -664,44 +658,86 @@ Surveillance cohort investigating genomic epidemiology and transmission dynamics
             <tbody>
               <tr>
                 <td><code>platform</code></td>
-                <td>String</td>
-                <td><code>ILLUMINA</code>, <code>OXFORD_NANOPORE</code>, <code>PACBIO</code>, <code>MGI</code>, <code>ION_TORRENT</code></td>
+                <td><span className="docs-type-badge">String</span></td>
+                <td>
+                  <div className="docs-table-chip-list">
+                    <code>ILLUMINA</code>
+                    <code>OXFORD_NANOPORE</code>
+                    <code>PACBIO</code>
+                    <code>MGI</code>
+                    <code>ION_TORRENT</code>
+                  </div>
+                </td>
                 <td>Sequencing hardware technology family.</td>
               </tr>
               <tr>
                 <td><code>instrument_model</code></td>
-                <td>String</td>
-                <td>e.g. <code>Illumina NovaSeq 6000</code>, <code>GridION</code>, <code>PacBio Revio</code></td>
+                <td><span className="docs-type-badge">String</span></td>
+                <td>
+                  <div className="docs-table-chip-list">
+                    <code>Illumina NovaSeq 6000</code>
+                    <code>GridION</code>
+                    <code>PacBio Revio</code>
+                    <code>DNBSEQ-T7</code>
+                  </div>
+                </td>
                 <td>Exact instrument hardware model.</td>
               </tr>
               <tr>
                 <td><code>library_strategy</code></td>
-                <td>String</td>
-                <td><code>WGS</code>, <code>AMPLICON</code>, <code>TARGETED-CAPTURE</code>, <code>RNA-SEQ</code>, <code>METAGENOMIC</code></td>
+                <td><span className="docs-type-badge">String</span></td>
+                <td>
+                  <div className="docs-table-chip-list">
+                    <code>WGS</code>
+                    <code>AMPLICON</code>
+                    <code>TARGETED-CAPTURE</code>
+                    <code>RNA-SEQ</code>
+                    <code>METAGENOMIC</code>
+                  </div>
+                </td>
                 <td>Sequencing assay methodology.</td>
               </tr>
               <tr>
                 <td><code>library_source</code></td>
-                <td>String</td>
-                <td><code>VIRAL_RNA</code>, <code>GENOMIC</code>, <code>METAGENOMIC</code>, <code>TRANSCRIPTOMIC</code></td>
+                <td><span className="docs-type-badge">String</span></td>
+                <td>
+                  <div className="docs-table-chip-list">
+                    <code>VIRAL_RNA</code>
+                    <code>GENOMIC</code>
+                    <code>METAGENOMIC</code>
+                    <code>TRANSCRIPTOMIC</code>
+                  </div>
+                </td>
                 <td>Source biological material type.</td>
               </tr>
               <tr>
                 <td><code>library_selection</code></td>
-                <td>String</td>
-                <td><code>PCR</code>, <code>RANDOM</code>, <code>HYBRID_SELECTION</code>, <code>UNSELECTED</code></td>
+                <td><span className="docs-type-badge">String</span></td>
+                <td>
+                  <div className="docs-table-chip-list">
+                    <code>PCR</code>
+                    <code>RANDOM</code>
+                    <code>HYBRID_SELECTION</code>
+                    <code>UNSELECTED</code>
+                  </div>
+                </td>
                 <td>Enrichment or selection method.</td>
               </tr>
               <tr>
                 <td><code>library_layout</code></td>
-                <td>String</td>
-                <td><code>PAIRED</code>, <code>SINGLE</code></td>
+                <td><span className="docs-type-badge">String</span></td>
+                <td>
+                  <div className="docs-table-chip-list">
+                    <code>PAIRED</code>
+                    <code>SINGLE</code>
+                  </div>
+                </td>
                 <td>Specifies whether runs require reverse reads (R2).</td>
               </tr>
               <tr>
                 <td><code>runs</code></td>
-                <td>List</td>
-                <td>List of run mapping records</td>
+                <td><span className="docs-type-badge">List</span></td>
+                <td>List of declared run mapping records</td>
                 <td>Declared sequencing runs and file paths.</td>
               </tr>
             </tbody>
