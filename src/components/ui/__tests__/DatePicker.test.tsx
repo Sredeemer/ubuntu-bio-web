@@ -60,4 +60,26 @@ describe("DatePicker Component", () => {
 
     expect(handleChange).toHaveBeenCalledWith("");
   });
+
+  it("supports explicit top placement prop", () => {
+    const handleChange = vi.fn();
+    render(<DatePicker value="2026-03-12" onChange={handleChange} placement="top" />);
+
+    fireEvent.click(screen.getByRole("button", { name: /Choose date/i }));
+
+    const dialog = screen.getByRole("dialog");
+    expect(dialog.getAttribute("data-placement")).toBe("top");
+    expect(dialog.className).toContain("placement-top");
+  });
+
+  it("supports explicit bottom placement prop", () => {
+    const handleChange = vi.fn();
+    render(<DatePicker value="2026-03-12" onChange={handleChange} placement="bottom" />);
+
+    fireEvent.click(screen.getByRole("button", { name: /Choose date/i }));
+
+    const dialog = screen.getByRole("dialog");
+    expect(dialog.getAttribute("data-placement")).toBe("bottom");
+    expect(dialog.className).toContain("placement-bottom");
+  });
 });

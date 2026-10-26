@@ -92,6 +92,7 @@
   left: 0;
   z-index: 100;
   width: 310px;
+  max-width: min(310px, calc(100vw - 32px));
   background: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 10px;
@@ -101,10 +102,29 @@
   animation: popoverFadeIn 0.14s ease-out;
 }
 
+.date-picker-popover.placement-top {
+  top: auto;
+  bottom: calc(100% + 6px);
+  animation: popoverFadeInUp 0.14s ease-out;
+  box-shadow: 0 -10px 25px -5px rgba(15, 23, 42, 0.12),
+              0 -8px 10px -6px rgba(15, 23, 42, 0.08);
+}
+
 @keyframes popoverFadeIn {
   from {
     opacity: 0;
     transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes popoverFadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
   }
   to {
     opacity: 1;

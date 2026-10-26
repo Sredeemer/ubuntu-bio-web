@@ -15,6 +15,7 @@ export interface DatePickerProps {
   error?: boolean | undefined;
   className?: string | undefined;
   ariaLabel?: string | undefined;
+  placement?: "auto" | "top" | "bottom" | undefined;
 }
 
 const MONTH_NAMES = [
@@ -69,6 +70,7 @@ export function DatePicker({
   error = false,
   className = "",
   ariaLabel = "Choose date",
+  placement = "auto",
 }: DatePickerProps) {
   const generatedId = useId();
   const inputId = id || `date-picker-${generatedId}`;
@@ -78,6 +80,53 @@ export function DatePicker({
 
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Dynamic placement state ('top' | 'bottom')
+  const [calculatedPlacement, setCalculatedPlacement] = useState<"top" | "bottom">(
+    placement === "top" ? "top" : "bottom"
+  );
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    if (placement === "top" || placement === "bottom") {
+      setCalculatedPlacement(placement);
+      return;
+    }
+
+    const updatePlacement = () => {
+      if (!containerRef.current) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      const spaceBelowViewport = window.innerHeight - rect.bottom;
+      const spaceAboveViewport = rect.top;
+
+      let spaceToFooter = spaceBelowViewport;
+      const footer =
+        document.querySelector(".ubio-footer") || document.querySelector("footer");
+      if (footer) {
+        const footerRect = footer.getBoundingClientRect();
+        if (footerRect.top > rect.bottom) {
+          spaceToFooter = Math.min(spaceBelowViewport, footerRect.top - rect.bottom);
+        }
+      }
+
+      // Calendar popover is ~340px tall. Flip upward if space below or to footer is constrained.
+      if (spaceToFooter < 360 && spaceAboveViewport > 260) {
+        setCalculatedPlacement("top");
+      } else {
+        setCalculatedPlacement("bottom");
+      }
+    };
+
+    updatePlacement();
+    window.addEventListener("scroll", updatePlacement, { passive: true });
+    window.addEventListener("resize", updatePlacement);
+
+    return () => {
+      window.removeEventListener("scroll", updatePlacement);
+      window.removeEventListener("resize", updatePlacement);
+    };
+  }, [isOpen, placement]);
 
   // Calendar Viewport State (Year & Month)
   const initialDate = parseIsoDate(value) || new Date();
@@ -193,7 +242,16 @@ export function DatePicker({
 
       {/* Popover Calendar */}
       {isOpen && (
-        <div className="date-picker-popover" role="dialog" aria-modal="true">
+        <div
+          className={`date-picker-popover placement-${
+            placement === "top" || placement === "bottom" ? placement : calculatedPlacement
+          }`}
+          data-placement={
+            placement === "top" || placement === "bottom" ? placement : calculatedPlacement
+          }
+          role="dialog"
+          aria-modal="true"
+        >
           {/* Quick Presets Bar */}
           <div className="date-picker-presets">
             <span className="presets-label">

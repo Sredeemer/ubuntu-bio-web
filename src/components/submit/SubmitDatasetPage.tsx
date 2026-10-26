@@ -855,6 +855,7 @@ export function SubmitDatasetPage() {
                         onChange={(iso) => setCollectionDate(iso)}
                         placeholder="Select sample collection date"
                         maxDate={new Date().toISOString().split("T")[0]}
+                        placement="top"
                       />
                       <span className="field-hint">
                         Sample collection date (strictly ISO-8601 YYYY-MM-DD).
