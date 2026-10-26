@@ -1627,6 +1627,232 @@
 }
 
 /* Responsive Breakpoints */
+/* ==========================================================================
+   Step 4 Ingestion Mode & Compulsory Upload Threshold Styles
+   ========================================================================== */
+
+.file-mode-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 22px;
+}
+
+.file-mode-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.file-mode-segmented-control {
+  display: inline-flex;
+  gap: 6px;
+  background: #f1f5f9;
+  padding: 4px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  width: fit-content;
+  max-width: 100%;
+  flex-wrap: wrap;
+}
+
+.file-mode-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #475569;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.file-mode-pill:hover {
+  color: #0f172a;
+}
+
+.file-mode-pill.active {
+  background: #ffffff;
+  color: #0f172a;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+}
+
+/* Threshold & Advisory Banners */
+.upload-threshold-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 18px 22px;
+  border-radius: 10px;
+  margin: 18px 0 26px;
+  line-height: 1.6;
+}
+
+.upload-threshold-banner.eligible {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #166534;
+}
+
+.upload-threshold-banner.eligible .banner-title {
+  color: #15803d;
+}
+
+.upload-threshold-banner.eligible .banner-desc {
+  color: #166534;
+}
+
+.upload-threshold-banner.exceeded {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #92400e;
+}
+
+.upload-threshold-banner.exceeded .banner-title {
+  color: #b45309;
+}
+
+.upload-threshold-banner.exceeded .banner-desc {
+  color: #92400e;
+}
+
+.upload-threshold-banner.required {
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  color: #334155;
+}
+
+.upload-threshold-banner.required .banner-title {
+  color: #0f172a;
+}
+
+.upload-threshold-banner.required .banner-desc {
+  color: #475569;
+}
+
+.upload-threshold-banner.failed {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+}
+
+.upload-threshold-banner.failed .banner-title {
+  color: #b91c1c;
+}
+
+.upload-threshold-banner.failed .banner-desc {
+  color: #991b1b;
+}
+
+.upload-threshold-banner.remote-info {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #334155;
+}
+
+.banner-icon-col {
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+
+.banner-text-col {
+  flex: 1;
+}
+
+.banner-title {
+  font-size: 0.925rem;
+  font-weight: 600;
+  margin: 0 0 6px 0;
+  line-height: 1.4;
+}
+
+.banner-desc {
+  font-size: 0.835rem;
+  margin: 0;
+  line-height: 1.6;
+}
+
+.banner-desc code {
+  background: rgba(0, 0, 0, 0.05);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.8rem;
+}
+
+/* Step 4 Inline Validation Banner */
+.step-validation-banner {
+  margin: 18px 0 6px;
+  padding: 12px 16px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+.step-validation-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.825rem;
+  color: #475569;
+  margin: 0;
+  font-weight: 500;
+}
+
+.step-validation-hint.error {
+  color: #dc2626;
+  font-weight: 600;
+}
+
+/* Upload Progress Container */
+.upload-progress-container {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 22px 26px;
+  margin-top: 24px;
+  margin-bottom: 20px;
+}
+
+.upload-progress-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.upload-progress-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.upload-progress-pct {
+  font-size: 0.925rem;
+  font-weight: 700;
+  color: #15803d;
+}
+
+.upload-progress-status {
+  display: block;
+  margin-top: 10px;
+  font-size: 0.8125rem;
+  color: #64748b;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
 @media (max-width: 980px) {
   .ubio-submit-layout-grid {
     grid-template-columns: 1fr;

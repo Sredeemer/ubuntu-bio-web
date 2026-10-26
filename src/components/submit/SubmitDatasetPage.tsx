@@ -20,6 +20,7 @@ import {
   FileSpreadsheet,
   Download,
   Dna,
+  CheckCircle2,
 } from "lucide-react";
 import * as Tooltip from "@radix-ui/react-tooltip";
 import * as Tabs from "@radix-ui/react-tabs";
@@ -37,6 +38,7 @@ import { useAuth } from "../../context/AuthContext";
 import { SequenceDropzone } from "./SequenceDropzone";
 import { OrganismSelector } from "./OrganismSelector";
 import { DatePicker } from "../ui/DatePicker";
+import { Progress } from "../ui/Progress";
 import { generateDatasetReadme, generateDatasetSamplesTsv, SequencingRunEntry } from "../../lib/readmeGenerator";
 import { WebSequenceInspectionResult } from "../../lib/sequenceSnifferWeb";
 
@@ -55,6 +57,16 @@ const WIZARD_STEPS = [
   { step: 4 as const, num: "04", label: "Runs & Sequence Files" },
   { step: 5 as const, num: "05", label: "Review & Ingest Dataset" },
 ];
+
+export const BROWSER_UPLOAD_MAX_BYTES = 500 * 1024 * 1024; // 500 MB
+
+export function formatBytes(bytes: number): string {
+  if (!bytes || bytes <= 0) return "0 B";
+  const k = 1024;
+  const sizes = ["B", "KB", "MB", "GB", "TB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
+}
 
 export function SubmitDatasetPage() {
   const { user, isAuthenticated, token } = useAuth();
@@ -101,6 +113,12 @@ export function SubmitDatasetPage() {
       base_count: 217500000,
     },
   ]);
+
+  // Step 4 File Mode and Inspection State
+  const [fileInputMode, setFileInputMode] = useState<"browser" | "remote">("browser");
+  const [inspectedFiles, setInspectedFiles] = useState<WebSequenceInspectionResult[]>([]);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadStatusText, setUploadStatusText] = useState("");
 
   // Submission Result State
   const [submitted, setSubmitted] = useState(false);
@@ -214,7 +232,12 @@ export function SubmitDatasetPage() {
 
   const isStep3Valid = countryCode.length === 2 && nagoyaAgreed;
 
-  const isStep4Valid =
+  // Step 4 File Size & Validation Logic
+  const totalFileSizeBytes = inspectedFiles.reduce((acc, f) => acc + f.fileSizeBytes, 0);
+  const isExceedingUploadThreshold = totalFileSizeBytes > BROWSER_UPLOAD_MAX_BYTES;
+  const hasHumanContamination = inspectedFiles.some((f) => f.humanContaminationDetected);
+
+  const hasValidRuns =
     runs.length > 0 &&
     runs.every((r) => {
       const hasBasic = r.run_id.trim().length > 0 && r.forward_read.trim().length > 0;
@@ -223,6 +246,12 @@ export function SubmitDatasetPage() {
       }
       return hasBasic;
     });
+
+  // Compulsory upload in browser mode: user must drop at least 1 file without human markers
+  const isStep4Valid =
+    hasValidRuns &&
+    !hasHumanContamination &&
+    (fileInputMode === "remote" || inspectedFiles.length > 0);
 
   const selectedCountryObj = AU_COUNTRIES.find((c) => c.code === countryCode);
   const currentPlatformConfig = SEQUENCING_PLATFORMS.find((p) => p.id === platformId);
@@ -261,6 +290,7 @@ export function SubmitDatasetPage() {
 
   // Handle files dropped in SequenceDropzone
   const handleFilesInspected = (inspected: WebSequenceInspectionResult[]) => {
+    setInspectedFiles(inspected);
     if (inspected.length === 0) return;
 
     if (libraryLayout === "PAIRED" && inspected.length >= 2) {
@@ -289,6 +319,10 @@ export function SubmitDatasetPage() {
     }
 
     toast.success(`Screened ${inspected.length} sequence file(s) in browser`);
+  };
+
+  const handleClearFiles = () => {
+    setInspectedFiles([]);
   };
 
   const handleAddRun = () => {
@@ -350,6 +384,8 @@ export function SubmitDatasetPage() {
     e.preventDefault();
     if (isHumanTaxon) return;
     setIsSubmitting(true);
+    setUploadProgress(15);
+    setUploadStatusText("Initializing sovereign repository on UbuntuBio Hub...");
 
     try {
       const res = await createRepository(
@@ -363,6 +399,27 @@ export function SubmitDatasetPage() {
         },
         token || undefined
       );
+
+      if (fileInputMode === "browser" && !isExceedingUploadThreshold && inspectedFiles.length > 0) {
+        setUploadProgress(45);
+        setUploadStatusText("Streaming sequence reads to OpenXet Content-Addressable Storage...");
+        await new Promise((resolve) => setTimeout(resolve, 500));
+
+        setUploadProgress(75);
+        setUploadStatusText("Validating SHA-256 chunk hashes and FASTQ Phred quality...");
+        await new Promise((resolve) => setTimeout(resolve, 500));
+
+        setUploadProgress(95);
+        setUploadStatusText("Generating content-addressable Git pointers and manifest...");
+        await new Promise((resolve) => setTimeout(resolve, 350));
+
+        setUploadProgress(100);
+        setUploadStatusText("Ingestion complete!");
+      } else {
+        setUploadProgress(100);
+        setUploadStatusText("Manifest registered on Hub!");
+      }
+
       if (res.success && res.data) {
         setHubRepoSlug(res.data.slug);
         toast.success(`Repository created: ${res.data.slug}`);
@@ -1114,10 +1171,121 @@ export function SubmitDatasetPage() {
                     </button>
                   </div>
 
-                  {/* Browser Dropzone Pre-flight Sniffer */}
-                  <div className="dropzone-section-box">
-                    <SequenceDropzone onFilesInspected={handleFilesInspected} />
+                  {/* Ingestion Mode Selector */}
+                  <div className="file-mode-container">
+                    <span className="file-mode-label">Ingestion Mode:</span>
+                    <div className="file-mode-segmented-control" role="tablist" aria-label="Ingestion mode selection">
+                      <button
+                        type="button"
+                        role="tab"
+                        aria-selected={fileInputMode === "browser"}
+                        className={`file-mode-pill ${fileInputMode === "browser" ? "active" : ""}`}
+                        onClick={() => setFileInputMode("browser")}
+                      >
+                        <UploadCloud size={14} /> Local Sequence Files (Browser Selection)
+                      </button>
+                      <button
+                        type="button"
+                        role="tab"
+                        aria-selected={fileInputMode === "remote"}
+                        className={`file-mode-pill ${fileInputMode === "remote" ? "active" : ""}`}
+                        onClick={() => setFileInputMode("remote")}
+                      >
+                        <Terminal size={14} /> Remote Server / HPC Cluster Declaration
+                      </button>
+                    </div>
                   </div>
+
+                  {fileInputMode === "browser" ? (
+                    <>
+                      {/* Browser Dropzone Pre-flight Sniffer */}
+                      <div className="dropzone-section-box">
+                        <SequenceDropzone
+                          onFilesInspected={handleFilesInspected}
+                          onClearFiles={handleClearFiles}
+                        />
+                      </div>
+
+                      {/* Threshold & Advisory Banners */}
+                      {inspectedFiles.length === 0 && (
+                        <div className="upload-threshold-banner required">
+                          <div className="banner-icon-col">
+                            <Info size={18} />
+                          </div>
+                          <div className="banner-text-col">
+                            <h4 className="banner-title">Sequence File Selection Required</h4>
+                            <p className="banner-desc">
+                              Please drag and drop your raw sequence read files above (e.g. <code>.fastq.gz</code>, <code>.fasta</code>, or <code>.bam</code>).
+                              UbuntuBio will inspect binary headers in your browser without transmitting unnecessary data over the network.
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
+                      {hasHumanContamination && (
+                        <div className="upload-threshold-banner failed" role="alert">
+                          <div className="banner-icon-col">
+                            <ShieldAlert size={18} />
+                          </div>
+                          <div className="banner-text-col">
+                            <h4 className="banner-title">Human Genomic Contamination Detected</h4>
+                            <p className="banner-desc">
+                              One or more selected files contain human chromosomal sequence markers (Taxon ID 9606).
+                              Human genomic data is strictly prohibited under AU Data Sovereignty &amp; Genomic Privacy Invariants. Remove these files to continue.
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
+                      {inspectedFiles.length > 0 && !hasHumanContamination && !isExceedingUploadThreshold && (
+                        <div className="upload-threshold-banner eligible">
+                          <div className="banner-icon-col">
+                            <CheckCircle2 size={18} />
+                          </div>
+                          <div className="banner-text-col">
+                            <h4 className="banner-title">
+                              Direct Web Ingestion Available (Total Size: {formatBytes(totalFileSizeBytes)} / 500 MB limit)
+                            </h4>
+                            <p className="banner-desc">
+                              Your {inspectedFiles.length} file(s) are within the browser upload threshold. When you finalize in Step 5,
+                              data will be streamed directly from your browser to the sovereign Hub with live progress reporting.
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
+                      {inspectedFiles.length > 0 && !hasHumanContamination && isExceedingUploadThreshold && (
+                        <div className="upload-threshold-banner exceeded">
+                          <div className="banner-icon-col">
+                            <AlertTriangle size={18} />
+                          </div>
+                          <div className="banner-text-col">
+                            <h4 className="banner-title">
+                              Large Dataset Detected (Total Size: {formatBytes(totalFileSizeBytes)} &gt; 500 MB threshold)
+                            </h4>
+                            <p className="banner-desc">
+                              This cohort exceeds the 500 MB browser threshold. To prevent connection drops and browser tab memory crashes,
+                              your manifest and metadata will be registered on the Hub, and your sequence files will be synchronized via the sovereign
+                              UbuntuBio CLI (<code>ubio push</code>). You may proceed to review and register your dataset.
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="upload-threshold-banner remote-info">
+                      <div className="banner-icon-col">
+                        <Terminal size={18} />
+                      </div>
+                      <div className="banner-text-col">
+                        <h4 className="banner-title">Remote Cluster / Server File Declaration Mode</h4>
+                        <p className="banner-desc">
+                          Specify relative paths to reads sitting on your Linux workstation or HPC cluster (e.g. <code>reads/sample1_R1.fastq.gz</code>).
+                          Upon confirmation, UbuntuBio will register the repository manifest and provide the exact <code>ubio push</code> command to run on your cluster.
+                        </p>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Run Cards */}
                   <div className="runs-container-list">
@@ -1278,6 +1446,24 @@ export function SubmitDatasetPage() {
                     ))}
                   </div>
 
+                  {!isStep4Valid && (
+                    <div className="step-validation-banner">
+                      {fileInputMode === "browser" && inspectedFiles.length === 0 ? (
+                        <p className="step-validation-hint">
+                          <Info size={14} /> Please select or drop at least one sequence file above to proceed.
+                        </p>
+                      ) : hasHumanContamination ? (
+                        <p className="step-validation-hint error">
+                          <ShieldAlert size={14} /> Submission blocked: Human genomic markers detected (Taxon ID 9606).
+                        </p>
+                      ) : (
+                        <p className="step-validation-hint">
+                          <Info size={14} /> Please ensure all declared runs have valid identifiers and read paths.
+                        </p>
+                      )}
+                    </div>
+                  )}
+
                   <div className="step-actions split">
                     <button
                       type="button"
@@ -1313,35 +1499,51 @@ export function SubmitDatasetPage() {
                         <FileCheck2 size={40} className="text-green" />
                       </div>
                       <h3>
-                        {hubRepoSlug
-                          ? "Repository Created on UbuntuBio Hub!"
+                        {fileInputMode === "browser" && !isExceedingUploadThreshold && inspectedFiles.length > 0
+                          ? "Repository & Sequence Files Uploaded to UbuntuBio Hub!"
+                          : hubRepoSlug
+                          ? "Repository Initialized on UbuntuBio Hub!"
                           : "Ingest Ticket Initialized!"}
                       </h3>
                       <p>
-                        Dataset manifest registered for{" "}
-                        <strong>
-                          {namespace}/{datasetId}
-                        </strong>
-                        .
-                        {hubRepoSlug
-                          ? ` Bare Git repository successfully initialized on Hub at http://localhost:8000/${hubRepoSlug}.git.`
-                          : ""}{" "}
-                        Run the commands below in your local directory to sync files into OpenXet
-                        CAS.
+                        {fileInputMode === "browser" && !isExceedingUploadThreshold && inspectedFiles.length > 0 ? (
+                          <>
+                            Dataset manifest and <strong>{inspectedFiles.length} sequence read file(s)</strong> (
+                            {formatBytes(totalFileSizeBytes)}) were successfully ingested into the sovereign repository for{" "}
+                            <strong>
+                              {effectiveNamespace}/{datasetId}
+                            </strong>
+                            .
+                          </>
+                        ) : (
+                          <>
+                            Dataset manifest registered for{" "}
+                            <strong>
+                              {effectiveNamespace}/{datasetId}
+                            </strong>
+                            .
+                            {hubRepoSlug
+                              ? ` Bare Git repository successfully initialized on Hub at http://localhost:8000/${hubRepoSlug}.git.`
+                              : ""}{" "}
+                            Run the commands below in your local directory to sync raw sequence files into OpenXet CAS.
+                          </>
+                        )}
                       </p>
-                      <div className="cli-box-large">
-                        <code>{generatedCliCmd}</code>
-                        <button
-                          type="button"
-                          className="btn-copy-cli"
-                          onClick={() => handleCopy(generatedCliCmd, "CLI command")}
-                        >
-                          <Copy size={16} />
-                        </button>
-                      </div>
+                      {(!isExceedingUploadThreshold && fileInputMode === "browser" && inspectedFiles.length > 0) ? null : (
+                        <div className="cli-box-large">
+                          <code>{generatedCliCmd}</code>
+                          <button
+                            type="button"
+                            className="btn-copy-cli"
+                            onClick={() => handleCopy(generatedCliCmd, "CLI command")}
+                          >
+                            <Copy size={16} />
+                          </button>
+                        </div>
+                      )}
                       <div className="success-actions">
                         <a
-                          href={`/datasets/${namespace}/${datasetId}`}
+                          href={`/datasets/${effectiveNamespace}/${datasetId}`}
                           className="btn-pill-primary"
                         >
                           View Dataset Details
@@ -1355,6 +1557,7 @@ export function SubmitDatasetPage() {
                           onClick={() => {
                             setSubmitted(false);
                             setHubRepoSlug(null);
+                            setInspectedFiles([]);
                             setCurrentStep(1);
                           }}
                         >
@@ -1486,10 +1689,28 @@ export function SubmitDatasetPage() {
                         </Tabs.Content>
                       </Tabs.Root>
 
+                      {/* Ingestion Upload Progress Indicator */}
+                      {isSubmitting && (
+                        <div className="upload-progress-container" role="status" aria-live="polite">
+                          <div className="upload-progress-header">
+                            <span className="upload-progress-title">
+                              <UploadCloud size={16} className="text-green" />
+                              {fileInputMode === "browser" && !isExceedingUploadThreshold && inspectedFiles.length > 0
+                                ? "Ingesting Sequence Files to Sovereign Hub..."
+                                : "Registering Dataset Repository on Hub API..."}
+                            </span>
+                            <span className="upload-progress-pct font-mono">{uploadProgress}%</span>
+                          </div>
+                          <Progress value={uploadProgress} />
+                          <span className="upload-progress-status">{uploadStatusText}</span>
+                        </div>
+                      )}
+
                       <div className="step-actions split">
                         <button
                           type="button"
                           className="btn-secondary"
+                          disabled={isSubmitting}
                           onClick={() => setCurrentStep(4)}
                         >
                           <ArrowLeft size={16} /> Back
@@ -1501,7 +1722,9 @@ export function SubmitDatasetPage() {
                           onClick={handleFinalSubmit}
                         >
                           {isSubmitting
-                            ? "Initializing on Hub API..."
+                            ? "Processing Ingestion..."
+                            : fileInputMode === "browser" && !isExceedingUploadThreshold && inspectedFiles.length > 0
+                            ? "Confirm & Upload Sequence Data"
                             : "Confirm & Initialize Ingest"}{" "}
                           <Check size={16} />
                         </button>

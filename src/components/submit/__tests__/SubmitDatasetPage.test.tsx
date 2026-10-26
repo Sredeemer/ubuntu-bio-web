@@ -125,6 +125,12 @@ describe("SubmitDatasetPage", () => {
     fireEvent.click(addRunBtn);
     expect(screen.getByText(/Run #2: RUN002/i)).toBeDefined();
 
+    // Switch to remote cluster declaration mode or drop files
+    const remoteModeBtn = screen.getByRole("tab", {
+      name: /Remote Server \/ HPC Cluster Declaration/i,
+    });
+    fireEvent.click(remoteModeBtn);
+
     const step4NextBtn = screen.getByRole("button", {
       name: /Review & Ingest Dataset/i,
     }) as HTMLButtonElement;
@@ -137,6 +143,36 @@ describe("SubmitDatasetPage", () => {
     expect(screen.getByText(/Generated README.md/i)).toBeDefined();
     expect(screen.getByText(/samples\.tsv/i)).toBeDefined();
     expect(screen.getAllByText(/Terminal CLI Push/i).length).toBeGreaterThan(0);
+  });
+
+  it("enforces compulsory sequence file selection in browser mode on Step 4", () => {
+    render(<SubmitDatasetPage />);
+
+    // Step 1
+    fireEvent.change(screen.getByLabelText(/Namespace Identifier/i), { target: { value: "waccbip" } });
+    fireEvent.change(screen.getByLabelText(/Dataset Slug ID/i), { target: { value: "cholera-accra" } });
+    fireEvent.change(screen.getByLabelText(/Formal Dataset Name/i), { target: { value: "Cholera Surveillance" } });
+    fireEvent.change(screen.getByLabelText(/Contributing Institution/i), { target: { value: "WACCBIP" } });
+    fireEvent.click(screen.getByRole("button", { name: /Proceed to Taxonomy & Safety/i }));
+
+    // Step 2
+    fireEvent.change(screen.getByLabelText(/NCBI Taxonomy ID/i), { target: { value: "666" } });
+    fireEvent.change(screen.getByLabelText(/Scientific Name/i), { target: { value: "Vibrio cholerae" } });
+    fireEvent.click(screen.getByRole("button", { name: /Continue to Sequencing Specs/i }));
+
+    // Step 3
+    fireEvent.click(screen.getByRole("checkbox"));
+    fireEvent.click(screen.getByRole("button", { name: /Continue to Runs & Sequence Files/i }));
+
+    // Step 4: Browser mode is active by default with no files dropped
+    expect(screen.getByText(/Sequence File Selection Required/i)).toBeDefined();
+    const nextBtn = screen.getByRole("button", { name: /Review & Ingest Dataset/i }) as HTMLButtonElement;
+    expect(nextBtn.disabled).toBe(true);
+
+    // Switching to Remote Cluster mode enables the button
+    const remoteBtn = screen.getByRole("tab", { name: /Remote Server \/ HPC Cluster Declaration/i });
+    fireEvent.click(remoteBtn);
+    expect(nextBtn.disabled).toBe(false);
   });
 
   it("displays inline validation errors and blocks Step 2 when clicking Proceed with empty fields", () => {
