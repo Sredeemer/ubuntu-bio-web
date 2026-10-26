@@ -35,6 +35,7 @@ import {
 import { createRepository } from "../../lib/api";
 import { useAuth } from "../../context/AuthContext";
 import { SequenceDropzone } from "./SequenceDropzone";
+import { OrganismSelector } from "./OrganismSelector";
 import { generateDatasetReadme, generateDatasetSamplesTsv, SequencingRunEntry } from "../../lib/readmeGenerator";
 import { WebSequenceInspectionResult } from "../../lib/sequenceSnifferWeb";
 
@@ -651,6 +652,27 @@ export function SubmitDatasetPage() {
                     </div>
                   )}
 
+                  <div className="form-field full-width" style={{ marginBottom: "20px" }}>
+                    <label className="form-label">
+                      Select Target Organism (Taxonomy Search) <span className="req">*</span>
+                    </label>
+                    <OrganismSelector
+                      valueTaxonId={taxonId}
+                      valueTaxonName={taxonName}
+                      onChange={(sel) => {
+                        setTaxonId(sel.taxonId);
+                        setTaxonName(sel.taxonName);
+                        if (sel.domain) {
+                          if (sel.domain === "virus") setPathogenType("Virus");
+                          else if (sel.domain === "bacteria") setPathogenType("Bacteria");
+                          else if (sel.domain === "parasite" || sel.domain === "vector") setPathogenType("Vector");
+                          else if (sel.domain === "plant") setPathogenType("Fungus");
+                        }
+                      }}
+                      error={touchedFields.taxonId && !taxonId ? "Target organism is required" : undefined}
+                    />
+                  </div>
+
                   <div className="form-grid">
                     <div className="form-field">
                       <div className="form-label-row">
@@ -737,17 +759,39 @@ export function SubmitDatasetPage() {
                     </div>
 
                     <div className="form-field">
-                      <label htmlFor="input-host-species" className="form-label">
-                        Host Organism / Vector
-                      </label>
+                      <div className="form-label-row">
+                        <label htmlFor="input-host-species" className="form-label">
+                          Host Organism / Source
+                        </label>
+                        <Tooltip.Root>
+                          <Tooltip.Trigger asChild>
+                            <button
+                              type="button"
+                              className="btn-tooltip-trigger"
+                              aria-label="Explain Host Organism"
+                            >
+                              <Info size={14} />
+                            </button>
+                          </Tooltip.Trigger>
+                          <Tooltip.Portal>
+                            <Tooltip.Content className="tooltip-content" sideOffset={5}>
+                              Patient or reservoir from which the pathogen isolate was sampled.
+                              <Tooltip.Arrow className="tooltip-arrow" />
+                            </Tooltip.Content>
+                          </Tooltip.Portal>
+                        </Tooltip.Root>
+                      </div>
                       <input
                         id="input-host-species"
                         type="text"
                         className="form-input"
-                        placeholder="e.g. Mastomys natalensis, Rousettus aegyptiacus"
+                        placeholder="e.g. Homo sapiens (Clinical isolate), Mastomys natalensis"
                         value={hostSpecies}
                         onChange={(e) => setHostSpecies(e.target.value)}
                       />
+                      <span className="field-hint">
+                        Clinical pathogen isolates from human patients (Homo sapiens) are permitted and encouraged.
+                      </span>
                     </div>
 
                     <div className="form-field">
@@ -758,10 +802,13 @@ export function SubmitDatasetPage() {
                         id="input-host-tax-id"
                         type="number"
                         className="form-input font-mono"
-                        placeholder="e.g. 10090, 7165"
+                        placeholder="e.g. 9606 (Human), 10090 (Rodent), 7165 (Mosquito)"
                         value={hostTaxonId}
                         onChange={(e) => setHostTaxonId(e.target.value)}
                       />
+                      <span className="field-hint">
+                        Specimen source NCBI ID (e.g. 9606 if isolated from human patient).
+                      </span>
                     </div>
 
                     <div className="form-field">

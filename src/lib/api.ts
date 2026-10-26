@@ -6,6 +6,7 @@
 
 import { DatasetItem, DatasetFile, DATASETS, getDataset as getLocalDataset } from "../data/datasets";
 import { AU_COUNTRIES } from "../data/auCountries";
+import { AFRICAN_TAXA, searchAfricanTaxa } from "../data/africanTaxa";
 
 /**
  * UbuntuBio Hub API Base URL
@@ -758,5 +759,89 @@ export async function verifyDeviceCode(
     return { success: false, error: msg };
   }
 }
+
+export interface TaxonSuggestion {
+  taxon_id: number;
+  scientific_name: string;
+  common_name?: string | null;
+  rank: string;
+  genus?: string | null;
+  family?: string | null;
+  order?: string | null;
+  domain?: string | null;
+  is_prohibited?: boolean;
+}
+
+/**
+ * Suggest organism taxonomy from local server NCBI taxdump service.
+ * Gracefully falls back to bundled African priority taxonomy if backend is unreachable.
+ */
+export async function suggestTaxa(
+  query: string,
+  limit: number = 10
+): Promise<TaxonSuggestion[]> {
+  try {
+    const res = await fetch(
+      `${API_BASE_URL}/api/taxonomy/suggest?q=${encodeURIComponent(query)}&limit=${limit}`,
+      {
+        headers: { Accept: "application/json" },
+        cache: "no-store",
+      }
+    );
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data.taxa)) {
+        return data.taxa;
+      }
+    }
+  } catch {
+    // Backend offline / SSR fallback
+  }
+
+  // Fallback to local curated African taxa
+  const localMatches = searchAfricanTaxa(query, limit);
+  return localMatches.map((t) => ({
+    taxon_id: t.taxon_id,
+    scientific_name: t.scientific_name,
+    common_name: t.common_name,
+    rank: t.rank,
+    genus: t.genus,
+    family: t.family,
+    domain: t.domain,
+    is_prohibited: t.is_prohibited || t.taxon_id === 9606,
+  }));
+}
+
+/**
+ * Fetch detailed taxonomy for a specific NCBI Taxon ID.
+ */
+export async function getTaxonById(taxonId: number): Promise<TaxonSuggestion | null> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/taxonomy/${taxonId}`, {
+      headers: { Accept: "application/json" },
+    });
+    if (res.ok) {
+      return await res.json();
+    }
+  } catch {
+    // Fallback
+  }
+
+  const found = AFRICAN_TAXA.find((t) => t.taxon_id === taxonId);
+  if (found) {
+    return {
+      taxon_id: found.taxon_id,
+      scientific_name: found.scientific_name,
+      common_name: found.common_name,
+      rank: found.rank,
+      genus: found.genus,
+      family: found.family,
+      domain: found.domain,
+      is_prohibited: found.is_prohibited || found.taxon_id === 9606,
+    };
+  }
+  return null;
+}
+
 
 
