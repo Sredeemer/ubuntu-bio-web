@@ -321,18 +321,52 @@ export default function DocsSubmissionPage() {
                 <span className="docs-step-pill green">Step 04</span>
                 <h4>Sequencing Runs &amp; In-Browser File Sniffing</h4>
               </div>
-              <span className="docs-tag">Zero-Network Client Sniffer</span>
+              <span className="docs-tag">500 MB Threshold &amp; Sniffer</span>
             </div>
             <p>
-              In Step 4, declare your run records (Run ID, Flowcell ID, Lane) and drag your raw reads
-              (<code>.fastq.gz</code> or <code>.fasta.gz</code>) directly into the interactive dropzone.
+              In Step 4, declare your run records (Run ID, Flowcell ID, Lane) and select your sequencing files.
+              File selection is <strong>compulsory</strong> in browser submission mode:
             </p>
-            <DocsCallout type="tip" title="How Client-Side Sniffing Protects Your Bandwidth">
+            <ul className="docs-check-list">
+              <li className="docs-check-item">
+                <Check size={16} className="docs-check-icon" />
+                <span>
+                  <strong>Dual Selection Modes</strong>: Choose between <em>Local Sequence Files</em> (for direct
+                  browser upload or CLI staging) or <em>Remote Server / HPC Cluster Declaration</em> (to declare file paths
+                  located on remote institutional storage or compute nodes without transferring them through the browser).
+                </span>
+              </li>
+              <li className="docs-check-item">
+                <Check size={16} className="docs-check-icon" />
+                <span>
+                  <strong>500 MB Dual-Path Ingestion Threshold</strong>: Datasets with total size up to 500 MB are
+                  eligible for 1-click in-browser upload directly in Step 5. For cohorts exceeding 500 MB, the wizard
+                  safely registers your sovereign metadata manifest and prompts you to transmit raw sequence reads using the
+                  deduplicated, resumable <code>ubio push</code> CLI command. This prevents browser tab crashes and network
+                  socket timeouts over variable African connectivity.
+                </span>
+              </li>
+              <li className="docs-check-item">
+                <Check size={16} className="docs-check-icon" />
+                <span>
+                  <strong>Supported Formats</strong>: <code>.fastq</code>, <code>.fastq.gz</code>, <code>.fq.gz</code>,{" "}
+                  <code>.fasta</code>, <code>.fasta.gz</code>, <code>.fa.gz</code>, <code>.bam</code>, and <code>.cram</code>.
+                </span>
+              </li>
+            </ul>
+
+            <DocsCallout type="tip" title="Zero-Network Client-Side Preflight Sniffing">
               <p>
-                Before transmitting large gigabyte files, the browser uses a Web Streams decompression
-                pipeline to read the first 64 KB locally. It parses the four-line FASTQ structure, verifies
-                Phred+33 ASCII quality score integrity, samples read lengths, computes SHA-256 checksums,
-                and validates that R1 and R2 filenames match your declared run layout.
+                Before transmitting any data, the browser uses a local Web Streams decompression pipeline to inspect
+                the initial 64 KB locally. It verifies magic bytes, validates the four-line FASTQ structure, ensures Phred+33
+                ASCII quality scores fall within standard ranges (33–126), samples read lengths, computes GC percentage,
+                and derives SHA-256 chunk hashes.
+              </p>
+              <p className="mt-2">
+                <strong>Human Contamination Screening</strong>: The sniffer strictly checks headers and sequence content
+                for human chromosomes (chr1–22, chrX, chrY, chrM, GRCh37/GRCh38) and canonical human k-mer markers. Any
+                detected human sequence immediately halts submission with a clear error banner, upholding the core sovereignty
+                invariant (strict prohibition of NCBI Taxon ID 9606 / human genomic data).
               </p>
             </DocsCallout>
           </div>
@@ -344,7 +378,7 @@ export default function DocsSubmissionPage() {
                 <span className="docs-step-pill green">Step 05</span>
                 <h4>Review, Ingestion &amp; Live Repository Publication</h4>
               </div>
-              <span className="docs-tag">One-Click Publish</span>
+              <span className="docs-tag">Progress Streaming &amp; Publication</span>
             </div>
             <p>
               Review the live generated <code>README.md</code> YAML frontmatter and <code>samples.tsv</code>{" "}
@@ -354,21 +388,28 @@ export default function DocsSubmissionPage() {
               <li className="docs-check-item">
                 <Check size={16} className="docs-check-icon" />
                 <span>
-                  The backend registers the repository in the Git tree and OpenXet content-addressed CAS store.
+                  <strong>In-Browser Upload Progress (Cohorts &le; 500 MB)</strong>: For cohorts within the 500 MB
+                  threshold, a live progress indicator displays real-time stages:
+                  repository initialization (15%), sequence read streaming to OpenXet CAS (45%), SHA-256 chunk and Phred
+                  quality validation (75%), Git pointer generation (95%), and publication completion (100%).
                 </span>
               </li>
               <li className="docs-check-item">
                 <Check size={16} className="docs-check-icon" />
                 <span>
-                  Meilisearch indexes biological taxonomy, country tags, and gene references in under 50ms.
+                  <strong>Large Cohort &amp; HPC Handoff (&gt; 500 MB)</strong>: When the 500 MB limit is exceeded or
+                  in remote declaration mode, the repository manifest is registered on the Hub, and the wizard generates
+                  the exact copyable <code> ubio check .</code> and <code>ubio push</code> commands to upload raw read
+                  files with resumable OpenXet content-addressed chunking.
                 </span>
               </li>
               <li className="docs-check-item">
                 <Check size={16} className="docs-check-icon" />
                 <span>
-                  You are instantly redirected to your live dataset repository page (e.g.{" "}
-                  <code>/datasets/pasteur-dakar/malawi-amr-ecoli</code>) where your interactive file tree
-                  and direct download buttons are immediately accessible.
+                  <strong>Search Indexing &amp; Live Navigation</strong>: Meilisearch indexes biological taxonomy, AU
+                  country tags, and gene references in under 50ms, and you are immediately redirected to your live repository
+                  page (e.g. <code>/datasets/pasteur-dakar/malawi-amr-ecoli</code>) with interactive file tree, download
+                  links, and verified sovereign metadata.
                 </span>
               </li>
             </ul>

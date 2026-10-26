@@ -144,6 +144,7 @@ ubio create pasteur-dakar/cholera-2026 --domain bacteria --access public --descr
             <li><code>--access</code>, <code>-a</code>: Access tier (<code>public</code>, <code>gated</code>, <code>private</code>) [default: public]</li>
             <li><code>--description</code>: Human-readable study description</li>
             <li><code>--license</code>: Data license SPDX identifier [default: cc-by-4.0]</li>
+            <li><code>--exist-ok</code>: Do not error if repository already exists on Hub (recommended for idempotent pipelines and scripts following web wizard manifest registration)</li>
           </ul>
         </section>
 
@@ -220,6 +221,14 @@ ubio check . --json`}
           <p>
             Runs pre-push validation and synchronizes dataset sequence reads, BAM alignments, and metadata to OpenXet Content-Addressed Storage (CAS) on the UbuntuBio Hub.
           </p>
+
+          <DocsCallout type="note" title="Recommended Pathway for Large Cohorts (> 500 MB)">
+            <p>
+              While small runs (&le; 500 MB) can be ingested directly through the 5-step web UI wizard, <code>ubio push</code>
+              is the mandatory and recommended pathway for larger cohorts, whole-genome datasets, and HPC compute nodes.
+              It leverages Gearhash CDC chunking (64 KiB), Blake3 deduplication, and automatic resume over unstable network links.
+            </p>
+          </DocsCallout>
 
           <DocsCallout type="warning" title="Strict Non-Human Invariant">
             <p>

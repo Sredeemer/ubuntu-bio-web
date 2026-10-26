@@ -259,7 +259,9 @@ export function SubmitDatasetPage() {
   const displayNamespace = effectiveNamespace || "namespace";
   const displayDatasetSlug = datasetId || "dataset-slug";
 
-  const generatedCliCmd = `ubio create ${displayNamespace}/${displayDatasetSlug} --domain ${(pathogenType || "virus").toLowerCase()}\nubio check .\nubio push ${displayNamespace}/${displayDatasetSlug} . --message "Initial sovereign dataset upload"`;
+  const generatedCliCmd = hubRepoSlug
+    ? `ubio check .\nubio push ${displayNamespace}/${displayDatasetSlug} . --message "Initial sovereign dataset upload"`
+    : `ubio create ${displayNamespace}/${displayDatasetSlug} --domain ${(pathogenType || "virus").toLowerCase()} --exist-ok\nubio check .\nubio push ${displayNamespace}/${displayDatasetSlug} . --message "Initial sovereign dataset upload"`;
 
   const readmeParams = {
     title: name || "Genomic Surveillance Cohort",
