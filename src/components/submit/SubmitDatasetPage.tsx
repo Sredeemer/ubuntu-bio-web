@@ -36,8 +36,17 @@ import { createRepository } from "../../lib/api";
 import { useAuth } from "../../context/AuthContext";
 import { SequenceDropzone } from "./SequenceDropzone";
 import { OrganismSelector } from "./OrganismSelector";
+import { DatePicker } from "../ui/DatePicker";
 import { generateDatasetReadme, generateDatasetSamplesTsv, SequencingRunEntry } from "../../lib/readmeGenerator";
 import { WebSequenceInspectionResult } from "../../lib/sequenceSnifferWeb";
+
+const HOST_PRESETS = [
+  { label: "Human Patient (9606)", species: "Homo sapiens (Clinical isolate)", taxonId: "9606" },
+  { label: "Mosquito Vector (7165)", species: "Anopheles gambiae (Vector)", taxonId: "7165" },
+  { label: "Bovine / Cattle (9913)", species: "Bos taurus (Livestock)", taxonId: "9913" },
+  { label: "Rodent Reservoir (10090)", species: "Mastomys natalensis (Rodent)", taxonId: "10090" },
+  { label: "Environmental (None)", species: "Environmental / Water isolate", taxonId: "" },
+];
 
 const WIZARD_STEPS = [
   { step: 1 as const, num: "01", label: "Identification & Metadata" },
@@ -722,6 +731,9 @@ export function SubmitDatasetPage() {
                         value={taxonName}
                         onChange={(e) => setTaxonName(e.target.value)}
                       />
+                      <span className="field-hint">
+                        Full binomial or formal taxonomic name of the target organism.
+                      </span>
                     </div>
 
                     <div className="form-field">
@@ -792,6 +804,28 @@ export function SubmitDatasetPage() {
                       <span className="field-hint">
                         Clinical pathogen isolates from human patients (Homo sapiens) are permitted and encouraged.
                       </span>
+
+                      {/* Common African Host Presets */}
+                      <div className="host-presets-wrapper">
+                        <span className="host-presets-label">Quick Host Presets:</span>
+                        <div className="host-presets-chips">
+                          {HOST_PRESETS.map((hp) => (
+                            <button
+                              key={hp.label}
+                              type="button"
+                              className={`host-preset-chip ${
+                                hostTaxonId === hp.taxonId && hostSpecies === hp.species ? "active" : ""
+                              }`}
+                              onClick={() => {
+                                setHostSpecies(hp.species);
+                                setHostTaxonId(hp.taxonId);
+                              }}
+                            >
+                              {hp.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
                     </div>
 
                     <div className="form-field">
@@ -815,13 +849,16 @@ export function SubmitDatasetPage() {
                       <label htmlFor="input-sample-date" className="form-label">
                         Collection Date
                       </label>
-                      <input
+                      <DatePicker
                         id="input-sample-date"
-                        type="date"
-                        className="form-input"
                         value={collectionDate}
-                        onChange={(e) => setCollectionDate(e.target.value)}
+                        onChange={(iso) => setCollectionDate(iso)}
+                        placeholder="Select sample collection date"
+                        maxDate={new Date().toISOString().split("T")[0]}
                       />
+                      <span className="field-hint">
+                        Sample collection date (strictly ISO-8601 YYYY-MM-DD).
+                      </span>
                     </div>
 
                     <div className="form-field">
@@ -836,6 +873,9 @@ export function SubmitDatasetPage() {
                         value={sampleType}
                         onChange={(e) => setSampleType(e.target.value)}
                       />
+                      <span className="field-hint">
+                        Anatomical site or environmental medium sampled.
+                      </span>
                     </div>
                   </div>
 
@@ -1011,6 +1051,9 @@ export function SubmitDatasetPage() {
                           </option>
                         ))}
                       </select>
+                      <span className="field-hint">
+                        Pathogen containment protocol under WHO/CDC laboratory guidelines.
+                      </span>
                     </div>
 
                     <div className="form-field full-width">
