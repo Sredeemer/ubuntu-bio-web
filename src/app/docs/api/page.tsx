@@ -12,9 +12,11 @@ export const metadata: Metadata = {
 };
 
 const TOC_ITEMS: TocItem[] = [
-  { id: "api-datasets", label: "GET /v1/datasets", level: 2 },
-  { id: "api-dataset-detail", label: "GET /v1/datasets/{id}", level: 2 },
-  { id: "api-cas-chunks", label: "GET /v1/cas/chunks/{hash}", level: 2 },
+  { id: "api-datasets", label: "GET /api/v1/datasets", level: 2 },
+  { id: "api-dataset-detail", label: "GET /api/v1/datasets/{id}", level: 2 },
+  { id: "api-taxonomy-suggest", label: "GET /api/v1/taxonomy/suggest", level: 2 },
+  { id: "api-taxonomy-detail", label: "GET /api/v1/taxonomy/{id}", level: 2 },
+  { id: "api-cas-chunks", label: "GET /api/v1/cas/chunks/{hash}", level: 2 },
 ];
 
 export default function DocsApiPage() {
@@ -119,6 +121,98 @@ export default function DocsApiPage() {
             title="cURL Example"
             language="bash"
             code={`curl -X GET "https://hub.ubuntubio.org/v1/datasets/pasteur-dakar/lassa-surveillance-2026" \\
+  -H "Accept: application/json"`}
+          />
+        </section>
+
+        {/* Endpoint: GET /api/v1/taxonomy/suggest */}
+        <section className="docs-section" id="api-taxonomy-suggest">
+          <h2>Taxonomy Autocomplete &amp; Suggestion API</h2>
+          <div className="api-endpoint-card">
+            <div className="endpoint-header">
+              <span className="http-method get">GET</span>
+              <code className="endpoint-path">/api/v1/taxonomy/suggest</code>
+            </div>
+            <p>
+              Queries the self-hosted NCBI taxdump index for biological organisms by scientific binomial name,
+              common name, genus, family, or NCBI Taxon ID. Completely air-gapped and self-contained (zero external NCBI calls).
+            </p>
+          </div>
+
+          <h4>Query Parameters:</h4>
+          <div className="params-table-wrapper">
+            <table className="params-table">
+              <thead>
+                <tr>
+                  <th>Parameter</th>
+                  <th>Type</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>q</code></td>
+                  <td>string</td>
+                  <td>Search term (e.g. <code>cholera</code>, <code>mpox</code>, <code>vibrio</code>, or numeric Taxon ID <code>666</code>). When empty, returns top African priority surveillance organisms.</td>
+                </tr>
+                <tr>
+                  <td><code>limit</code></td>
+                  <td>integer</td>
+                  <td>Maximum number of suggestions to return (1–50, default: <code>10</code>).</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <DocsCodeBlock
+            title="cURL Example"
+            language="bash"
+            code={`curl -X GET "https://hub.ubuntubio.org/api/v1/taxonomy/suggest?q=cholera&limit=5" \\
+  -H "Accept: application/json"`}
+          />
+
+          <h4>Response Payload (JSON):</h4>
+          <DocsCodeBlock
+            title="Taxonomy Suggestion Response"
+            language="json"
+            code={`{
+  "query": "cholera",
+  "count": 1,
+  "taxa": [
+    {
+      "taxon_id": 666,
+      "scientific_name": "Vibrio cholerae",
+      "common_name": "Cholera",
+      "rank": "species",
+      "genus": "Vibrio",
+      "family": "Vibrionaceae",
+      "order": "Vibrionales",
+      "domain": "bacteria",
+      "is_prohibited": false
+    }
+  ]
+}`}
+          />
+        </section>
+
+        {/* Endpoint: GET /api/v1/taxonomy/{taxon_id} */}
+        <section className="docs-section" id="api-taxonomy-detail">
+          <h2>Taxon Lineage &amp; Verification Lookup</h2>
+          <div className="api-endpoint-card">
+            <div className="endpoint-header">
+              <span className="http-method get">GET</span>
+              <code className="endpoint-path">/api/v1/taxonomy/{`{taxon_id}`}</code>
+            </div>
+            <p>
+              Retrieves authoritative taxonomy details and lineage for a specific numerical NCBI Taxon ID.
+              Flags strictly prohibited human genomic data (Taxon ID <code>9606</code>) with <code>is_prohibited: true</code>.
+            </p>
+          </div>
+
+          <DocsCodeBlock
+            title="cURL Example"
+            language="bash"
+            code={`curl -X GET "https://hub.ubuntubio.org/api/v1/taxonomy/10244" \\
   -H "Accept: application/json"`}
           />
         </section>

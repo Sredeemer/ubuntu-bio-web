@@ -175,8 +175,10 @@ ubio init inrb-kinshasa/ebola-drc-2026 \\
             <li><code>--title</code>, <code>-t</code>: Formal publication / study title</li>
             <li><code>--domain</code>, <code>-d</code>: Biological domain (<code>virus</code>, <code>bacteria</code>, <code>vector</code>, etc.)</li>
             <li><code>--country</code>, <code>-c</code>: ISO-3166-1 alpha-2 code of African Union member state</li>
-            <li><code>--taxon-id</code>: NCBI Taxonomy numeric ID (Taxon 9606 is prohibited)</li>
-            <li><code>--scientific-name</code>: Pathogen binomial nomenclature</li>
+            <li><code>--taxon-id</code>: NCBI Taxonomy numeric ID of target organism (Taxon <code>9606</code> is prohibited)</li>
+            <li><code>--scientific-name</code>: Target organism binomial nomenclature</li>
+            <li><code>--host</code>: Specimen source host (e.g. <code>"Homo sapiens"</code> for clinical isolates, <code>"Mastomys natalensis"</code>)</li>
+            <li><code>--host-taxon-id</code>: NCBI Taxon ID of specimen host (e.g. <code>9606</code> for human clinical patients)</li>
             <li><code>--platform</code>: Sequencing platform (<code>ILLUMINA</code>, <code>OXFORD_NANOPORE</code>, <code>PACBIO</code>, <code>MGI</code>)</li>
             <li><code>--layout</code>: <code>PAIRED</code> or <code>SINGLE</code></li>
             <li><code>--non-interactive</code>: Skip prompts and use defaults/flags</li>
@@ -203,7 +205,8 @@ ubio check . --json`}
           />
           <h4>Diagnostics Performed:</h4>
           <ul>
-            <li><strong>YAML Frontmatter Schema</strong>: Verifies mandatory fields, ISO AU country codes, and non-human taxon ID.</li>
+            <li><strong>YAML Frontmatter Schema</strong>: Verifies mandatory fields, ISO AU country codes, and non-human target taxon ID.</li>
+            <li><strong>Target vs. Host Provenance</strong>: Confirms target pathogen organism is non-human while validating clinical patient host provenance (<code>host: Homo sapiens</code> / <code>9606</code>).</li>
             <li><strong>Two-Way Read File Parity</strong>: Ensures declared forward/reverse reads exist on disk and all local FASTQ files are declared.</li>
             <li><strong>Sequence Format Sniffing</strong>: Checks Gzip, BAM, and FASTQ magic bytes and verifies 4-line record structural synchronization.</li>
             <li><strong>Phred Quality Scale</strong>: Classifies Phred+33 vs legacy Phred+64 encoding.</li>

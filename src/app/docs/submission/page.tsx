@@ -185,7 +185,7 @@ export default function DocsSubmissionPage() {
               <span className="docs-tag">Safety Screening</span>
             </div>
             <p>
-              Specify the target biological organism. UbuntuBio enforces strict sovereignty and safety controls:
+              Specify the target biological organism using the interactive <strong>OrganismSelector</strong> search bar or quick-pick priority chips. UbuntuBio enforces strict sovereignty and safety controls:
             </p>
             <table className="docs-fields-table">
               <thead>
@@ -197,38 +197,60 @@ export default function DocsSubmissionPage() {
               </thead>
               <tbody>
                 <tr>
-                  <td><code>Pathogen Type</code></td>
-                  <td>Select Virus, Bacteria, Fungus, or Vector.</td>
-                  <td><code>Bacteria</code></td>
+                  <td><code>Target Organism Search</code></td>
+                  <td>Interactive autocomplete searching the self-hosted NCBI taxdump index by common name, scientific name, or taxon ID.</td>
+                  <td>Search <code>Cholera</code>, <code>Mpox</code>, <code>1773</code>, or click priority chips</td>
                 </tr>
                 <tr>
-                  <td><code>NCBI Taxon ID</code></td>
-                  <td>Standard NCBI taxonomy numerical identifier.</td>
-                  <td><code>562</code> (for <em>Escherichia coli</em>)</td>
+                  <td><code>NCBI Taxonomy ID</code></td>
+                  <td>Standard numerical identifier from NCBI Taxonomy. Must be a non-human organism (Taxon ID <code>9606</code> is blocked).</td>
+                  <td><code>562</code> (<em>Escherichia coli</em>) or <code>666</code> (<em>Vibrio cholerae</em>)</td>
                 </tr>
                 <tr>
                   <td><code>Scientific Name</code></td>
-                  <td>Canonical scientific species name.</td>
-                  <td><code>Escherichia coli</code></td>
+                  <td>Canonical binomial nomenclature populated automatically from the local taxdump index.</td>
+                  <td><code>Vibrio cholerae</code></td>
                 </tr>
                 <tr>
-                  <td><code>Host Species &amp; ID</code></td>
-                  <td>Source host from which the sample was isolated (optional host provenance).</td>
-                  <td><code>Homo sapiens</code> (Taxon <code>9606</code>) or <code>Mastomys natalensis</code></td>
+                  <td><code>Pathogen Category</code></td>
+                  <td>Biological kingdom or domain (Virus, Bacteria, Vector, Fungus / Crop Pathogen).</td>
+                  <td><code>Bacteria</code></td>
                 </tr>
                 <tr>
-                  <td><code>Sample Type</code></td>
-                  <td>Clinical specimen or environmental isolate source.</td>
-                  <td><code>Urine specimen</code> or <code>Blood culture</code></td>
+                  <td><code>Host Specimen Source</code></td>
+                  <td>Patient or environmental reservoir from which the isolate was sampled. Human host is permitted here for clinical isolates.</td>
+                  <td><code>Homo sapiens (Clinical isolate)</code> or <code>Mastomys natalensis</code></td>
+                </tr>
+                <tr>
+                  <td><code>Host NCBI Taxon ID</code></td>
+                  <td>NCBI Taxon ID of the specimen host (e.g. <code>9606</code> for human clinical isolates, <code>7165</code> for mosquito vectors).</td>
+                  <td><code>9606</code> (Human) or <code>10090</code> (Rodent)</td>
+                </tr>
+                <tr>
+                  <td><code>Specimen / Sample Type</code></td>
+                  <td>Anatomical or environmental matrix source of the isolate.</td>
+                  <td><code>Stool swab</code>, <code>Sputum</code>, or <code>Blood culture</code></td>
                 </tr>
               </tbody>
             </table>
 
-            <DocsCallout type="warning" title="Non-Negotiable Rule: Prohibited Human Taxon ID (9606)">
+            <DocsCallout type="tip" title="Clinical Pathogen Isolates vs. Human Host Invariant">
               <p>
-                Human genomic sequencing data (NCBI Taxon ID <code>9606</code>) as the target dataset
-                is strictly prohibited in UbuntuBio v1. The wizard actively validates this and will block
-                progression if <code>9606</code> is entered as the target organism taxon ID.
+                <strong>Is clinical pathogen data from human patients permitted? Yes!</strong>
+                <br />
+                The non-human invariant strictly regulates the <strong>Target Organism</strong> (the sequenced genome).
+                When submitting clinical pathogens (e.g. <em>Vibrio cholerae</em>, <em>Mycobacterium tuberculosis</em>, or <em>Mpox virus</em>)
+                isolated from hospital patients, your target organism must be the microbial pathogen (e.g. Taxon <code>666</code>),
+                while the specimen host is declared as <code>Homo sapiens</code> (Taxon <code>9606</code>).
+              </p>
+            </DocsCallout>
+
+            <DocsCallout type="warning" title="Non-Negotiable Rule: Prohibited Human Target Taxon (9606)">
+              <p>
+                Human genomic sequencing data (NCBI Taxon ID <code>9606</code> / <em>Homo sapiens</em>) as the
+                target dataset is strictly prohibited in UbuntuBio v1 under African Union Data Sovereignty &amp;
+                Genomic Privacy Invariants. Submissions of human germline DNA, human RNA-seq, or human variant calls
+                are blocked at both the UI wizard layer and the server-side git pre-receive hook.
               </p>
             </DocsCallout>
           </div>

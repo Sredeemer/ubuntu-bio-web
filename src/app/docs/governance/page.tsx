@@ -64,17 +64,29 @@ export default function DocsGovernancePage() {
 
           <DocsCallout type="warning" title="Strict Prohibition: NCBI Taxon ID 9606 (Homo sapiens)">
             <p>
-              In v1, UbuntuBio strictly prohibits human genomic data. Submissions containing human DNA,
-              RNA, or variant calls (Taxon 9606) are blocked at the validator layer and will fail ingest.
+              In v1, UbuntuBio strictly prohibits human genomic data. Submissions containing human germline DNA,
+              human RNA-seq, or human variant calls (Taxon <code>9606</code>) are blocked at the validator layer and will fail ingest.
               The platform is dedicated exclusively to pathogen surveillance, veterinary genomics, and crop biodiversity.
             </p>
           </DocsCallout>
 
-          <DocsCallout type="note" title="Biological Screening Guardrails">
+          <DocsCallout type="tip" title="Clinical Pathogen Isolates from Human Hosts Are Fully Supported">
             <p>
-              To prevent accidental submission of un-depleted human clinical host reads, the <code>ubio check</code> validator
-              and server-side pre-receive git hooks screen sequence headers for human chromosomal references (<code>chr1</code>..<code>chr22</code>,
-              <code>GRCh38</code>) and test for canonical human 25-mer rRNA and mtDNA marker signatures.
+              The human exclusion invariant applies strictly to the <strong>target biological organism</strong>.
+              Clinical pathogen surveillance (e.g. <em>Vibrio cholerae</em>, <em>Mycobacterium tuberculosis</em>,
+              or <em>Mpox virus</em> isolated from human patient blood, sputum, or swab specimens) is the core mission
+              of UbuntuBio. In these studies, the target organism is the microbe (e.g. Taxon <code>666</code>),
+              and the specimen host is documented as <code>Homo sapiens</code> (Taxon <code>9606</code>).
+            </p>
+          </DocsCallout>
+
+          <DocsCallout type="note" title="Biological Screening & Host Depletion Guardrails">
+            <p>
+              To protect patient privacy, submitting laboratories are advised to perform bioinformatic host depletion
+              (e.g., using <code>Hostile</code>, <code>KneadData</code>, or mapping against <code>GRCh38</code>) prior to upload.
+              The <code>ubio check</code> validator and server-side pre-receive git hooks actively screen sequence headers
+              for human chromosomal references (<code>chr1</code>..<code>chr22</code>) and test for canonical human 25-mer
+              rRNA and mtDNA marker signatures to prevent accidental leaks.
             </p>
           </DocsCallout>
 
