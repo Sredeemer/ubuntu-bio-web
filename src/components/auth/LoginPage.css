@@ -301,19 +301,6 @@
   animation: floatSlow 8s ease-in-out infinite alternate;
 }
 
-.hero-motif-star {
-  position: absolute;
-  bottom: 12%;
-  right: 12%;
-  font-size: 260px;
-  line-height: 1;
-  font-weight: 900;
-  color: rgba(0, 237, 100, 0.1);
-  user-select: none;
-  pointer-events: none;
-  transform: rotate(15deg);
-}
-
 .hero-motif-curve {
   position: absolute;
   top: -10%;

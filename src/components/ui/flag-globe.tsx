@@ -517,7 +517,7 @@ export function FlagGlobe({
   theta = 0.3,
   altitude = 0.125,
   markerDots = false,
-  stars = true,
+  stars = false,
   baseColor,
   glowColor,
   dark,

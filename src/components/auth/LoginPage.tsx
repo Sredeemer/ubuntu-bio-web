@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, AlertCircle, Loader2, KeyRound, Sparkles } from "lucide-react";
+import { ArrowRight, AlertCircle, Loader2, KeyRound, UserCheck } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { devLogin } from "../../lib/api";
 import { UbuntuBioLogo } from "../icons/UbuntuBioLogo";
@@ -170,7 +170,7 @@ export function LoginPage() {
               disabled={loading}
               title="Sign in with a sandbox test researcher account"
             >
-              <Sparkles size={14} />
+              <UserCheck size={14} />
               <span>Quick Sandbox Login (Dr. Chinedu Okafor)</span>
             </button>
           </div>
@@ -189,7 +189,6 @@ export function LoginPage() {
       {/* ── RIGHT PANE: Deep Teal Showcase Column ─────────────────────────── */}
       <div className="ubio-login-hero-pane">
         <div className="hero-motif-braces">{`{ }`}</div>
-        <div className="hero-motif-star">*</div>
         <div className="hero-motif-curve" />
 
         <div className="ubio-hero-content">

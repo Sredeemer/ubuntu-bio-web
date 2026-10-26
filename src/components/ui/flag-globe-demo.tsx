@@ -9,7 +9,7 @@ const settings = {
   altitude: 0.2,
   autoRotate: true,
   rotationSpeed: 0.16,
-  stars: true,
+  stars: false,
 };
 
 const ALL_COUNTRIES: FlagGlobeMarker[] = Object.keys(COUNTRY_COORDINATES).map((code) => ({ code }));

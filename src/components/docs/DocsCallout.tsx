@@ -1,5 +1,5 @@
 import React from "react";
-import { Info, Sparkles, AlertTriangle, ShieldAlert, CheckCircle2 } from "lucide-react";
+import { Info, Lightbulb, AlertTriangle, ShieldAlert, CheckCircle2 } from "lucide-react";
 
 export type CalloutType = "important" | "tip" | "note" | "warning" | "success";
 
@@ -17,7 +17,7 @@ export function DocsCallout({
   const renderIcon = () => {
     switch (type) {
       case "tip":
-        return <Sparkles size={15} className="docs-callout-clean-icon" />;
+        return <Lightbulb size={15} className="docs-callout-clean-icon" />;
       case "warning":
         return <AlertTriangle size={15} className="docs-callout-clean-icon" />;
       case "important":

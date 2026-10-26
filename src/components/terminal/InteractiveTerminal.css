@@ -222,10 +222,6 @@
   color: var(--brand-green);
 }
 
-.sparkle-icon {
-  color: var(--brand-green);
-}
-
 @keyframes stream-fade-in {
   to {
     opacity: 1;

@@ -17,7 +17,6 @@ import {
   ExternalLink,
   FolderTree,
   FileText,
-  Sparkles,
   Database,
   Layers,
 } from "lucide-react";

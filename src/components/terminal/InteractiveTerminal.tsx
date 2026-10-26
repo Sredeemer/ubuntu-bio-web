@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Terminal, Copy, Check, Sparkles } from "lucide-react";
+import { Terminal, Copy, Check } from "lucide-react";
 
 export interface TerminalTab {
   id: string;

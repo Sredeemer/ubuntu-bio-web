@@ -106,7 +106,7 @@ export function AfricaGlobeSection() {
               phi={0.35} // Centered on African continent
               theta={0.16} // Optimal tilt framing North, West, Central, East and Southern Africa
               markerDots={true}
-              stars={true}
+              stars={false}
               className="ubio-3d-globe"
             />
           </div>
