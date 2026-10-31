@@ -1,0 +1,137 @@
+/* ==========================================================================
+   Start Today — ivory band with dark CTA card + light resource list
+   ========================================================================== */
+
+.ubio-start-section {
+  max-width: var(--container-max-width, 1360px);
+  margin: 0 auto;
+  padding: var(--spacing-section, 96px) 32px;
+}
+
+.ubio-start-title {
+  font-size: clamp(40px, 5vw, 64px);
+  max-width: 900px;
+  margin-bottom: 40px;
+}
+
+.ubio-start-grid {
+  display: grid;
+  grid-template-columns: 1.8fr 1fr;
+  gap: 32px;
+}
+
+/* Dark CTA card */
+.start-card-dark {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: 32px;
+  padding: 40px;
+  background-color: var(--ink);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 16px 40px rgba(0, 30, 43, 0.18);
+}
+
+.start-card-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.ubio-band-light .start-card-title {
+  font-size: clamp(30px, 2.8vw, 38px);
+  color: #f5f3e7;
+}
+
+.ubio-band-light .start-card-desc {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--text-on-dark-secondary);
+}
+
+.start-card-cta {
+  margin-top: 8px;
+  border-radius: var(--radius-md);
+  padding: 12px 28px;
+}
+
+.start-card-code {
+  margin: 0;
+  padding: 20px;
+  background-color: #031017;
+  border: 1px solid var(--hairline-dark);
+  border-radius: var(--radius-lg);
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.8;
+  color: var(--text-on-dark);
+  overflow-x: auto;
+}
+
+.code-dim { color: var(--brand-green); user-select: none; }
+.code-ok { color: var(--text-on-dark-dim); }
+
+/* Light resource card */
+.start-card-light {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 36px;
+  background-color: var(--canvas-light);
+  border: 1px solid var(--hairline-light);
+  border-radius: var(--radius-xl);
+}
+
+.start-resource-list {
+  list-style: none;
+}
+
+.start-resource-list li + li {
+  border-top: 1px solid var(--hairline-light);
+}
+
+.start-resource-link {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.start-resource-link svg {
+  margin-left: auto;
+  color: var(--brand-green-dark);
+  transition: transform var(--duration-fast) var(--ease-spring);
+}
+
+.start-resource-link:hover svg {
+  transform: translateX(3px);
+}
+
+.resource-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #016bf8;
+  flex-shrink: 0;
+}
+
+@media (max-width: 1080px) {
+  .ubio-start-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .start-card-dark {
+    grid-template-columns: 1fr;
+    padding: 28px;
+  }
+
+  .ubio-start-section {
+    padding: 64px 20px;
+  }
+}

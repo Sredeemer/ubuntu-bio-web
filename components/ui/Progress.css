@@ -1,0 +1,22 @@
+/* ==========================================================================
+   UbuntuBio Shadcn Progress Component
+   High-contrast, accessible progress bar backed by @radix-ui/react-progress.
+   ========================================================================== */
+
+.ubio-progress-root {
+  position: relative;
+  height: 8px;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 9999px;
+  background-color: #e2e8f0;
+}
+
+.ubio-progress-indicator {
+  height: 100%;
+  width: 100%;
+  flex: 1;
+  background-color: #15803d;
+  border-radius: 9999px;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}

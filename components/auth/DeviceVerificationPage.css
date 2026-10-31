@@ -1,0 +1,226 @@
+/* =========================================================================
+   UbuntuBio Device Verification Page (RFC 8628)
+   ========================================================================= */
+
+.ubio-device-container {
+  min-height: 80vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1.5rem;
+  background: radial-gradient(circle at 50% 20%, rgba(0, 237, 100, 0.05) 0%, rgba(10, 15, 29, 0.95) 70%);
+}
+
+.ubio-device-card {
+  max-width: 520px;
+  width: 100%;
+  background: #111827;
+  border: 1px solid #1f2937;
+  border-radius: 16px;
+  padding: 2.5rem;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+  position: relative;
+  overflow: hidden;
+}
+
+.ubio-device-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #00ed64, #00d2ff, #f59e0b);
+}
+
+.ubio-device-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.ubio-device-badge-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(0, 237, 100, 0.1);
+  border: 1px solid rgba(0, 237, 100, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.25rem;
+}
+
+.ubio-device-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #f9fafb;
+  margin-bottom: 0.5rem;
+}
+
+.ubio-device-subtitle {
+  font-size: 0.875rem;
+  color: #9ca3af;
+  line-height: 1.5;
+}
+
+/* User identity banner */
+.ubio-device-user-badge {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #1f2937;
+  border: 1px solid #374151;
+  border-radius: 10px;
+  padding: 0.875rem 1.25rem;
+  margin-bottom: 1.75rem;
+}
+
+.ubio-device-user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.ubio-device-user-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #f3f4f6;
+}
+
+.ubio-device-orcid-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  color: #a6ce39;
+  text-decoration: none;
+}
+
+.ubio-device-input-group {
+  margin-bottom: 1.5rem;
+}
+
+.ubio-device-label {
+  display: block;
+  font-size: 0.825rem;
+  font-weight: 500;
+  color: #d1d5db;
+  margin-bottom: 0.5rem;
+}
+
+.ubio-device-input {
+  width: 100%;
+  background: #0d1117;
+  border: 1.5px solid #374151;
+  border-radius: 8px;
+  padding: 0.875rem 1rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: #00ed64;
+  text-align: center;
+  text-transform: uppercase;
+  transition: all 0.2s ease;
+}
+
+.ubio-device-input:focus {
+  outline: none;
+  border-color: #00ed64;
+  box-shadow: 0 0 0 3px rgba(0, 237, 100, 0.15);
+}
+
+.ubio-device-permissions-card {
+  background: rgba(17, 24, 39, 0.8);
+  border: 1px solid #283144;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1.75rem;
+}
+
+.ubio-device-permissions-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #9ca3af;
+  margin-bottom: 0.5rem;
+}
+
+.ubio-device-permissions-list {
+  margin: 0;
+  padding-left: 1.25rem;
+  font-size: 0.8rem;
+  color: #d1d5db;
+  line-height: 1.6;
+}
+
+.ubio-device-btn-primary {
+  width: 100%;
+  background: #00ed64;
+  color: #001e00;
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: 0.875rem 1.25rem;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.ubio-device-btn-primary:hover:not(:disabled) {
+  background: #00ff6a;
+  box-shadow: 0 4px 14px rgba(0, 237, 100, 0.3);
+}
+
+.ubio-device-btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.ubio-device-error {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  color: #f87171;
+  font-size: 0.825rem;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.25rem;
+}
+
+.ubio-device-success-view {
+  text-align: center;
+  padding: 1rem 0;
+}
+
+.ubio-device-success-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(0, 237, 100, 0.15);
+  border: 2px solid #00ed64;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.5rem;
+  animation: pulse-success 1.5s infinite;
+}
+
+@keyframes pulse-success {
+  0% {
+    box-shadow: 0 0 0 0 rgba(0, 237, 100, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(0, 237, 100, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 237, 100, 0);
+  }
+}

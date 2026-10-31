@@ -1,0 +1,193 @@
+/**
+ * UbuntuBio Settings & Token Management Styles
+ */
+
+.ubio-settings-container {
+  max-width: 980px;
+  margin: 48px auto;
+  padding: 0 24px;
+}
+
+.ubio-settings-header {
+  margin-bottom: 36px;
+}
+
+.ubio-settings-title {
+  font-family: var(--font-display, "Plus Jakarta Sans", sans-serif);
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--text-on-dark, #ffffff);
+  letter-spacing: -0.02em;
+  margin-bottom: 8px;
+}
+
+.ubio-settings-subtitle {
+  font-size: 15px;
+  color: var(--text-on-dark-secondary, #c1ccd6);
+}
+
+/* Card Containers */
+.ubio-settings-card {
+  background-color: #08151d;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 28px;
+  margin-bottom: 32px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.ubio-settings-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ubio-card-title-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ubio-card-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.ubio-card-desc {
+  font-size: 13px;
+  color: var(--text-on-dark-secondary, #9ca3af);
+  margin-top: 2px;
+}
+
+/* Profile Grid */
+.ubio-profile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+.ubio-profile-stat-box {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.ubio-stat-label {
+  font-size: 12px;
+  color: #9ca3af;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+
+.ubio-stat-value {
+  font-size: 15px;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+/* Tokens Table */
+.ubio-tokens-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  margin-top: 16px;
+}
+
+.ubio-tokens-table th {
+  text-align: left;
+  padding: 10px 14px;
+  color: #9ca3af;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ubio-tokens-table td {
+  padding: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  color: #e5e7eb;
+}
+
+.token-scope-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: var(--font-mono, monospace);
+  background-color: rgba(0, 237, 100, 0.12);
+  color: #00ed64;
+}
+
+.btn-revoke-token {
+  padding: 6px 12px;
+  border-radius: 6px;
+  background: none;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #f87171;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-revoke-token:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: #ef4444;
+}
+
+/* Token Generated Banner */
+.token-generated-banner {
+  background-color: rgba(0, 237, 100, 0.08);
+  border: 1px solid rgba(0, 237, 100, 0.35);
+  border-radius: 10px;
+  padding: 18px 20px;
+  margin-bottom: 24px;
+}
+
+.token-code-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+  background-color: #001e2b;
+  border: 1px solid rgba(0, 237, 100, 0.3);
+  border-radius: 8px;
+  padding: 10px 14px;
+}
+
+.token-code-text {
+  font-family: var(--font-mono, monospace);
+  font-size: 14px;
+  color: #00ed64;
+  flex: 1;
+  word-break: break-all;
+}
+
+.btn-copy-token {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  background-color: #00ed64;
+  color: #001e2b;
+  font-size: 12px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.btn-copy-token:hover {
+  background-color: #00d659;
+}

@@ -1,0 +1,488 @@
+"use client";
+
+import React, { useState, useMemo, useEffect } from "react";
+import {
+  Search,
+  Filter,
+  Database,
+  Check,
+  Copy,
+  ArrowRight,
+  FolderTree,
+  ShieldCheck,
+  SlidersHorizontal,
+} from "lucide-react";
+import { DatasetItem, getAllDatasets } from "../../data/datasets";
+import { AU_COUNTRIES } from "../../data/auCountries";
+import { searchDatasets, fetchRepositories } from "../../lib/api";
+import * as Flags from "country-flag-icons/react/1x1";
+
+export function DatasetsCatalogPage() {
+  const [datasets, setDatasets] = useState<DatasetItem[]>(getAllDatasets());
+  const [isLiveApi, setIsLiveApi] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+  const [selectedBSLs, setSelectedBSLs] = useState<string[]>([]);
+  const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
+  const [countryFilterText, setCountryFilterText] = useState("");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  // Default filters to open on desktop, collapsed on mobile
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.innerWidth > 900) {
+      setIsSidebarOpen(true);
+    }
+  }, []);
+
+  // Sync with FastAPI Hub on mount & search changes
+  useEffect(() => {
+    let active = true;
+    const timer = setTimeout(() => {
+      searchDatasets(searchQuery, {
+        country: selectedCountries.length === 1 ? selectedCountries[0] : undefined,
+      }).then((result) => {
+        if (!active) return;
+        setIsLiveApi(result.isLive);
+        if (result.isLive && result.items.length > 0) {
+          const liveIds = new Set(result.items.map((i) => i.id));
+          const merged = [
+            ...result.items,
+            ...getAllDatasets().filter((d) => !liveIds.has(d.id)),
+          ];
+          setDatasets(merged);
+        }
+      });
+    }, 200);
+
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
+  }, [searchQuery, selectedCountries]);
+
+  const filteredDatasets = useMemo(() => {
+    return datasets.filter((d) => {
+      // Type filter (checkboxes)
+      if (selectedTypes.length > 0 && !selectedTypes.includes(d.pathogenType)) {
+        return false;
+      }
+      // BSL filter (checkboxes)
+      if (selectedBSLs.length > 0 && !selectedBSLs.includes(d.biocontainment)) {
+        return false;
+      }
+      // Country filter (checkboxes)
+      if (
+        selectedCountries.length > 0 &&
+        !selectedCountries.includes(d.countryCode)
+      ) {
+        return false;
+      }
+      // Search query (client-side pass for instant typing response)
+      if (!searchQuery.trim()) return true;
+      const q = searchQuery.toLowerCase().trim();
+      return (
+        d.name.toLowerCase().includes(q) ||
+        d.taxonName.toLowerCase().includes(q) ||
+        d.id.toLowerCase().includes(q) ||
+        d.leadInstitution.toLowerCase().includes(q) ||
+        d.countryName.toLowerCase().includes(q) ||
+        d.taxonId.toString().includes(q) ||
+        d.description.toLowerCase().includes(q)
+      );
+    });
+  }, [datasets, searchQuery, selectedTypes, selectedBSLs, selectedCountries]);
+
+  const toggleType = (type: string) => {
+    setSelectedTypes((prev) =>
+      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
+    );
+  };
+
+  const toggleBSL = (bsl: string) => {
+    setSelectedBSLs((prev) =>
+      prev.includes(bsl) ? prev.filter((b) => b !== bsl) : [...prev, bsl]
+    );
+  };
+
+  const toggleCountry = (code: string) => {
+    setSelectedCountries((prev) =>
+      prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code]
+    );
+  };
+
+  const handleCopyPull = (id: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    navigator.clipboard.writeText(`ubio download ${id}`);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const handleResetFilters = () => {
+    setSearchQuery("");
+    setSelectedTypes([]);
+    setSelectedBSLs([]);
+    setSelectedCountries([]);
+    setCountryFilterText("");
+  };
+
+  const visibleCountries = useMemo(() => {
+    if (!countryFilterText.trim()) return AU_COUNTRIES;
+    const q = countryFilterText.toLowerCase().trim();
+    return AU_COUNTRIES.filter(
+      (c) =>
+        c.name.toLowerCase().includes(q) || c.code.toLowerCase().includes(q)
+    );
+  }, [countryFilterText]);
+
+  const activeFiltersCount =
+    selectedTypes.length + selectedBSLs.length + selectedCountries.length;
+  const hasActiveFilters =
+    activeFiltersCount > 0 || searchQuery.trim() !== "";
+
+  return (
+    <div className="ubio-catalog-container">
+      {/* Catalog Hero Banner */}
+      <section className="ubio-catalog-hero">
+        <div className="ubio-catalog-hero-inner">
+          <div className="ubio-catalog-badge">
+            <Database size={14} />
+            <span>Open Sovereign Genomic Index</span>
+          </div>
+          <h1 className="ubio-catalog-title">
+            African Pathogen &amp; Genomic Catalog
+          </h1>
+          <p className="ubio-catalog-subtitle">
+            Explore peer-validated non-human genomic datasets across 54 African
+            Union member states with sub-50ms search and fast sequence
+            synchronization.
+          </p>
+
+          {/* Quick Metrics Bar */}
+          <div className="ubio-catalog-metrics-bar">
+            <div className="metric-item">
+              <span className="metric-val">{datasets.length}</span>
+              <span className="metric-lbl">Indexed Datasets</span>
+            </div>
+            <div className="metric-divider" />
+            <div className="metric-item">
+              <span className="metric-val">54</span>
+              <span className="metric-lbl">AU States Permitted</span>
+            </div>
+            <div className="metric-divider" />
+            <div className="metric-item">
+              <span className="metric-val">
+                {datasets
+                  .reduce((acc, d) => acc + d.samplesCount, 0)
+                  .toLocaleString()}
+              </span>
+              <span className="metric-lbl">Sequenced Samples</span>
+            </div>
+            <div className="metric-divider" />
+            <div className="metric-item">
+              <span className="metric-val">
+                {(
+                  datasets.reduce((acc, d) => acc + d.totalSizeMb, 0) / 1024
+                ).toFixed(1)}{" "}
+                GB
+              </span>
+              <span className="metric-lbl">Total Volume</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Main Two-Column Layout */}
+      <div className="ubio-catalog-layout">
+        {/* Collapsible Sidebar Filter Panel */}
+        <aside
+          className={`ubio-catalog-sidebar ${isSidebarOpen ? "open" : "collapsed"}`}
+          aria-label="Dataset filters"
+        >
+          <div className="sidebar-inner">
+            <div className="sidebar-header">
+              <div className="sidebar-header-title">
+                <Filter size={16} />
+                <span>Filters</span>
+                {activeFiltersCount > 0 && (
+                  <span className="filter-count-badge">
+                    {activeFiltersCount}
+                  </span>
+                )}
+              </div>
+              {hasActiveFilters && (
+                <button
+                  type="button"
+                  className="btn-sidebar-reset"
+                  onClick={handleResetFilters}
+                >
+                  Reset all
+                </button>
+              )}
+            </div>
+
+            {/* Pathogen Type Section */}
+            <div className="filter-section">
+              <h3 className="filter-section-title">Pathogen Type</h3>
+              <div className="catalog-filter-list">
+                {["Virus", "Bacteria", "Vector", "Fungus"].map((type) => (
+                  <label
+                    key={type}
+                    className="catalog-filter-label"
+                    htmlFor={`filter-type-${type}`}
+                  >
+                    <input
+                      type="checkbox"
+                      id={`filter-type-${type}`}
+                      name={`filter-type-${type}`}
+                      checked={selectedTypes.includes(type)}
+                      onChange={() => toggleType(type)}
+                      className="catalog-filter-checkbox"
+                    />
+                    <span className="catalog-filter-text">{type}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* Biocontainment Level Section */}
+            <div className="filter-section">
+              <h3 className="filter-section-title">Biocontainment Level</h3>
+              <div className="catalog-filter-list">
+                {["BSL-4", "BSL-3", "BSL-2", "BSL-1"].map((bsl) => (
+                  <label
+                    key={bsl}
+                    className="catalog-filter-label"
+                    htmlFor={`filter-bsl-${bsl}`}
+                  >
+                    <input
+                      type="checkbox"
+                      id={`filter-bsl-${bsl}`}
+                      name={`filter-bsl-${bsl}`}
+                      checked={selectedBSLs.includes(bsl)}
+                      onChange={() => toggleBSL(bsl)}
+                      className="catalog-filter-checkbox"
+                    />
+                    <span className="catalog-filter-text">{bsl}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* AU Member States Section */}
+            <div className="filter-section">
+              <div className="filter-section-header">
+                <h3 className="filter-section-title">AU Member State</h3>
+                {selectedCountries.length > 0 && (
+                  <button
+                    type="button"
+                    className="btn-clear-group"
+                    onClick={() => setSelectedCountries([])}
+                  >
+                    Clear ({selectedCountries.length})
+                  </button>
+                )}
+              </div>
+              <input
+                type="text"
+                placeholder="Search countries..."
+                value={countryFilterText}
+                onChange={(e) => setCountryFilterText(e.target.value)}
+                className="country-filter-input"
+                aria-label="Filter countries"
+              />
+              <div className="country-scroll-list">
+                {visibleCountries.map((c) => {
+                  const CountryFlag = (
+                    Flags as Record<
+                      string,
+                      React.ComponentType<React.SVGProps<SVGSVGElement>> | undefined
+                    >
+                  )[c.code];
+
+                  return (
+                    <label
+                      key={c.code}
+                      className="catalog-filter-label"
+                      htmlFor={`filter-country-${c.code}`}
+                    >
+                      <input
+                        type="checkbox"
+                        id={`filter-country-${c.code}`}
+                        name={`filter-country-${c.code}`}
+                        checked={selectedCountries.includes(c.code)}
+                        onChange={() => toggleCountry(c.code)}
+                        className="catalog-filter-checkbox"
+                      />
+                      <span className="catalog-filter-text">
+                        {CountryFlag ? (
+                          <span className="sidebar-flag-circle" aria-hidden="true">
+                            <CountryFlag />
+                          </span>
+                        ) : (
+                          <span className="country-code-chip">{c.code}</span>
+                        )}
+                        {c.name}
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        {/* Main Content Area */}
+        <div className="ubio-catalog-main-content">
+          <div className="catalog-toolbar">
+            <button
+              type="button"
+              className="btn-toggle-sidebar"
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              aria-label={isSidebarOpen ? "Hide Filters" : "Show Filters"}
+            >
+              <SlidersHorizontal size={16} />
+              <span>{isSidebarOpen ? "Hide Filters" : "Show Filters"}</span>
+            </button>
+
+            <div className="catalog-search-box">
+              <Search className="search-icon" size={18} />
+              <input
+                type="text"
+                className="catalog-search-input"
+                placeholder="Search by pathogen name, taxon ID, institution, country, or keyword..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                aria-label="Search datasets"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  className="btn-clear-search"
+                  onClick={() => setSearchQuery("")}
+                  aria-label="Clear search"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+
+            <div className="results-count-pill">
+              Showing <strong>{filteredDatasets.length}</strong> of{" "}
+              {datasets.length} datasets
+            </div>
+          </div>
+
+          {filteredDatasets.length === 0 ? (
+            <div className="ubio-catalog-empty">
+              <Filter size={36} className="empty-icon" />
+              <h3>No matching datasets found</h3>
+              <p>Try adjusting your search query or unchecking filters.</p>
+              <button
+                type="button"
+                className="btn-pill-primary"
+                onClick={handleResetFilters}
+              >
+                Clear All Filters
+              </button>
+            </div>
+          ) : (
+            <div className="ubio-catalog-grid">
+              {filteredDatasets.map((dataset) => {
+                const sizeFormatted =
+                  dataset.totalSizeMb >= 1000
+                    ? `${(dataset.totalSizeMb / 1024).toFixed(1)} GB`
+                    : `${dataset.totalSizeMb} MB`;
+
+                const FlagComponent = (
+                  Flags as Record<
+                    string,
+                    React.ComponentType<React.SVGProps<SVGSVGElement>> | undefined
+                  >
+                )[dataset.countryCode];
+
+                return (
+                  <article key={dataset.id} className="ubio-dataset-card">
+                    <div className="dataset-card-header">
+                      <div className="dataset-badges">
+                        {FlagComponent ? (
+                          <span
+                            className="card-flag-circle"
+                            title={dataset.countryName}
+                            aria-label={dataset.countryName}
+                          >
+                            <FlagComponent />
+                          </span>
+                        ) : (
+                          <span
+                            className="card-flag-fallback"
+                            title={dataset.countryName}
+                          >
+                            {dataset.countryCode}
+                          </span>
+                        )}
+                        <span
+                          className={`badge-type badge-${dataset.pathogenType.toLowerCase()}`}
+                        >
+                          {dataset.pathogenType}
+                        </span>
+                      </div>
+                      <span className="dataset-metrics-chip">
+                        {dataset.samplesCount > 0 ? `${dataset.samplesCount} samples` : "Genomic Callset"} · {sizeFormatted}
+                      </span>
+                    </div>
+
+                    <h2 className="dataset-card-title">
+                      <a
+                        href={`/datasets/${dataset.namespace}/${dataset.datasetId}`}
+                      >
+                        {dataset.name}
+                      </a>
+                    </h2>
+
+                    <p className="dataset-card-meta">
+                      {dataset.leadInstitution}
+                    </p>
+
+                    <p className="dataset-card-desc">
+                      {dataset.description}
+                    </p>
+
+                    <div className="dataset-card-actions">
+                      <button
+                        type="button"
+                        className="btn-copy-pull"
+                        onClick={(e) => handleCopyPull(dataset.id, e)}
+                        title={`Copy 'ubio download ${dataset.id}'`}
+                      >
+                        {copiedId === dataset.id ? (
+                          <>
+                            <Check size={13} className="text-green" />
+                            <span>Copied</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy size={13} />
+                            <code>ubio download</code>
+                          </>
+                        )}
+                      </button>
+
+                      <a
+                        href={`/datasets/${dataset.namespace}/${dataset.datasetId}`}
+                        className="btn-inspect"
+                      >
+                        Inspect <ArrowRight size={14} />
+                      </a>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
