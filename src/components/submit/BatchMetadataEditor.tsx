@@ -185,14 +185,15 @@ export function BatchMetadataEditor({
 
   return (
     <div className="batch-editor-wrapper" onPaste={handlePaste}>
+      {/* Sleek, 1-Line Compact Toolbar */}
       <div className="batch-toolbar">
-        <div className="batch-toolbar-group">
+        <div className="batch-toolbar-left">
           <button
             type="button"
             className="btn-toolbar btn-toolbar-primary"
             onClick={handleAddRow}
           >
-            <Plus size={15} />
+            <Plus size={14} />
             <span>Add Row</span>
           </button>
 
@@ -200,9 +201,10 @@ export function BatchMetadataEditor({
             type="button"
             className="btn-toolbar"
             onClick={() => fileUploadInputRef.current?.click()}
+            title="Import metadata from TSV, CSV, or Tab-delimited spreadsheet"
           >
-            <Upload size={14} />
-            <span>Upload Sheet (TSV/CSV)</span>
+            <Upload size={13} />
+            <span>Upload Sheet</span>
           </button>
 
           <input
@@ -217,47 +219,55 @@ export function BatchMetadataEditor({
             type="button"
             className="btn-toolbar"
             onClick={handleFillDefaults}
+            title="Populate missing fields with study defaults from Step 1"
           >
-            <Wand2 size={14} />
-            <span>Fill Study Defaults</span>
+            <Wand2 size={13} />
+            <span>Fill Defaults</span>
           </button>
 
           <button
             type="button"
             className="btn-toolbar"
             onClick={handleNormalizeDates}
+            title="Format slashed dates (MM/DD/YYYY) to standard ISO-8601 (YYYY-MM-DD)"
           >
-            <CalendarCheck size={14} />
-            <span>Normalize Dates (ISO-8601)</span>
+            <CalendarCheck size={13} />
+            <span>Normalize Dates</span>
           </button>
         </div>
 
-        <div className="batch-toolbar-group">
-          <button
-            type="button"
-            className="btn-toolbar"
-            onClick={() => handleDownloadTemplate("tsv")}
-          >
-            <Download size={14} />
-            <span>Download TSV</span>
-          </button>
-
-          <button
-            type="button"
-            className="btn-toolbar"
-            onClick={() => handleDownloadTemplate("csv")}
-          >
-            <Download size={14} />
-            <span>Download CSV</span>
-          </button>
+        <div className="batch-toolbar-right">
+          <div className="template-download-group">
+            <span className="template-download-label">
+              <Download size={12} />
+              <span>Template:</span>
+            </span>
+            <button
+              type="button"
+              className="btn-template-pill"
+              onClick={() => handleDownloadTemplate("tsv")}
+              title="Download TSV template with header specification"
+            >
+              TSV
+            </button>
+            <button
+              type="button"
+              className="btn-template-pill"
+              onClick={() => handleDownloadTemplate("csv")}
+              title="Download CSV template with header specification"
+            >
+              CSV
+            </button>
+          </div>
 
           {rows.length > 0 && (
             <button
               type="button"
-              className="btn-toolbar btn-toolbar-danger"
+              className="btn-toolbar btn-toolbar-ghost-danger"
               onClick={() => onChange([])}
+              title="Clear all records from table"
             >
-              <Trash2 size={14} />
+              <Trash2 size={13} />
               <span>Clear</span>
             </button>
           )}
@@ -265,7 +275,7 @@ export function BatchMetadataEditor({
       </div>
 
       <div className="batch-paste-hint">
-        <HelpCircle size={14} />
+        <HelpCircle size={13} />
         <span>Tip: You can copy cells directly from Microsoft Excel or Google Sheets and paste (Ctrl+V) into this table.</span>
       </div>
 
@@ -273,8 +283,8 @@ export function BatchMetadataEditor({
         <table className="batch-table">
           <thead>
             <tr>
-              <th style={{ width: "40px" }}>#</th>
-              <th style={{ width: "90px" }}>Status</th>
+              <th style={{ width: "36px", textAlign: "center" }}>#</th>
+              <th style={{ width: "105px" }}>Status</th>
               <th style={{ minWidth: "130px" }}>Sample ID *</th>
               <th style={{ minWidth: "90px" }}>Taxon ID *</th>
               <th style={{ minWidth: "80px" }}>AU Country *</th>
@@ -283,20 +293,20 @@ export function BatchMetadataEditor({
               <th style={{ minWidth: "140px" }}>Specimen Source *</th>
               <th style={{ minWidth: "180px" }}>Forward Read (R1) *</th>
               {isPaired && <th style={{ minWidth: "180px" }}>Reverse Read (R2) *</th>}
-              <th style={{ width: "45px" }}>Actions</th>
+              <th style={{ width: "38px", textAlign: "center" }}>Actions</th>
             </tr>
           </thead>
           <tbody>
             {rows.length === 0 ? (
               <tr>
-                <td colSpan={isPaired ? 11 : 10} style={{ textAlign: "center", padding: "36px", color: "#64748b" }}>
-                  No sample records in table. Click "Add Row", upload a spreadsheet, or drop a sequence folder above.
+                <td colSpan={isPaired ? 11 : 10} style={{ textAlign: "center", padding: "32px", color: "#64748b" }}>
+                  No sample records in table. Click &quot;Add Row&quot;, upload a spreadsheet, or drop a sequence folder above.
                 </td>
               </tr>
             ) : (
               rows.map((row, idx) => {
                 const recon = getRowReconciliation(idx);
-                const status = recon?.status || "matched";
+                const status = recon?.status || "pending_folder";
 
                 const sampleIdIssue = getCellIssue(idx, "sample_id");
                 const taxonIssue = getCellIssue(idx, "taxon_id");
@@ -310,7 +320,13 @@ export function BatchMetadataEditor({
                     <td style={{ textAlign: "center", color: "#64748b", fontWeight: 600 }}>{idx + 1}</td>
                     <td>
                       <span className={`status-badge-cell status-cell-${status}`}>
-                        {status === "matched" ? "Matched" : status === "missing_file" ? "Missing File" : "Invalid"}
+                        {status === "matched"
+                          ? "Matched"
+                          : status === "pending_folder"
+                          ? "Folder Pending"
+                          : status === "missing_file"
+                          ? "Missing File"
+                          : "Invalid"}
                       </span>
                     </td>
                     <td>
@@ -395,7 +411,7 @@ export function BatchMetadataEditor({
                         title="Delete row"
                         onClick={() => handleDeleteRow(idx)}
                       >
-                        <Trash2 size={14} />
+                        <Trash2 size={13} />
                       </button>
                     </td>
                   </tr>

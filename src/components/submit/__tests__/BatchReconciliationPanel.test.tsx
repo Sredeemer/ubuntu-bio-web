@@ -57,4 +57,29 @@ describe("BatchReconciliationPanel", () => {
     fireEvent.click(button);
     expect(onAdd).toHaveBeenCalledTimes(1);
   });
+
+  it("completely hides the parity strip when table has 0 samples and folder has 0 files", () => {
+    const emptyReport: ReconciliationReport = {
+      reconciledRows: [],
+      totalSamples: 0,
+      matchedCount: 0,
+      missingFileCount: 0,
+      invalidAttributeCount: 0,
+      orphanFiles: [],
+      canProceed: false,
+    };
+
+    render(
+      <BatchReconciliationPanel
+        report={emptyReport}
+        discoveredFiles={[]}
+        onFilesDiscovered={vi.fn()}
+        onClearFiles={vi.fn()}
+        onAddRowsFromOrphans={vi.fn()}
+      />
+    );
+
+    expect(screen.queryByTestId("batch-parity-strip")).toBeNull();
+    expect(screen.queryByText("Matched Samples")).toBeNull();
+  });
 });

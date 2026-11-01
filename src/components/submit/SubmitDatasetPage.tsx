@@ -1103,20 +1103,24 @@ export function SubmitDatasetPage() {
                       </div>
 
                       {/* Nagoya Declaration */}
-                      <div className="nagoya-consent-box" style={{ marginTop: "18px", marginBottom: "18px" }}>
-                        <label className="nagoya-checkbox-label">
+                      <div className="form-field full-width" style={{ marginTop: "16px", marginBottom: "18px" }}>
+                        <div className="checkbox-card">
                           <input
                             type="checkbox"
-                            className="nagoya-checkbox"
+                            id="chk-batch-nagoya"
+                            className="form-checkbox"
                             checked={nagoyaAgreed}
                             onChange={(e) => setNagoyaAgreed(e.target.checked)}
                           />
-                          <span className="nagoya-text">
-                            <strong>African Union Sovereign Data &amp; Nagoya Protocol Declaration</strong>
-                            <br />
-                            I certify that biological materials and digital sequence information (DSI) in this cohort originate from <strong>{selectedCountryObj?.name || "the designated AU Member State"}</strong> and conform to national prior informed consent (PIC) and mutually agreed terms (MAT) pursuant to the Nagoya Protocol and AU sovereign genomic frameworks.
-                          </span>
-                        </label>
+                          <div className="checkbox-label-group">
+                            <label htmlFor="chk-batch-nagoya" className="checkbox-label">
+                              African Union Sovereign Data &amp; Nagoya Protocol Declaration
+                            </label>
+                            <p className="checkbox-desc">
+                              I certify that biological materials and digital sequence information (DSI) in this cohort originate from <strong>{selectedCountryObj?.name || "the designated AU Member State"}</strong> and conform to national prior informed consent (PIC) and mutually agreed terms (MAT) pursuant to the Nagoya Protocol and AU sovereign genomic frameworks.
+                            </p>
+                          </div>
+                        </div>
                       </div>
                     </>
                   )}

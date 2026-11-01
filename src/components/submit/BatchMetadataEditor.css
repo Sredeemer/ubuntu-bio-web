@@ -3,48 +3,51 @@
 .batch-editor-wrapper {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 10px;
   background: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
-  padding: 16px;
-  margin-top: 14px;
+  padding: 14px;
+  margin-top: 6px;
 }
 
 .batch-toolbar {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
-  padding-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-bottom: 10px;
   border-bottom: 1px solid #f1f5f9;
 }
 
-.batch-toolbar-group {
+.batch-toolbar-left,
+.batch-toolbar-right {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
 .btn-toolbar {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  border-radius: 6px;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 5px;
   background: #f8fafc;
   border: 1px solid #cbd5e1;
-  font-size: 0.8rem;
+  font-size: 0.76rem;
   font-weight: 500;
   color: #334155;
   cursor: pointer;
-  transition: background-color 0.12s ease;
+  transition: all 0.12s ease;
+  white-space: nowrap;
 }
 
 .btn-toolbar:hover {
   background: #e2e8f0;
+  border-color: #94a3b8;
 }
 
 .btn-toolbar-primary {
@@ -58,14 +61,67 @@
   background: #15803d;
 }
 
-.btn-toolbar-danger {
+.btn-toolbar-ghost-danger {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 9px;
+  border-radius: 5px;
   color: #dc2626;
-  border-color: #fecaca;
+  border: 1px solid #fecaca;
   background: #fff5f5;
+  font-size: 0.76rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.12s ease;
 }
 
-.btn-toolbar-danger:hover {
+.btn-toolbar-ghost-danger:hover {
   background: #fee2e2;
+  border-color: #f87171;
+}
+
+/* Template Segmented Pill Group */
+.template-download-group {
+  display: inline-flex;
+  align-items: center;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.template-download-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: #475569;
+  background: #f1f5f9;
+  border-right: 1px solid #cbd5e1;
+}
+
+.btn-template-pill {
+  padding: 4px 9px;
+  background: transparent;
+  border: none;
+  border-right: 1px solid #e2e8f0;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.btn-template-pill:last-child {
+  border-right: none;
+}
+
+.btn-template-pill:hover {
+  background: #e2e8f0;
+  color: #0f172a;
 }
 
 .batch-table-container {
@@ -79,7 +135,7 @@
 .batch-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   text-align: left;
 }
 
@@ -89,15 +145,16 @@
   background: #f8fafc;
   color: #475569;
   font-weight: 600;
-  padding: 8px 10px;
+  padding: 7px 9px;
   border-bottom: 1px solid #cbd5e1;
   border-right: 1px solid #e2e8f0;
   white-space: nowrap;
   z-index: 2;
+  font-size: 0.76rem;
 }
 
 .batch-table td {
-  padding: 4px 6px;
+  padding: 3px 5px;
   border-bottom: 1px solid #f1f5f9;
   border-right: 1px solid #f1f5f9;
   vertical-align: middle;
@@ -109,8 +166,8 @@
 
 .cell-input {
   width: 100%;
-  padding: 5px 8px;
-  font-size: 0.8rem;
+  padding: 4px 7px;
+  font-size: 0.78rem;
   font-family: inherit;
   border: 1px solid transparent;
   border-radius: 4px;
@@ -137,9 +194,11 @@
   gap: 4px;
   padding: 2px 6px;
   border-radius: 4px;
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 600;
   text-transform: uppercase;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
 }
 
 .status-cell-matched {
@@ -147,12 +206,20 @@
   color: #15803d;
 }
 
+.status-cell-pending_folder {
+  background: #f1f5f9;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+}
+
+.status-cell-missing_file,
 .status-cell-missing {
   background: #fef9c3;
   color: #a16207;
 }
 
-.status-cell-invalid {
+.status-cell-invalid,
+.status-cell-invalid_attributes {
   background: #fee2e2;
   color: #b91c1c;
 }
@@ -161,8 +228,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 26px;
-  height: 26px;
+  width: 24px;
+  height: 24px;
   border-radius: 4px;
   border: none;
   background: transparent;
@@ -176,10 +243,9 @@
 }
 
 .batch-paste-hint {
-  font-size: 0.76rem;
+  font-size: 0.74rem;
   color: #64748b;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
 }
-

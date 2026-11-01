@@ -19,10 +19,12 @@ export interface RowValidationIssue {
   severity: "error" | "warning";
 }
 
+export type RowParityStatus = "matched" | "missing_file" | "pending_folder" | "invalid_attributes";
+
 export interface ReconciledRow {
   row: BatchSampleRow;
   originalIndex: number;
-  status: "matched" | "missing_file" | "invalid_attributes";
+  status: RowParityStatus;
   issues: RowValidationIssue[];
   matchedForward?: DiscoveredSequenceFile | undefined;
   matchedReverse?: DiscoveredSequenceFile | undefined;
@@ -264,20 +266,29 @@ export function reconcileBatchWithDiscoveredFiles(
       }
     }
 
-    const allIssues = [...attributeIssues, ...linkageIssues];
     const hasAttrErrors = attributeIssues.some((i) => i.severity === "error");
     const hasFileErrors = linkageIssues.some((i) => i.severity === "error");
 
-    let status: "matched" | "missing_file" | "invalid_attributes" = "matched";
+    let status: RowParityStatus = "matched";
     if (hasAttrErrors) {
       status = "invalid_attributes";
       invalidAttributeCount++;
+    } else if (discoveredFiles.length === 0) {
+      status = "pending_folder";
+      linkageIssues.push({
+        field: "forward_read",
+        message: "No folder scanned yet. Drop local sequencing directory to verify reads on disk.",
+        severity: "warning",
+      });
     } else if (hasFileErrors) {
       status = "missing_file";
       missingFileCount++;
     } else {
+      status = "matched";
       matchedCount++;
     }
+
+    const allIssues = [...attributeIssues, ...linkageIssues];
 
     reconciledRows.push({
       row,
@@ -295,8 +306,9 @@ export function reconcileBatchWithDiscoveredFiles(
 
   const canProceed =
     rows.length > 0 &&
+    discoveredFiles.length > 0 &&
     invalidAttributeCount === 0 &&
-    (discoveredFiles.length === 0 || missingFileCount === 0);
+    missingFileCount === 0;
 
   return {
     reconciledRows,

@@ -137,6 +137,29 @@ describe("parityMatcher", () => {
     expect(report.canProceed).toBe(false); // blocked due to missing files
   });
 
+  it("sets pending_folder status and disables proceed when rows exist but no sequence folder is dropped", () => {
+    const rows: BatchSampleRow[] = [
+      {
+        sample_id: "SAM_001",
+        taxon_id: 5833,
+        country: "GH",
+        collection_date: "2026-01-01",
+        host: "Homo sapiens",
+        isolation_source: "blood",
+        forward_read: "reads/SAM_001_R1.fq.gz",
+        reverse_read: "reads/SAM_001_R2.fq.gz",
+      },
+    ];
+
+    const report = reconcileBatchWithDiscoveredFiles(rows, [], true);
+
+    expect(report.totalSamples).toBe(1);
+    expect(report.matchedCount).toBe(0);
+    expect(report.missingFileCount).toBe(0);
+    expect(report.reconciledRows[0]?.status).toBe("pending_folder");
+    expect(report.canProceed).toBe(false);
+  });
+
   it("generates new batch rows from orphan files", () => {
     const orphanFiles: DiscoveredSequenceFile[] = [
       { name: "PF_ACCRA_1.fastq.gz", sizeBytes: 5000 },

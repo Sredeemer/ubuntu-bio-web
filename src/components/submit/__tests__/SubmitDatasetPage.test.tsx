@@ -395,9 +395,9 @@ describe("SubmitDatasetPage", () => {
 
     // Verify user lands directly on Step 2 (Batch Matrix & Folder Drop)
     expect(screen.getByText(/Step 2: Batch Metadata Matrix & Folder Sequence Ingestion/i)).toBeDefined();
-    expect(screen.getByText(/Drag and Drop Sequencing Folder/i)).toBeDefined();
-    expect(screen.getByText(/Download TSV/i)).toBeDefined();
-    expect(screen.getByText(/Fill Study Defaults/i)).toBeDefined();
+    expect(screen.getByText("Drag & Drop Local Sequencing Folder")).toBeDefined();
+    expect(screen.getByText("TSV")).toBeDefined();
+    expect(screen.getByText(/Fill Defaults/i)).toBeDefined();
 
     // Add a sample row in the table editor
     fireEvent.click(screen.getByText("Add Row"));

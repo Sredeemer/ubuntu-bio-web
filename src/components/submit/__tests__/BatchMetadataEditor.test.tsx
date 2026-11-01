@@ -37,11 +37,11 @@ describe("BatchMetadataEditor", () => {
     );
 
     expect(screen.getByText("Add Row")).toBeDefined();
-    expect(screen.getByText("Upload Sheet (TSV/CSV)")).toBeDefined();
-    expect(screen.getByText("Fill Study Defaults")).toBeDefined();
-    expect(screen.getByText("Normalize Dates (ISO-8601)")).toBeDefined();
-    expect(screen.getByText("Download TSV")).toBeDefined();
-    expect(screen.getByText("Download CSV")).toBeDefined();
+    expect(screen.getByText("Upload Sheet")).toBeDefined();
+    expect(screen.getByText("Fill Defaults")).toBeDefined();
+    expect(screen.getByText("Normalize Dates")).toBeDefined();
+    expect(screen.getByText("TSV")).toBeDefined();
+    expect(screen.getByText("CSV")).toBeDefined();
     expect(screen.getByText(/No sample records in table/i)).toBeDefined();
   });
 
@@ -156,5 +156,53 @@ describe("BatchMetadataEditor", () => {
     expect(countryInput.getAttribute("title")).toBe(
       "Country must be one of the 54 African Union member states."
     );
+  });
+
+  it("displays 'Folder Pending' status badge when sequence folder is not yet linked", () => {
+    const pendingRow: BatchSampleRow = {
+      sample_id: "SAM_PENDING",
+      taxon_id: 5833,
+      country: "GH",
+      collection_date: "2026-05-01",
+      host: "Homo sapiens",
+      isolation_source: "blood",
+      forward_read: "reads/pending_R1.fq.gz",
+    };
+
+    const pendingReport: ReconciliationReport = {
+      reconciledRows: [
+        {
+          row: pendingRow,
+          originalIndex: 0,
+          status: "pending_folder",
+          issues: [
+            {
+              field: "forward_read",
+              message: "No folder scanned yet.",
+              severity: "warning",
+            },
+          ],
+        },
+      ],
+      totalSamples: 1,
+      matchedCount: 0,
+      missingFileCount: 0,
+      invalidAttributeCount: 0,
+      orphanFiles: [],
+      canProceed: false,
+    };
+
+    render(
+      <BatchMetadataEditor
+        rows={[pendingRow]}
+        onChange={vi.fn()}
+        report={pendingReport}
+        defaults={sampleDefaults}
+        isPaired={false}
+      />
+    );
+
+    expect(screen.getByText("Folder Pending")).toBeDefined();
+    expect(screen.queryByText("Matched")).toBeNull();
   });
 });
