@@ -46,7 +46,6 @@ import { useAuth } from "../../context/AuthContext";
 import { SequenceDropzone } from "./SequenceDropzone";
 import { OrganismSelector } from "./OrganismSelector";
 import { HostOrganismSelector, HostEntry } from "./HostOrganismSelector";
-import { CollectionDateRangeField } from "./CollectionDateRangeField";
 import { BatchMetadataEditor } from "./BatchMetadataEditor";
 import { BatchReconciliationPanel } from "./BatchReconciliationPanel";
 import { BatchSampleRow, TemplateDefaults } from "../../lib/templateGenerator";
@@ -58,9 +57,9 @@ import {
 import { DatePicker } from "../ui/DatePicker";
 import { Progress } from "../ui/Progress";
 import {
-  CollectionDateInput,
-  EMPTY_COLLECTION_DATE_INPUT,
-  buildCollectionDateRange,
+  CollectionDateValue,
+  EMPTY_COLLECTION_DATE,
+  serializeCollectionDate,
   validateCollectionDate,
 } from "../../lib/submitValidation";
 import { generateDatasetReadme, generateDatasetSamplesTsv, SequencingRunEntry } from "../../lib/readmeGenerator";
@@ -114,17 +113,14 @@ export function SubmitDatasetPage() {
       taxonId: 9606,
     },
   ]);
-  const [collectionDateInput, setCollectionDateInput] = useState<CollectionDateInput>(EMPTY_COLLECTION_DATE_INPUT);
+  const [collectionDateInput, setCollectionDateInput] = useState<CollectionDateValue>(EMPTY_COLLECTION_DATE);
   const [sampleType, setSampleType] = useState("Blood / Swab specimen");
 
   const hostSpecies = hosts.map((h) => h.name).join(", ");
   const hostTaxonId = hosts[0]?.taxonId ? String(hosts[0].taxonId) : "";
 
   const collectionDateErrors = validateCollectionDate(collectionDateInput);
-  const dateRange = buildCollectionDateRange(collectionDateInput);
-  const collectionDate = dateRange.end_datetime
-    ? `${dateRange.start_datetime} / ${dateRange.end_datetime}`
-    : (dateRange.start_datetime || "");
+  const collectionDate = serializeCollectionDate(collectionDateInput);
 
   // Step 3: Sequencing Technology & Sovereign Specs
   const [countryCode, setCountryCode] = useState("NG");
@@ -1454,14 +1450,20 @@ export function SubmitDatasetPage() {
                       <label htmlFor="input-sample-date" className="form-label">
                         Collection Date
                       </label>
-                      <CollectionDateRangeField
+                      <DatePicker
                         id="input-sample-date"
                         value={collectionDateInput}
                         onChange={setCollectionDateInput}
-                        errors={collectionDateErrors}
+                        error={Boolean(collectionDateErrors)}
+                        ariaDescribedBy={collectionDateErrors ? "error-collection-date" : undefined}
                       />
+                      {collectionDateErrors && (
+                        <span className="field-error-msg" id="error-collection-date">
+                          <AlertCircle size={13} /> {collectionDateErrors.start ?? collectionDateErrors.end}
+                        </span>
+                      )}
                       <span className="field-hint">
-                        Sample collection date or date range with optional collection time (strictly ISO-8601).
+                        Sample collection date or date range (ISO-8601 date): YYYY-MM-DD or YYYY-MM-DD/YYYY-MM-DD.
                       </span>
                     </div>
 

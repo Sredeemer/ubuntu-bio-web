@@ -1,877 +1,483 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useLayoutEffect, useId } from "react";
-import { Calendar, ChevronDown, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { createPortal } from "react-dom";
+import { Calendar, ChevronLeft, ChevronRight, ChevronDown, X } from "lucide-react";
+import type { CollectionDateValue } from "../../lib/submitValidation";
 import "./DatePicker.css";
 
 export interface DatePickerProps {
-  /** id of the main trigger button (so an outer <label htmlFor> can point at it). */
+  /** id of the trigger button (so an outer <label htmlFor> can point at it). */
   id?: string | undefined;
-  value?: string | undefined; // ISO-8601 string: YYYY-MM-DD
-  onChange: (value: string) => void;
+  value: CollectionDateValue;
+  onChange: (value: CollectionDateValue) => void;
   placeholder?: string | undefined;
-  maxDate?: string | undefined; // ISO string, defaults to today (local)
-  minDate?: string | undefined; // ISO string (e.g. 1900-01-01)
+  /** Latest selectable date (YYYY-MM-DD); defaults to today in local time. */
+  maxDate?: string | undefined;
+  /** Earliest selectable date (YYYY-MM-DD); defaults to 1990-01-01. */
+  minDate?: string | undefined;
   disabled?: boolean | undefined;
   error?: boolean | undefined;
   className?: string | undefined;
   ariaLabel?: string | undefined;
   /** id(s) of element(s) describing the field, e.g. an error message. */
   ariaDescribedBy?: string | undefined;
-  placement?: "auto" | "top" | "bottom" | undefined;
-  /**
-   * Optional time ("HH:MM", 24h) shown as an "Add time" button inside the pill.
-   * The time control only appears when onTimeChange is given and a date is set.
-   */
-  time?: string | undefined;
-  onTimeChange?: ((value: string) => void) | undefined;
-  /** Earliest / latest selectable time ("HH:MM") for the chosen date; others are disabled. */
-  minTime?: string | undefined;
-  maxTime?: string | undefined;
-  /** Accessible name for the time list, e.g. "Choose start time". */
-  timeAriaLabel?: string | undefined;
 }
 
 const MONTH_NAMES = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
 ];
-
-const WEEKDAY_NAMES = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
-const WEEKDAY_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-
-/** 15-minute steps across the day: "00:00" … "23:45". */
-export const TIME_SLOTS: readonly string[] = Array.from({ length: 96 }, (_, i) => {
-  const h = Math.floor(i / 4);
-  const m = (i % 4) * 15;
-  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
-});
+const WEEKDAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+const WEEKDAYS_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 function formatIsoDate(d: Date): string {
-  const y = d.getFullYear();
+  const y = String(d.getFullYear()).padStart(4, "0");
   const m = String(d.getMonth() + 1).padStart(2, "0");
   const day = String(d.getDate()).padStart(2, "0");
   return `${y}-${m}-${day}`;
 }
 
-function parseIsoDate(iso: string): Date | null {
-  if (!iso || !/^\d{4}-\d{2}-\d{2}$/.test(iso)) return null;
-  const [y, m, d] = iso.split("-").map(Number);
-  if (!y || !m || !d) return null;
-  const date = new Date(y, m - 1, d);
-  return isNaN(date.getTime()) ? null : date;
+function parseIsoDate(iso: string | undefined): Date | null {
+  if (!iso) return null;
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+  if (!m) return null;
+  const date = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+  return Number.isNaN(date.getTime()) ? null : date;
 }
 
 function addDays(d: Date, days: number): Date {
-  const out = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-  out.setDate(out.getDate() + days);
-  return out;
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate() + days);
 }
 
-function formatDisplayDate(iso: string): string {
-  const parsed = parseIsoDate(iso);
-  if (!parsed) return iso;
-  const month = MONTH_NAMES[parsed.getMonth()]?.slice(0, 3) || "";
-  return `${parsed.getDate()} ${month} ${parsed.getFullYear()}`;
+/** "15 Oct 2024" */
+export function formatDisplayDate(iso: string): string {
+  const d = parseIsoDate(iso);
+  if (!d) return iso;
+  return `${d.getDate()} ${(MONTH_NAMES[d.getMonth()] ?? "").slice(0, 3)} ${d.getFullYear()}`;
 }
 
-function formatLongDate(iso: string): string {
-  const parsed = parseIsoDate(iso);
-  if (!parsed) return iso;
-  return `${parsed.getDate()} ${MONTH_NAMES[parsed.getMonth()]} ${parsed.getFullYear()}`;
-}
-
-/** "Today", "Yesterday", otherwise "15 Mar 2026". */
-export function formatFriendlyDate(iso: string, now: Date = new Date()): string {
-  const today = formatIsoDate(now);
-  if (iso === today) return "Today";
-  if (iso === formatIsoDate(addDays(now, -1))) return "Yesterday";
-  return formatDisplayDate(iso);
-}
-
-/** "14:30" -> "2:30 pm". Unparseable values are returned unchanged. */
-export function formatTime12h(hhmm: string): string {
-  const match = /^(\d{2}):(\d{2})$/.exec(hhmm);
-  if (!match) return hhmm;
-  const h = Number(match[1]);
-  const suffix = h < 12 ? "am" : "pm";
-  const h12 = h % 12 === 0 ? 12 : h % 12;
-  return `${h12}:${match[2]} ${suffix}`;
-}
-
-export interface DatePreset {
-  label: string;
-  iso: string;
-  /** Weekday ("Sat") within the last week, otherwise "24 Oct". */
-  hint: string;
-}
-
-/**
- * Past-only quick presets for collection dates. Weeks start on Sunday (matching the
- * calendar), so "Last weekend" is the Saturday before the current week.
- */
-export function getPastDatePresets(now: Date = new Date()): DatePreset[] {
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const startOfWeek = addDays(today, -today.getDay());
-  const entries: Array<[string, Date]> = [
-    ["Today", today],
-    ["Yesterday", addDays(today, -1)],
-    ["Last week", addDays(today, -7)],
-    ["Last weekend", addDays(startOfWeek, -1)],
-    ["2 weeks ago", addDays(today, -14)],
-    ["4 weeks ago", addDays(today, -28)],
-    ["8 weeks ago", addDays(today, -56)],
-  ];
-  return entries.map(([label, date]) => {
-    const daysAgo = Math.round((today.getTime() - date.getTime()) / 86_400_000);
-    const hint =
-      daysAgo < 7
-        ? WEEKDAY_SHORT[date.getDay()] ?? ""
-        : `${date.getDate()} ${MONTH_NAMES[date.getMonth()]?.slice(0, 3) ?? ""}`;
-    return { label, iso: formatIsoDate(date), hint };
-  });
-}
-
-interface PopoverPosition {
-  side: "top" | "bottom";
-  /** Horizontal nudge (px) from the CSS anchor (left: 0 for "start", right: 0 for "end"). */
-  shiftX: number;
-  maxHeight: number | undefined;
-}
-
-/** Fixed height cap for the time list (~7 rows); must match .date-picker-time-list in CSS. */
-export const TIME_LIST_MAX_HEIGHT = 280;
-
-const VIEWPORT_MARGIN = 8;
-const GAP = 6;
-
-/**
- * Positions an absolutely-positioned popover relative to its anchor: picks the side with
- * room (never past the footer or viewport), clamps it horizontally inside the viewport
- * and caps its height to the space available so it scrolls instead of overflowing.
- */
-function usePopoverPosition(
-  open: boolean,
-  anchorRef: React.RefObject<HTMLElement | null>,
-  popoverRef: React.RefObject<HTMLElement | null>,
-  placement: "auto" | "top" | "bottom",
-  align: "start" | "end",
-  /** Changes whenever the popover content may change size (e.g. month or view switch). */
-  layoutKey: string = "",
-  /**
-   * Hard height limit. scrollHeight reports the full content height and ignores CSS
-   * max-height, so without this a long list "needs" thousands of pixels and the
-   * computed inline maxHeight (which overrides the stylesheet) becomes huge.
-   */
-  heightCap?: number
-): PopoverPosition {
-  const [pos, setPos] = useState<PopoverPosition>({
-    side: placement === "top" ? "top" : "bottom",
-    shiftX: 0,
-    maxHeight: heightCap,
-  });
-
-  useLayoutEffect(() => {
-    if (!open) return;
-
-    const update = () => {
-      const anchor = anchorRef.current;
-      const pop = popoverRef.current;
-      if (!anchor || !pop) return;
-      const rect = anchor.getBoundingClientRect();
-      const viewportW = document.documentElement.clientWidth || window.innerWidth;
-      const viewportH = window.innerHeight;
-
-      let bottomLimit = viewportH;
-      const footer = document.querySelector(".ubio-footer") || document.querySelector("footer");
-      if (footer) {
-        const footerTop = footer.getBoundingClientRect().top;
-        if (footerTop > rect.bottom) bottomLimit = Math.min(bottomLimit, footerTop);
-      }
-      const spaceBelow = bottomLimit - rect.bottom - GAP - VIEWPORT_MARGIN;
-      const spaceAbove = rect.top - GAP - VIEWPORT_MARGIN;
-      const naturalH = heightCap ? Math.min(pop.scrollHeight, heightCap) : pop.scrollHeight;
-
-      let side: "top" | "bottom";
-      if (placement === "top" || placement === "bottom") side = placement;
-      else if (naturalH <= spaceBelow) side = "bottom";
-      else if (naturalH <= spaceAbove) side = "top";
-      else side = spaceAbove > spaceBelow ? "top" : "bottom";
-
-      const available = side === "top" ? spaceAbove : spaceBelow;
-      // Shrink only when the chosen side is too short (keeping a usable minimum), and never
-      // exceed the cap.
-      let maxHeight: number | undefined =
-        naturalH > available && available > 0 ? Math.max(available, 160) : undefined;
-      if (heightCap) maxHeight = Math.min(maxHeight ?? heightCap, heightCap);
-
-      // Where CSS puts it, then nudge back inside the viewport if needed.
-      const width = pop.offsetWidth;
-      const naturalLeft = align === "end" ? rect.right - width : rect.left;
-      let clampedLeft = naturalLeft;
-      if (clampedLeft + width > viewportW - VIEWPORT_MARGIN) clampedLeft = viewportW - VIEWPORT_MARGIN - width;
-      if (clampedLeft < VIEWPORT_MARGIN) clampedLeft = VIEWPORT_MARGIN;
-      const shiftX = Math.round(clampedLeft - naturalLeft);
-
-      setPos((prev) =>
-        prev.side === side && prev.shiftX === shiftX && prev.maxHeight === maxHeight
-          ? prev
-          : { side, shiftX, maxHeight }
-      );
-    };
-
-    update();
-    window.addEventListener("scroll", update, { passive: true });
-    window.addEventListener("resize", update);
-    return () => {
-      window.removeEventListener("scroll", update);
-      window.removeEventListener("resize", update);
-    };
-  }, [open, placement, align, anchorRef, popoverRef, layoutKey, heightCap]);
-
-  return pos;
+/** "15 Oct 2024" or "10 Oct 2024 – 24 Oct 2024". */
+export function formatDateValue(val: CollectionDateValue): string {
+  if (!val.startDate) return "";
+  if (!val.endDate || val.endDate === val.startDate) return formatDisplayDate(val.startDate);
+  return `${formatDisplayDate(val.startDate)} – ${formatDisplayDate(val.endDate)}`;
 }
 
 export function DatePicker({
   id,
-  value = "",
+  value,
   onChange,
-  placeholder = "Select date",
+  placeholder = "Select date or date range",
   maxDate,
-  minDate = "1900-01-01",
+  minDate = "1990-01-01",
   disabled = false,
   error = false,
   className = "",
-  ariaLabel = "Choose date",
+  ariaLabel = "Choose date or date range",
   ariaDescribedBy,
-  placement = "auto",
-  time = "",
-  onTimeChange,
-  minTime,
-  maxTime,
-  timeAriaLabel = "Choose time",
 }: DatePickerProps) {
   const generatedId = useId();
   const baseId = id || `date-picker-${generatedId.replace(/:/g, "")}`;
-  const dialogTitleId = `${baseId}-dialog-title`;
-  const timeListId = `${baseId}-time-list`;
+  const dialogId = `${baseId}-dialog`;
 
-  const now = new Date();
-  const todayIso = formatIsoDate(now);
-  const effectiveMaxDate = maxDate || todayIso;
-  const isOutOfRange = (iso: string) =>
-    Boolean((effectiveMaxDate && iso > effectiveMaxDate) || (minDate && iso < minDate));
+  const todayIso = formatIsoDate(new Date());
+  const max = maxDate && maxDate < todayIso ? maxDate : todayIso; // never beyond local today
+  const minYear = Number(minDate.slice(0, 4));
+  const maxYear = Number(max.slice(0, 4));
+  const isOutOfRange = (iso: string) => iso > max || iso < minDate;
 
-  const [openPanel, setOpenPanel] = useState<"none" | "calendar" | "time">("none");
+  const [open, setOpen] = useState(false);
+  /** True after the first click of a range, until the second click or close. */
+  const [awaitingEnd, setAwaitingEnd] = useState(false);
+  const [view, setView] = useState<"days" | "years">("days");
   const rootRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
-  const timeButtonRef = useRef<HTMLButtonElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
-  const timeListRef = useRef<HTMLUListElement>(null);
+  const focusAfterRender = useRef(false);
+  /** Viewport-fixed popover position, computed from the trigger on open/resize/scroll. */
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
 
-  // Calendar viewport (year & month)
-  const initialDate = parseIsoDate(value) || now;
-  const [viewYear, setViewYear] = useState<number>(initialDate.getFullYear());
-  const [viewMonth, setViewMonth] = useState<number>(initialDate.getMonth());
+  const anchor = parseIsoDate(value.startDate) ?? parseIsoDate(max) ?? new Date();
+  const [viewYear, setViewYear] = useState(anchor.getFullYear());
+  const [viewMonth, setViewMonth] = useState(anchor.getMonth());
+  const [focusIso, setFocusIso] = useState(formatIsoDate(anchor));
 
-  // Month / year pickers inside the calendar column.
-  const [calendarView, setCalendarView] = useState<"days" | "months" | "years">("days");
-  const [pickerYear, setPickerYear] = useState<number>(initialDate.getFullYear());
+  const close = (returnFocus: boolean) => {
+    setOpen(false);
+    setAwaitingEnd(false);
+    setView("days");
+    if (returnFocus) triggerRef.current?.focus();
+  };
 
-  const calendarPos = usePopoverPosition(
-    openPanel === "calendar",
-    rootRef,
-    dialogRef,
-    placement,
-    "start",
-    `${calendarView}-${viewYear}-${viewMonth}-${pickerYear}`
-  );
-  const timePos = usePopoverPosition(
-    openPanel === "time",
-    rootRef,
-    timeListRef,
-    placement,
-    "end",
-    "",
-    TIME_LIST_MAX_HEIGHT
-  );
+  const openPopover = () => {
+    const a = parseIsoDate(value.startDate) ?? parseIsoDate(max) ?? new Date();
+    setViewYear(a.getFullYear());
+    setViewMonth(a.getMonth());
+    setFocusIso(formatIsoDate(a));
+    setView("days");
+    setOpen(true);
+  };
 
   useEffect(() => {
-    const parsed = parseIsoDate(value);
-    if (parsed) {
-      setViewYear(parsed.getFullYear());
-      setViewMonth(parsed.getMonth());
-    }
-  }, [value]);
-
-  // Close on outside click (focus stays wherever the user clicked).
-  useEffect(() => {
-    if (openPanel === "none") return;
-    const handleOutside = (event: MouseEvent) => {
-      if (rootRef.current && !rootRef.current.contains(event.target as Node)) {
-        setOpenPanel("none");
+    if (!open) return;
+    const onMouseDown = (e: MouseEvent) => {
+      const target = e.target as Node;
+      // The popover is portalled, so it is outside rootRef in the DOM.
+      if (
+        rootRef.current && !rootRef.current.contains(target) &&
+        !(dialogRef.current && dialogRef.current.contains(target))
+      ) {
+        setOpen(false);
+        setAwaitingEnd(false);
+        setView("days");
       }
     };
-    document.addEventListener("mousedown", handleOutside);
-    return () => document.removeEventListener("mousedown", handleOutside);
-  }, [openPanel]);
+    document.addEventListener("mousedown", onMouseDown);
+    return () => document.removeEventListener("mousedown", onMouseDown);
+  }, [open]);
 
-  const closeAndReturnFocus = (to: "trigger" | "time") => {
-    setOpenPanel("none");
-    // The time button only exists while a date is set; fall back to the trigger.
-    const target = to === "time" ? timeButtonRef.current ?? triggerRef.current : triggerRef.current;
-    target?.focus();
-  };
+  // Place the popover next to the trigger, flipping/clamping to stay in the viewport.
+  useLayoutEffect(() => {
+    if (!open) {
+      setPos(null);
+      return;
+    }
+    const GAP = 6;
+    const MARGIN = 8;
+    const place = () => {
+      const anchorEl = rootRef.current;
+      const pop = dialogRef.current;
+      if (!anchorEl || !pop) return;
+      const r = anchorEl.getBoundingClientRect();
+      const vw = window.innerWidth || document.documentElement.clientWidth;
+      const vh = window.innerHeight || document.documentElement.clientHeight;
+      const w = pop.offsetWidth;
+      const h = pop.offsetHeight;
+      // Horizontal: left-align with the trigger; right-align if that overflows; then clamp.
+      let left = r.left;
+      if (left + w > vw - MARGIN) left = r.right - w;
+      left = Math.max(MARGIN, Math.min(left, vw - w - MARGIN));
+      // Vertical: prefer below; flip above when there is not enough room and more room above.
+      const spaceBelow = vh - r.bottom - GAP - MARGIN;
+      const spaceAbove = r.top - GAP - MARGIN;
+      let top = h <= spaceBelow || spaceBelow >= spaceAbove ? r.bottom + GAP : r.top - GAP - h;
+      top = Math.max(MARGIN, Math.min(top, vh - h - MARGIN));
+      setPos((prev) => (prev && prev.top === top && prev.left === left ? prev : { top, left }));
+    };
+    place();
+    window.addEventListener("resize", place);
+    window.addEventListener("scroll", place, true);
+    return () => {
+      window.removeEventListener("resize", place);
+      window.removeEventListener("scroll", place, true);
+    };
+  }, [open]);
 
-  /* ---------------------------- Calendar panel ---------------------------- */
-
-  // Every time the calendar opens it starts on the day grid.
+  // Bring the selected year into view when the year grid opens.
   useEffect(() => {
-    if (openPanel === "calendar") setCalendarView("days");
-  }, [openPanel]);
+    if (!open || view !== "years") return;
+    const el = dialogRef.current?.querySelector<HTMLElement>(".year-cell.is-selected");
+    el?.scrollIntoView?.({ block: "nearest" });
+  }, [open, view]);
 
-  // Move focus to the highlighted cell whenever the dialog opens or switches view:
-  // selected cell, else today's cell, else the first enabled cell.
+  // Move DOM focus to the roving day button after keyboard navigation.
   useEffect(() => {
-    if (openPanel !== "calendar" || !dialogRef.current) return;
-    const grid = dialogRef.current.querySelector<HTMLElement>(".calendar-grid");
-    const target =
-      grid?.querySelector<HTMLButtonElement>(".is-selected:not(:disabled)") ||
-      grid?.querySelector<HTMLButtonElement>(".is-today:not(:disabled)") ||
-      grid?.querySelector<HTMLButtonElement>("button:not(:disabled)") ||
-      dialogRef.current.querySelector<HTMLButtonElement>("button:not(:disabled)");
-    target?.focus({ preventScroll: true });
-    // Scroll the (scrollable) year grid itself so the focused year is visible, without
-    // scrolling the page. The grid is position: relative, so offsetTop is grid-relative.
-    if (grid && target && grid.contains(target) && grid.scrollHeight > grid.clientHeight) {
-      grid.scrollTop = Math.max(0, target.offsetTop - (grid.clientHeight - target.offsetHeight) / 2);
+    if (open && view === "days" && focusAfterRender.current) {
+      focusAfterRender.current = false;
+      dialogRef.current?.querySelector<HTMLButtonElement>('button[data-iso][tabindex="0"]')?.focus();
     }
-    // Deliberately not keyed on the viewed month: re-running on month navigation would
-    // steal focus from the month arrows.
-  }, [openPanel, calendarView]);
+  }, [open, view, focusIso]);
 
-  const handlePrevMonth = () => {
-    if (viewMonth === 0) {
-      setViewMonth(11);
-      setViewYear((prev) => prev - 1);
-    } else {
-      setViewMonth((prev) => prev - 1);
-    }
-  };
-
-  const handleNextMonth = () => {
-    if (viewMonth === 11) {
-      setViewMonth(0);
-      setViewYear((prev) => prev + 1);
-    } else {
-      setViewMonth((prev) => prev + 1);
-    }
-  };
-
-  const handleShowToday = () => {
-    setViewYear(now.getFullYear());
-    setViewMonth(now.getMonth());
-    setCalendarView("days");
-  };
-
-  // Year bounds for the month / year pickers (from minDate / maxDate).
-  const minYear = parseIsoDate(minDate)?.getFullYear() ?? -Infinity;
-  const maxYear = parseIsoDate(effectiveMaxDate)?.getFullYear() ?? Infinity;
-  const minMonthKey = minDate ? minDate.slice(0, 7) : "";
-  const maxMonthKey = effectiveMaxDate ? effectiveMaxDate.slice(0, 7) : "";
-  const monthKey = (y: number, m: number) => `${y}-${String(m + 1).padStart(2, "0")}`;
-  const isMonthDisabled = (y: number, m: number) =>
-    Boolean((maxMonthKey && monthKey(y, m) > maxMonthKey) || (minMonthKey && monthKey(y, m) < minMonthKey));
-  const isYearDisabled = (y: number) => y > maxYear || y < minYear;
-  // The year view lists every selectable year at once (oldest first, newest at the bottom).
-  const firstYear = Number.isFinite(minYear) ? minYear : 1900;
-  const lastYear = Number.isFinite(maxYear) ? maxYear : now.getFullYear();
-  const yearList = Array.from({ length: Math.max(0, lastYear - firstYear + 1) }, (_, i) => firstYear + i);
-
-  const openMonthView = () => {
-    setPickerYear(viewYear);
-    setCalendarView("months");
-  };
-
-  const openYearView = () => {
-    setCalendarView("years");
-  };
-
-  const selectYear = (y: number) => {
-    if (isYearDisabled(y)) return;
-    setPickerYear(y);
-    setCalendarView("months");
-  };
-
-  const selectMonth = (m: number) => {
-    if (isMonthDisabled(pickerYear, m)) return;
-    setViewYear(pickerYear);
-    setViewMonth(m);
-    setCalendarView("days");
-  };
-
-  /** Arrow-key movement inside a grid of buttons; skips disabled cells. */
-  const handleGridKeyDown = (e: React.KeyboardEvent<HTMLDivElement>, columns: number) => {
-    const deltas: Record<string, number> = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -columns, ArrowDown: columns };
-    const delta = deltas[e.key];
-    if (!delta) return;
-    const buttons = Array.from(e.currentTarget.querySelectorAll<HTMLButtonElement>("button"));
-    const current = buttons.indexOf(document.activeElement as HTMLButtonElement);
-    if (current < 0) return;
-    e.preventDefault();
-    for (let i = current + delta; i >= 0 && i < buttons.length; i += delta) {
-      const candidate = buttons[i];
-      if (candidate && !candidate.disabled) {
-        candidate.focus();
-        return;
-      }
-    }
-  };
-
-  const selectDate = (iso: string) => {
+  const selectDay = (iso: string) => {
     if (isOutOfRange(iso)) return;
-    onChange(iso);
-    closeAndReturnFocus("trigger");
+    if (!awaitingEnd) {
+      onChange({ startDate: iso });
+      setAwaitingEnd(true);
+      return;
+    }
+    const start = value.startDate;
+    if (!start || iso === start) {
+      // Same day twice = a single date.
+      onChange({ startDate: iso });
+    } else if (iso < start) {
+      onChange({ startDate: iso, endDate: start });
+    } else {
+      onChange({ startDate: start, endDate: iso });
+    }
+    close(true);
   };
 
-  const handleClear = () => {
-    onChange("");
-    triggerRef.current?.focus();
+  const moveFocus = (target: Date) => {
+    let iso = formatIsoDate(target);
+    if (iso > max) iso = max;
+    if (iso < minDate) iso = minDate;
+    const d = parseIsoDate(iso);
+    if (!d) return;
+    focusAfterRender.current = true;
+    setFocusIso(iso);
+    setViewYear(d.getFullYear());
+    setViewMonth(d.getMonth());
   };
 
-  const presets = getPastDatePresets(now);
-  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
-  const firstDayIndex = new Date(viewYear, viewMonth, 1).getDay(); // 0 = Sunday
+  const onGridKeyDown = (e: React.KeyboardEvent) => {
+    const cur = parseIsoDate(focusIso);
+    if (!cur) return;
+    const deltas: Record<string, number> = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7 };
+    const delta = deltas[e.key];
+    if (delta !== undefined) {
+      e.preventDefault();
+      moveFocus(addDays(cur, delta));
+    } else if (e.key === "PageUp" || e.key === "PageDown") {
+      e.preventDefault();
+      const step = e.key === "PageUp" ? -1 : 1;
+      const lastDay = new Date(cur.getFullYear(), cur.getMonth() + step + 1, 0).getDate();
+      moveFocus(new Date(cur.getFullYear(), cur.getMonth() + step, Math.min(cur.getDate(), lastDay)));
+    }
+  };
 
-  /* ------------------------------ Time panel ------------------------------ */
+  const onDialogKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Escape") {
+      e.stopPropagation();
+      if (view === "years") setView("days");
+      else close(true);
+    }
+  };
 
-  const isTimeDisabled = (t: string) =>
-    Boolean((minTime && t < minTime) || (maxTime && t > maxTime));
+  const canPrev = viewYear > minYear || (viewYear === minYear && viewMonth > Number(minDate.slice(5, 7)) - 1);
+  const canNext = viewYear < maxYear || (viewYear === maxYear && viewMonth < Number(max.slice(5, 7)) - 1);
+  const stepMonth = (delta: number) => {
+    const d = new Date(viewYear, viewMonth + delta, 1);
+    setViewYear(d.getFullYear());
+    setViewMonth(d.getMonth());
+  };
 
-  interface TimeOption {
-    value: string; // "" = clear
-    label: string;
-    disabled: boolean;
-  }
-  const timeOptions: TimeOption[] = [
-    ...(time ? [{ value: "", label: "Clear time", disabled: false }] : []),
-    ...TIME_SLOTS.map((t) => ({ value: t, label: formatTime12h(t), disabled: isTimeDisabled(t) })),
+  const pickYear = (year: number) => {
+    let month = viewMonth;
+    if (year === maxYear) month = Math.min(month, Number(max.slice(5, 7)) - 1);
+    if (year === minYear) month = Math.max(month, Number(minDate.slice(5, 7)) - 1);
+    setViewYear(year);
+    setViewMonth(month);
+    const first = formatIsoDate(new Date(year, month, 1));
+    setFocusIso(first < minDate ? minDate : first);
+    setView("days");
+  };
+
+  const goToToday = () => {
+    const t = parseIsoDate(max) ?? new Date();
+    setViewYear(t.getFullYear());
+    setViewMonth(t.getMonth());
+    setFocusIso(formatIsoDate(t));
+    setView("days");
+  };
+
+  // Quick-select presets (each picks a single date).
+  const today = parseIsoDate(todayIso) ?? new Date();
+  const dayShort = (d: Date) => WEEKDAYS_SHORT[d.getDay()] ?? "";
+  const dayMonth = (d: Date) => `${d.getDate()} ${(MONTH_NAMES[d.getMonth()] ?? "").slice(0, 3)}`;
+  const yesterday = addDays(today, -1);
+  const lastSaturday = addDays(yesterday, -((yesterday.getDay() + 1) % 7));
+  const weeksAgo = (n: number) => addDays(today, -7 * n);
+  const presets: { label: string; iso: string; meta: string }[] = [
+    { label: "Today", iso: formatIsoDate(today), meta: dayShort(today) },
+    { label: "Yesterday", iso: formatIsoDate(yesterday), meta: dayShort(yesterday) },
+    { label: "Last week", iso: formatIsoDate(weeksAgo(1)), meta: dayMonth(weeksAgo(1)) },
+    { label: "Last weekend", iso: formatIsoDate(lastSaturday), meta: dayShort(lastSaturday) },
+    { label: "2 weeks ago", iso: formatIsoDate(weeksAgo(2)), meta: dayMonth(weeksAgo(2)) },
+    { label: "4 weeks ago", iso: formatIsoDate(weeksAgo(4)), meta: dayMonth(weeksAgo(4)) },
+    { label: "8 weeks ago", iso: formatIsoDate(weeksAgo(8)), meta: dayMonth(weeksAgo(8)) },
   ];
 
-  const [activeTimeIndex, setActiveTimeIndex] = useState(0);
+  // Calendar cells for the viewed month (null = leading blank).
+  const firstWeekday = new Date(viewYear, viewMonth, 1).getDay();
+  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+  const cells: (string | null)[] = [
+    ...Array.from({ length: firstWeekday }, () => null),
+    ...Array.from({ length: daysInMonth }, (_, i) => formatIsoDate(new Date(viewYear, viewMonth, i + 1))),
+  ];
+  // The roving tab stop must land on a rendered, enabled day.
+  const monthPrefix = `${String(viewYear).padStart(4, "0")}-${String(viewMonth + 1).padStart(2, "0")}-`;
+  const tabIso = focusIso.startsWith(monthPrefix) && !isOutOfRange(focusIso)
+    ? focusIso
+    : cells.find((c): c is string => c !== null && !isOutOfRange(c));
 
-  const initialTimeIndex = (): number => {
-    const exact = timeOptions.findIndex((o) => o.value !== "" && o.value === time);
-    if (exact >= 0 && !timeOptions[exact]?.disabled) return exact;
-    // Nearest 15-minute step at or before the selected time (or the current time).
-    const ref = time || `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
-    let idx = timeOptions.reduce((best, o, i) => (o.value !== "" && o.value <= ref ? i : best), -1);
-    if (idx < 0) idx = timeOptions.findIndex((o) => o.value !== "");
-    // Step to the closest enabled option (prefer earlier, since later is often "future").
-    for (let d = 0; d < timeOptions.length; d++) {
-      for (const cand of [idx - d, idx + d]) {
-        const o = timeOptions[cand];
-        if (o && o.value !== "" && !o.disabled) return cand;
-      }
-    }
-    return 0;
-  };
-
-  useEffect(() => {
-    if (openPanel !== "time") return;
-    setActiveTimeIndex(initialTimeIndex());
-    timeListRef.current?.focus({ preventScroll: true });
-    // Deliberately keyed on openPanel only: reset the active option when the list opens.
-  }, [openPanel]);
-
-  // Keep the active option scrolled into view inside the list.
-  useEffect(() => {
-    if (openPanel !== "time") return;
-    const list = timeListRef.current;
-    const el = list?.children[activeTimeIndex] as HTMLElement | undefined;
-    if (list && el) {
-      const top = el.offsetTop;
-      const bottom = top + el.offsetHeight;
-      if (top < list.scrollTop) list.scrollTop = top;
-      else if (bottom > list.scrollTop + list.clientHeight) list.scrollTop = bottom - list.clientHeight;
-    }
-  }, [openPanel, activeTimeIndex]);
-
-  const chooseTimeOption = (idx: number) => {
-    const opt = timeOptions[idx];
-    if (!opt || opt.disabled || !onTimeChange) return;
-    onTimeChange(opt.value);
-    closeAndReturnFocus("time");
-  };
-
-  const moveActive = (from: number, step: 1 | -1) => {
-    for (let i = from + step; i >= 0 && i < timeOptions.length; i += step) {
-      if (!timeOptions[i]?.disabled) return i;
-    }
-    return from;
-  };
-
-  const handleTimeListKeyDown = (e: React.KeyboardEvent<HTMLUListElement>) => {
-    switch (e.key) {
-      case "ArrowDown":
-        e.preventDefault();
-        setActiveTimeIndex((i) => moveActive(i, 1));
-        break;
-      case "ArrowUp":
-        e.preventDefault();
-        setActiveTimeIndex((i) => moveActive(i, -1));
-        break;
-      case "Home":
-        e.preventDefault();
-        setActiveTimeIndex(moveActive(-1, 1));
-        break;
-      case "End":
-        e.preventDefault();
-        setActiveTimeIndex(moveActive(timeOptions.length, -1));
-        break;
-      case "Enter":
-      case " ":
-        e.preventDefault();
-        chooseTimeOption(activeTimeIndex);
-        break;
-      case "Escape":
-        e.preventDefault();
-        e.stopPropagation();
-        closeAndReturnFocus("time");
-        break;
-      case "Tab":
-        setOpenPanel("none");
-        break;
-      default:
-        break;
-    }
-  };
-
-  const showTime = Boolean(onTimeChange && value);
-  const displayLabel = value ? formatFriendlyDate(value, now) : placeholder;
+  const start = value.startDate;
+  const end = value.endDate && value.endDate !== start ? value.endDate : "";
+  const hasValue = Boolean(start);
+  const years: number[] = [];
+  for (let y = maxYear; y >= minYear; y--) years.push(y);
 
   return (
-    <div className={`date-picker-root ${className}`} ref={rootRef}>
+    <div ref={rootRef} className={`date-picker-root ${className}`.trim()}>
       <div
-        className={`date-picker-pill ${openPanel !== "none" ? "is-open" : ""} ${error ? "has-error" : ""} ${
-          disabled ? "is-disabled" : ""
-        }`}
-        onClick={(e) => {
-          // Mouse convenience: clicking empty pill space opens the calendar. Keyboard users
-          // reach the same action through the trigger button.
-          if (!disabled && e.target === e.currentTarget) setOpenPanel("calendar");
-        }}
+        className={`date-picker-pill${open ? " is-open" : ""}${error ? " has-error" : ""}${disabled ? " is-disabled" : ""}`}
       >
         <button
           ref={triggerRef}
-          id={baseId}
           type="button"
+          id={baseId}
           className="date-picker-trigger"
           disabled={disabled}
+          aria-label={ariaLabel}
           aria-haspopup="dialog"
-          aria-expanded={openPanel === "calendar"}
-          aria-label={value ? `${ariaLabel}, ${formatLongDate(value)}` : ariaLabel}
-          aria-invalid={error || undefined}
+          aria-expanded={open}
+          aria-controls={open ? dialogId : undefined}
           aria-describedby={ariaDescribedBy}
-          onClick={() => setOpenPanel((p) => (p === "calendar" ? "none" : "calendar"))}
+          aria-invalid={error || undefined}
+          onClick={() => (open ? close(false) : openPopover())}
+          onKeyDown={(e) => {
+            if (e.key === "ArrowDown" && !open && !disabled) {
+              e.preventDefault();
+              openPopover();
+            }
+          }}
         >
           <Calendar size={16} className="date-picker-icon" aria-hidden="true" />
-          <span className={`date-picker-value ${!value ? "is-placeholder" : ""}`}>{displayLabel}</span>
+          <span className={`date-picker-value${hasValue ? "" : " is-placeholder"}`}>
+            {hasValue ? formatDateValue(value) : placeholder}
+          </span>
         </button>
-
-        {value && !disabled && (
+        {hasValue && !disabled && (
           <button
             type="button"
             className="date-picker-clear-btn"
-            onClick={handleClear}
-            title="Clear date"
             aria-label="Clear date"
+            onClick={() => {
+              onChange({ startDate: "" });
+              close(false);
+            }}
           >
-            <X size={13} />
-          </button>
-        )}
-
-        {showTime && !disabled && (
-          <button
-            ref={timeButtonRef}
-            type="button"
-            className={`date-picker-time-btn ${time ? "has-time" : ""}`}
-            aria-haspopup="listbox"
-            aria-expanded={openPanel === "time"}
-            aria-controls={openPanel === "time" ? timeListId : undefined}
-            aria-label={time ? `Change time, ${formatTime12h(time)}` : "Add time"}
-            aria-describedby={ariaDescribedBy}
-            onClick={() => setOpenPanel((p) => (p === "time" ? "none" : "time"))}
-          >
-            {time ? formatTime12h(time) : "Add time"}
+            <X size={14} aria-hidden="true" />
           </button>
         )}
       </div>
 
-      {openPanel === "calendar" && (
+      {open && createPortal(
         <div
           ref={dialogRef}
-          className={`date-picker-popover placement-${calendarPos.side}`}
-          data-placement={calendarPos.side}
+          id={dialogId}
           role="dialog"
-          aria-modal="false"
-          aria-label={ariaLabel}
-          style={{
-            left: `${calendarPos.shiftX}px`,
-            ...(calendarPos.maxHeight ? { maxHeight: `${calendarPos.maxHeight}px` } : {}),
-          }}
-          onKeyDown={(e) => {
-            if (e.key !== "Escape") return;
-            e.preventDefault();
-            e.stopPropagation();
-            // Escape steps back one level (years -> months -> days) before closing.
-            if (calendarView === "years") setCalendarView("months");
-            else if (calendarView === "months") setCalendarView("days");
-            else closeAndReturnFocus("trigger");
-          }}
+          aria-label="Choose collection date or date range"
+          className="date-picker-popover"
+          style={pos ? { top: pos.top, left: pos.left } : { top: 0, left: 0, visibility: "hidden" }}
+          onKeyDown={onDialogKeyDown}
         >
-          <ul className="date-preset-list" aria-label="Quick dates">
-            {presets.map((p) => {
-              const presetDisabled = isOutOfRange(p.iso);
-              return (
-                <li key={p.label}>
-                  <button
-                    type="button"
-                    className={`date-preset-item ${value === p.iso ? "is-selected" : ""}`}
-                    disabled={presetDisabled}
-                    aria-label={`${p.label}, ${formatLongDate(p.iso)}`}
-                    onClick={() => selectDate(p.iso)}
-                  >
-                    <span className="date-preset-label">{p.label}</span>
-                    <span className="date-preset-hint">{p.hint}</span>
-                  </button>
-                </li>
-              );
-            })}
+          <ul className="preset-list" aria-label="Quick select">
+            {presets.map((p) => (
+              <li key={p.label}>
+                <button
+                  type="button"
+                  className="preset-btn"
+                  disabled={isOutOfRange(p.iso)}
+                  onClick={() => {
+                    onChange({ startDate: p.iso });
+                    close(true);
+                  }}
+                >
+                  <span className="preset-label">{p.label}</span>
+                  <span className="preset-meta">{p.meta}</span>
+                </button>
+              </li>
+            ))}
           </ul>
-
-          <div className="date-picker-calendar">
-            <div className="calendar-header">
-              {calendarView === "days" && (
-                <button
-                  type="button"
-                  className="calendar-title-btn"
-                  aria-expanded={false}
-                  aria-label={`Choose month and year, ${MONTH_NAMES[viewMonth]} ${viewYear}`}
-                  onClick={openMonthView}
-                >
-                  <span className="month-name">{MONTH_NAMES[viewMonth]}</span>{" "}
-                  <span className="year-number">{viewYear}</span>
-                  <ChevronDown size={14} aria-hidden="true" />
-                </button>
-              )}
-              {calendarView === "months" && (
-                <button
-                  type="button"
-                  className="calendar-title-btn"
-                  aria-expanded={false}
-                  aria-label={`Choose year, ${pickerYear}`}
-                  onClick={openYearView}
-                >
-                  <span className="year-number">{pickerYear}</span>
-                  <ChevronDown size={14} aria-hidden="true" />
-                </button>
-              )}
-              {calendarView === "years" && (
-                <span className="calendar-title" id={dialogTitleId}>
-                  {firstYear} – {lastYear}
-                </span>
-              )}
-
-              <div className="calendar-header-actions">
-                <button type="button" className="calendar-today-btn" aria-label="Go to today" onClick={handleShowToday}>
-                  Today
-                </button>
-                {calendarView === "days" && (
-                  <>
-                    <button type="button" className="calendar-nav-btn" onClick={handlePrevMonth} aria-label="Previous month">
-                      <ChevronLeft size={15} />
-                    </button>
-                    <button type="button" className="calendar-nav-btn" onClick={handleNextMonth} aria-label="Next month">
-                      <ChevronRight size={15} />
-                    </button>
-                  </>
-                )}
-                {calendarView === "months" && (
-                  <>
-                    <button
-                      type="button"
-                      className="calendar-nav-btn"
-                      onClick={() => setPickerYear((y) => y - 1)}
-                      disabled={pickerYear - 1 < minYear}
-                      aria-label="Previous year"
-                    >
-                      <ChevronLeft size={15} />
-                    </button>
-                    <button
-                      type="button"
-                      className="calendar-nav-btn"
-                      onClick={() => setPickerYear((y) => y + 1)}
-                      disabled={pickerYear + 1 > maxYear}
-                      aria-label="Next year"
-                    >
-                      <ChevronRight size={15} />
-                    </button>
-                  </>
-                )}
-              </div>
-            </div>
-
-            {calendarView === "days" && (
-              <>
-                <div className="calendar-weekdays" aria-hidden="true">
-                  {WEEKDAY_NAMES.map((wd) => (
-                    <span key={wd} className="weekday-label">
-                      {wd}
-                    </span>
-                  ))}
-                </div>
-
-                <div
-                  className="calendar-grid calendar-days-grid"
-                  role="group"
-                  aria-label={`${MONTH_NAMES[viewMonth]} ${viewYear}`}
-                  onKeyDown={(e) => handleGridKeyDown(e, 7)}
-                >
-                  {Array.from({ length: firstDayIndex }).map((_, idx) => (
-                    <span key={`empty-${idx}`} className="day-cell day-empty" />
-                  ))}
-                  {Array.from({ length: daysInMonth }).map((_, idx) => {
-                    const day = idx + 1;
-                    const cellIso = formatIsoDate(new Date(viewYear, viewMonth, day));
-                    const isSelected = value === cellIso;
-                    const isToday = todayIso === cellIso;
-                    const isDisabled = isOutOfRange(cellIso);
-                    return (
-                      <button
-                        key={`day-${day}`}
-                        type="button"
-                        disabled={isDisabled}
-                        className={`day-cell day-btn ${isSelected ? "is-selected" : ""} ${isToday ? "is-today" : ""} ${
-                          isDisabled ? "is-disabled" : ""
-                        }`}
-                        aria-pressed={isSelected}
-                        aria-current={isToday ? "date" : undefined}
-                        onClick={() => selectDate(cellIso)}
-                        aria-label={`${day} ${MONTH_NAMES[viewMonth]} ${viewYear}`}
-                      >
-                        {day}
-                      </button>
-                    );
-                  })}
-                </div>
-              </>
-            )}
-
-            {calendarView === "months" && (
-              <div
-                className="calendar-grid calendar-period-grid"
-                role="group"
-                aria-label={`Months of ${pickerYear}`}
-                onKeyDown={(e) => handleGridKeyDown(e, 3)}
-              >
-                {MONTH_NAMES.map((name, m) => {
-                  const isSelected = pickerYear === viewYear && m === viewMonth;
-                  const isCurrent = pickerYear === now.getFullYear() && m === now.getMonth();
-                  const isDisabled = isMonthDisabled(pickerYear, m);
-                  return (
-                    <button
-                      key={name}
-                      type="button"
-                      disabled={isDisabled}
-                      className={`period-btn ${isSelected ? "is-selected" : ""} ${isCurrent ? "is-today" : ""} ${
-                        isDisabled ? "is-disabled" : ""
-                      }`}
-                      aria-pressed={isSelected}
-                      aria-current={isCurrent ? "date" : undefined}
-                      aria-label={`${name} ${pickerYear}`}
-                      onClick={() => selectMonth(m)}
-                    >
-                      {name.slice(0, 3)}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-
-            {calendarView === "years" && (
-              <div
-                className="calendar-grid calendar-period-grid calendar-year-grid"
-                role="group"
-                aria-label={`Years ${firstYear} – ${lastYear}`}
-                onKeyDown={(e) => handleGridKeyDown(e, 3)}
-              >
-                {yearList.map((y) => {
-                  const isSelected = y === pickerYear;
-                  const isCurrent = y === now.getFullYear();
-                  return (
-                    <button
-                      key={y}
-                      type="button"
-                      className={`period-btn ${isSelected ? "is-selected" : ""} ${isCurrent ? "is-today" : ""}`}
-                      aria-pressed={isSelected}
-                      aria-current={isCurrent ? "date" : undefined}
-                      onClick={() => selectYear(y)}
-                    >
-                      {y}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {openPanel === "time" && showTime && (
-        <ul
-          ref={timeListRef}
-          id={timeListId}
-          role="listbox"
-          tabIndex={0}
-          aria-label={timeAriaLabel}
-          aria-activedescendant={`${timeListId}-opt-${activeTimeIndex}`}
-          className={`date-picker-time-list align-end placement-${timePos.side}`}
-          data-placement={timePos.side}
-          style={{
-            right: `${-timePos.shiftX}px`,
-            maxHeight: `${timePos.maxHeight ?? TIME_LIST_MAX_HEIGHT}px`,
-          }}
-          onKeyDown={handleTimeListKeyDown}
-        >
-          {timeOptions.map((opt, idx) => (
-            <li
-              key={opt.value || "clear"}
-              id={`${timeListId}-opt-${idx}`}
-              role="option"
-              aria-selected={opt.value !== "" && opt.value === time}
-              aria-disabled={opt.disabled || undefined}
-              className={`time-option ${opt.value === "" ? "is-clear" : ""} ${idx === activeTimeIndex ? "is-active" : ""} ${
-                opt.value !== "" && opt.value === time ? "is-selected" : ""
-              } ${opt.disabled ? "is-disabled" : ""}`}
-              onMouseEnter={() => !opt.disabled && setActiveTimeIndex(idx)}
-              onMouseDown={(e) => e.preventDefault() /* keep focus on the listbox */}
-              onClick={() => chooseTimeOption(idx)}
+          <div className="calendar-panel">
+          <div className="calendar-header">
+            <button
+              type="button"
+              className="calendar-title-btn"
+              aria-expanded={view === "years"}
+              aria-label={`${MONTH_NAMES[viewMonth]} ${viewYear}, choose year`}
+              onClick={() => setView(view === "years" ? "days" : "years")}
             >
-              {opt.label}
-            </li>
-          ))}
-        </ul>
+              <span>{MONTH_NAMES[viewMonth]}</span> <span>{viewYear}</span>
+              <ChevronDown size={16} aria-hidden="true" />
+            </button>
+            <div className="calendar-header-actions">
+              <button type="button" className="calendar-today-btn" onClick={goToToday}>
+                Today
+              </button>
+              <button
+                type="button"
+                className="calendar-nav-btn"
+                aria-label="Previous month"
+                disabled={view !== "days" || !canPrev}
+                onClick={() => stepMonth(-1)}
+              >
+                <ChevronLeft size={18} aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                className="calendar-nav-btn"
+                aria-label="Next month"
+                disabled={view !== "days" || !canNext}
+                onClick={() => stepMonth(1)}
+              >
+                <ChevronRight size={18} aria-hidden="true" />
+              </button>
+            </div>
+          </div>
+
+          {view === "years" ? (
+            <div className="year-grid" role="listbox" aria-label="Choose year">
+              {years.map((y) => (
+                <button
+                  key={y}
+                  type="button"
+                  role="option"
+                  aria-selected={y === viewYear}
+                  className={`year-cell${y === viewYear ? " is-selected" : ""}`}
+                  onClick={() => pickYear(y)}
+                >
+                  {y}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <>
+              <div className="calendar-weekdays" aria-hidden="true">
+                {WEEKDAYS.map((w) => (
+                  <span key={w} className="weekday-label">{w}</span>
+                ))}
+              </div>
+              <div className="calendar-days-grid" role="grid" aria-label={`${MONTH_NAMES[viewMonth]} ${viewYear}`} onKeyDown={onGridKeyDown}>
+                {cells.map((iso, i) => {
+                  if (!iso) return <span key={`blank-${i}`} className="day-cell day-empty" />;
+                  const dayNum = Number(iso.slice(8));
+                  const isStart = iso === start;
+                  const isEnd = Boolean(end) && iso === end;
+                  const inRange = Boolean(end) && iso > start && iso < end;
+                  const cls = [
+                    "day-cell day-btn",
+                    isStart ? "is-start" : "",
+                    isEnd ? "is-end" : "",
+                    isStart && !end ? "is-single" : "",
+                    inRange ? "in-range" : "",
+                    iso === todayIso ? "is-today" : "",
+                  ].filter(Boolean).join(" ");
+                  const dt = parseIsoDate(iso);
+                  return (
+                    <button
+                      key={iso}
+                      type="button"
+                      data-iso={iso}
+                      className={cls}
+                      disabled={isOutOfRange(iso)}
+                      tabIndex={iso === tabIso ? 0 : -1}
+                      aria-pressed={isStart || isEnd || inRange}
+                      aria-label={dt ? `${dayNum} ${MONTH_NAMES[dt.getMonth()]} ${dt.getFullYear()}` : iso}
+                      onClick={() => selectDay(iso)}
+                      onFocus={() => setFocusIso(iso)}
+                    >
+                      {dayNum}
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          )}
+          </div>
+        </div>,
+        document.body,
       )}
     </div>
   );

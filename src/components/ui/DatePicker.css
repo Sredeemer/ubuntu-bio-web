@@ -1,7 +1,7 @@
 /* ==========================================================================
    UbuntuBio DatePicker
-   Pill trigger (date + optional time) with a two-column popover: past-date
-   presets on the left, month calendar on the right, plus a 15-minute time list.
+   Single trigger pill (date or date range, no time) with a month calendar,
+   a continuous in-range strip and a fast year grid.
    ========================================================================== */
 
 .date-picker-root {
@@ -9,8 +9,6 @@
   width: 100%;
   min-width: 0;
 }
-
-/* ── Pill trigger ─────────────────────────────────────────────────────────── */
 
 .date-picker-pill {
   display: flex;
@@ -23,13 +21,10 @@
   border: 1px solid transparent;
   border-radius: 10px;
   color: #0f172a;
-  cursor: pointer;
   transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-.date-picker-pill:hover:not(.is-disabled) {
-  background: #e9eef3;
-}
+.date-picker-pill:hover:not(.is-disabled) { background: #e9eef3; }
 
 .date-picker-pill.is-open {
   background: #ffffff;
@@ -37,17 +32,11 @@
   box-shadow: 0 0 0 2px rgba(21, 128, 61, 0.15);
 }
 
-.date-picker-pill.has-error {
-  border-color: #ef4444;
-  background: #fef2f2;
-}
-
-.date-picker-pill.is-disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
+.date-picker-pill.has-error { border-color: #ef4444; background: #fef2f2; }
+.date-picker-pill.is-disabled { opacity: 0.6; cursor: not-allowed; }
 
 .date-picker-trigger {
+  flex: 1;
   display: inline-flex;
   align-items: center;
   gap: 10px;
@@ -63,26 +52,19 @@
   cursor: pointer;
 }
 
-/* Without a value the trigger fills the pill so the whole surface is one target. */
-.date-picker-trigger:only-child {
-  flex: 1;
-}
-
-.date-picker-trigger:disabled {
-  cursor: not-allowed;
-}
+.date-picker-trigger:disabled { cursor: not-allowed; }
 
 .date-picker-trigger:focus-visible,
 .date-picker-clear-btn:focus-visible,
-.date-picker-time-btn:focus-visible {
+.calendar-title-btn:focus-visible,
+.calendar-nav-btn:focus-visible,
+.day-btn:focus-visible,
+.year-cell:focus-visible {
   outline: 2px solid #15803d;
   outline-offset: 1px;
 }
 
-.date-picker-icon {
-  color: #64748b;
-  flex-shrink: 0;
-}
+.date-picker-icon { color: #64748b; flex-shrink: 0; }
 
 .date-picker-value {
   font-size: 0.9rem;
@@ -93,10 +75,7 @@
   text-overflow: ellipsis;
 }
 
-.date-picker-value.is-placeholder {
-  color: #64748b;
-  font-weight: 400;
-}
+.date-picker-value.is-placeholder { color: #64748b; font-weight: 400; }
 
 .date-picker-clear-btn {
   display: inline-flex;
@@ -114,463 +93,217 @@
   transition: background-color 0.12s ease, color 0.12s ease;
 }
 
-.date-picker-clear-btn:hover {
-  background: #e2e8f0;
-  color: #dc2626;
-}
+.date-picker-clear-btn:hover { background: #e2e8f0; color: #dc2626; }
 
-.date-picker-time-btn {
-  margin-left: auto;
-  flex-shrink: 0;
-  padding: 6px 8px;
-  background: transparent;
-  border: none;
-  border-radius: 6px;
-  color: #64748b;
-  font: inherit;
-  font-size: 0.85rem;
-  white-space: nowrap;
-  cursor: pointer;
-  transition: background-color 0.12s ease, color 0.12s ease;
-}
-
-.date-picker-time-btn:hover {
-  background: #e2e8f0;
-  color: #0f172a;
-}
-
-.date-picker-time-btn.has-time {
-  color: #0f172a;
-  font-weight: 500;
-}
-
-/* ── Shared popover surface ───────────────────────────────────────────────── */
-
-.date-picker-popover,
-.date-picker-time-list {
-  position: absolute;
-  top: calc(100% + 6px);
-  z-index: 100;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  box-shadow: 0 12px 32px -8px rgba(15, 23, 42, 0.18),
-              0 4px 10px -4px rgba(15, 23, 42, 0.08);
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  animation: popoverFadeIn 0.14s ease-out;
-}
-
-.date-picker-popover.placement-top,
-.date-picker-time-list.placement-top {
-  top: auto;
-  bottom: calc(100% + 6px);
-  animation: popoverFadeInUp 0.14s ease-out;
-  box-shadow: 0 -12px 32px -8px rgba(15, 23, 42, 0.18),
-              0 -4px 10px -4px rgba(15, 23, 42, 0.08);
-}
-
-@keyframes popoverFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes popoverFadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* ── Calendar popover: presets | calendar ─────────────────────────────────── */
+/* ── Popover ──────────────────────────────────────────────────────────────── */
 
 .date-picker-popover {
+  /* Portalled to <body> and positioned via inline top/left (see DatePicker.tsx). */
+  position: fixed;
+  z-index: 1000;
   display: flex;
-  width: 540px;
-  max-width: calc(100vw - 16px);
+  box-sizing: border-box;
+  width: 600px;
+  max-width: calc(100vw - 32px);
+  height: 410px; /* fixed: day and year views share the same size */
+  max-height: calc(100vh - 16px);
+  overflow: hidden;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  box-shadow: 0 12px 36px rgba(15, 23, 42, 0.16);
 }
 
-.date-preset-list {
-  list-style: none;
-  flex: 0 0 210px;
+/* Left: quick-select presets */
+.preset-list {
+  flex: 0 0 200px;
+  overflow-y: auto;
   margin: 0;
-  padding: 8px 0;
+  padding: 12px 8px;
+  list-style: none;
   background: #f8fafc;
   border-right: 1px solid #e2e8f0;
-  border-radius: 12px 0 0 12px;
 }
 
-.date-preset-item {
+.preset-btn {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: space-between;
-  gap: 12px;
+  gap: 8px;
   width: 100%;
-  padding: 8px 18px;
-  background: transparent;
+  padding: 9px 12px;
   border: none;
+  border-radius: 8px;
+  background: transparent;
   color: #0f172a;
   font: inherit;
-  font-size: 0.875rem;
+  font-size: 0.95rem;
   text-align: left;
   cursor: pointer;
-  transition: background-color 0.12s ease;
 }
 
-.date-preset-item:hover:not(:disabled),
-.date-preset-item:focus-visible {
-  background: #eef2f6;
-  outline: none;
-}
+.preset-btn:hover:not(:disabled) { background: #e9eef3; }
+.preset-btn:disabled { color: #cbd5e1; cursor: not-allowed; }
+.preset-btn:focus-visible { outline: 2px solid #15803d; outline-offset: -2px; }
+.preset-meta { font-size: 0.85rem; color: #94a3b8; }
 
-.date-preset-item.is-selected .date-preset-label {
-  color: #15803d;
-  font-weight: 600;
-}
-
-.date-preset-item:disabled {
-  cursor: not-allowed;
-  color: #cbd5e1;
-}
-
-.date-preset-item:disabled .date-preset-hint {
-  color: #cbd5e1;
-}
-
-.date-preset-hint {
-  color: #94a3b8;
-  font-size: 0.8rem;
-  white-space: nowrap;
-}
-
-.date-picker-calendar {
+/* Right: calendar */
+.calendar-panel {
   flex: 1;
   min-width: 0;
-  padding: 14px 16px 16px;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 18px 14px;
+  overflow-y: auto;
 }
+
+.calendar-header { flex-shrink: 0; }
 
 .calendar-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 
-.calendar-title {
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: #0f172a;
-  white-space: nowrap;
-}
+.calendar-header-actions { display: flex; align-items: center; gap: 4px; }
 
 .calendar-title-btn {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   padding: 4px 6px;
-  margin-left: -6px;
-  background: transparent;
   border: none;
   border-radius: 6px;
+  background: transparent;
   color: #0f172a;
+  font: inherit;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.calendar-title-btn:hover { background: #f1f5f9; }
+
+.calendar-today-btn {
+  padding: 4px 10px;
+  margin-right: 6px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #334155;
   font: inherit;
   font-size: 0.95rem;
   font-weight: 600;
-  white-space: nowrap;
   cursor: pointer;
 }
 
-.calendar-title-btn .year-number {
-  color: inherit;
-}
-
-.calendar-title-btn svg {
-  color: #64748b;
-}
-
-.calendar-title-btn:hover {
-  background: #f1f5f9;
-}
-
-.calendar-title-btn:focus-visible,
-.period-btn:focus-visible {
-  outline: 2px solid #15803d;
-  outline-offset: 1px;
-}
-
-.calendar-header-actions {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-}
-
-.calendar-today-btn {
-  padding: 4px 8px;
-  background: transparent;
-  border: none;
-  border-radius: 6px;
-  color: #475569;
-  font: inherit;
-  font-size: 0.8rem;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.calendar-today-btn:hover {
-  background: #f1f5f9;
-  color: #0f172a;
-}
+.calendar-today-btn:hover { background: #f1f5f9; }
+.calendar-today-btn:focus-visible { outline: 2px solid #15803d; outline-offset: 1px; }
 
 .calendar-nav-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 26px;
-  height: 26px;
+  width: 32px;
+  height: 32px;
   border: none;
   background: transparent;
   border-radius: 6px;
-  color: #64748b;
+  color: #334155;
   cursor: pointer;
 }
 
-.calendar-nav-btn:disabled {
-  color: #cbd5e1;
-  cursor: not-allowed;
-  background: transparent;
-}
+.calendar-nav-btn:disabled { color: #cbd5e1; cursor: not-allowed; }
+.calendar-nav-btn:hover:not(:disabled) { background: #f1f5f9; color: #0f172a; }
 
-.calendar-nav-btn:hover:not(:disabled) {
-  background: #f1f5f9;
-  color: #0f172a;
-}
-
-.calendar-today-btn:focus-visible,
-.calendar-nav-btn:focus-visible,
-.day-btn:focus-visible {
-  outline: 2px solid #15803d;
-  outline-offset: 1px;
-}
-
-.calendar-weekdays {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 2px;
-  margin-bottom: 2px;
-  text-align: center;
-}
-
-.weekday-label {
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: #94a3b8;
-  padding: 4px 0;
-}
-
+.calendar-weekdays,
 .calendar-days-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 2px;
 }
 
+.calendar-days-grid { row-gap: 4px; }
+.calendar-weekdays { text-align: center; margin-bottom: 4px; }
+
+.weekday-label { font-size: 0.85rem; font-weight: 600; color: #94a3b8; padding: 6px 0; }
+
 .day-cell {
-  aspect-ratio: 1;
+  position: relative;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.85rem;
-  border-radius: 8px;
+  font-size: 0.95rem;
   border: none;
+  border-radius: 10px;
   background: transparent;
   color: #0f172a;
-  cursor: pointer;
-  transition: background-color 0.12s ease;
 }
 
-.day-cell.day-empty {
-  cursor: default;
-}
+.day-cell.day-empty { cursor: default; }
+.day-btn { cursor: pointer; transition: background-color 0.12s ease; }
 
-.day-btn:hover:not(.is-disabled):not(.is-selected) {
-  background-color: #f1f5f9;
-}
+.day-btn:hover:not(:disabled):not(.is-start):not(.is-end):not(.in-range) { background: #f1f5f9; }
 
-.day-btn.is-today:not(.is-selected) {
+.day-btn:disabled { color: #cbd5e1; cursor: not-allowed; }
+
+.day-btn.is-today:not(.is-start):not(.is-end) {
   color: #15803d;
   font-weight: 700;
-  box-shadow: inset 0 0 0 1px #15803d;
+  box-shadow: inset 0 0 0 1.5px #15803d;
 }
 
-.day-btn.is-selected {
-  background-color: #15803d;
+/* Range: solid pills at both ends joined by a continuous soft tint strip. */
+.day-btn.in-range {
+  background: #dcfce7;
+  color: #14532d;
+  border-radius: 0;
+}
+
+.day-btn.is-start,
+.day-btn.is-end {
+  background: #15803d;
   color: #ffffff;
   font-weight: 600;
 }
 
-.day-btn.is-disabled {
-  color: #cbd5e1;
-  cursor: not-allowed;
-  background: transparent;
-}
+.day-btn.is-start { border-radius: 999px 0 0 999px; }
+.day-btn.is-end { border-radius: 0 999px 999px 0; }
+.day-btn.is-single { border-radius: 999px; }
 
-/* ── Month / year pickers ─────────────────────────────────────────────────── */
 
-/* Roughly the height of a six-row day grid so the panel doesn't jump in size. */
-.calendar-period-grid {
+/* ── Year grid ────────────────────────────────────────────────────────────── */
+
+.year-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-auto-rows: 1fr;
-  gap: 6px;
-  min-height: 240px;
-  margin-top: 6px;
-}
-
-/* Year view: every selectable year at once, scrolling inside the panel. */
-.calendar-year-grid {
-  position: relative;
-  grid-auto-rows: 40px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  flex: 1;
   min-height: 0;
-  height: 240px;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  padding: 2px;
   align-content: start;
+  overflow-y: auto;
+  padding: 2px;
 }
 
-.period-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 40px;
+.year-cell {
+  padding: 8px 0;
   border: none;
   border-radius: 8px;
   background: transparent;
   color: #0f172a;
   font: inherit;
-  font-size: 0.875rem;
+  font-size: 0.85rem;
   cursor: pointer;
-  transition: background-color 0.12s ease;
 }
 
-.period-btn:hover:not(.is-disabled):not(.is-selected) {
-  background-color: #f1f5f9;
-}
+.year-cell:hover:not(.is-selected) { background: #f1f5f9; }
+.year-cell.is-selected { background: #15803d; color: #ffffff; font-weight: 600; }
 
-.period-btn.is-today:not(.is-selected) {
-  color: #15803d;
-  font-weight: 700;
-  box-shadow: inset 0 0 0 1px #15803d;
-}
-
-.period-btn.is-selected {
-  background-color: #15803d;
-  color: #ffffff;
-  font-weight: 600;
-}
-
-.period-btn.is-disabled {
-  color: #cbd5e1;
-  cursor: not-allowed;
-  background: transparent;
-}
-
-/* ── Time list ────────────────────────────────────────────────────────────── */
-
-/* Anchored under/over the "Add time" button at the pill's right edge. The inline
-   max-height set by the positioning hook never exceeds this cap (TIME_LIST_MAX_HEIGHT). */
-.date-picker-time-list {
-  list-style: none;
-  width: 192px;
-  max-width: calc(100vw - 16px);
-  max-height: 280px;
-  margin: 0;
-  padding: 6px;
-}
-
-.date-picker-time-list.align-end {
-  left: auto;
-  right: 0;
-}
-
-.date-picker-time-list:focus-visible {
-  outline: 2px solid #15803d;
-  outline-offset: 2px;
-}
-
-.time-option {
-  padding: 8px 12px;
-  border-radius: 8px;
-  font-size: 0.875rem;
-  color: #0f172a;
-  cursor: pointer;
-  user-select: none;
-}
-
-.time-option.is-active {
-  background: #f1f5f9;
-}
-
-.time-option.is-selected {
-  color: #15803d;
-  font-weight: 600;
-}
-
-.time-option.is-clear {
-  color: #64748b;
-  border-bottom: 1px solid #f1f5f9;
-  border-radius: 8px 8px 0 0;
-  margin-bottom: 4px;
-}
-
-.time-option.is-disabled {
-  color: #cbd5e1;
-  cursor: not-allowed;
-}
-
-/* ── Phone widths: stack presets above the calendar ───────────────────────── */
-
-@media (max-width: 600px) {
-  .date-picker-popover {
-    flex-direction: column;
-    width: calc(100vw - 16px);
-  }
-
-  .date-preset-list {
-    flex: none;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    border-right: none;
-    border-bottom: 1px solid #e2e8f0;
-    border-radius: 12px 12px 0 0;
-    padding: 6px 0;
-  }
-
-  .date-preset-item {
-    padding: 7px 14px;
-  }
-
-  .calendar-period-grid {
-    min-height: 200px;
-  }
-
-  .calendar-year-grid {
-    height: 200px;
-  }
-
-  /* On phones the time list spans the pill. */
-  .date-picker-time-list.align-end {
-    left: 0;
-    width: auto;
-  }
+@media (max-width: 640px) {
+  .date-picker-popover { width: 340px; }
+  .calendar-panel { padding: 12px 12px 10px; }
+  .preset-list { display: none; }
 }

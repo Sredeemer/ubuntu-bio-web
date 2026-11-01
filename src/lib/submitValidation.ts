@@ -1,32 +1,21 @@
 /**
- * Validation and date range formatting utilities for the UbuntuBio dataset submission wizard.
- * Strictly adheres to sovereign metadata standards and local time boundary invariants.
+ * Validation and serialization utilities for the UbuntuBio dataset submission wizard.
+ * Collection dates are date-only (no time) and serialize to the backend DATE_REGEX forms:
+ * "YYYY-MM-DD" or "YYYY-MM-DD/YYYY-MM-DD".
  */
 
-export interface CollectionDateInput {
-  isRange: boolean;
+export interface CollectionDateValue {
+  /** Local calendar date, YYYY-MM-DD. Empty string when nothing is selected. */
   startDate: string;
-  startTime: string;
-  endDate: string;
-  endTime: string;
+  /** Optional range end, YYYY-MM-DD. Absent for a single date. */
+  endDate?: string | undefined;
 }
 
-export const EMPTY_COLLECTION_DATE_INPUT: CollectionDateInput = {
-  isRange: false,
-  startDate: "",
-  startTime: "",
-  endDate: "",
-  endTime: "",
-};
+export const EMPTY_COLLECTION_DATE: CollectionDateValue = { startDate: "" };
 
 export interface CollectionDateErrors {
   start?: string | undefined;
   end?: string | undefined;
-}
-
-export interface CollectionDateRange {
-  start_datetime: string | null;
-  end_datetime: string | null;
 }
 
 /**
@@ -40,81 +29,39 @@ export function getLocalTodayIso(now: Date = new Date()): string {
 }
 
 /**
- * Returns current time in local time formatted as 24-hour HH:MM.
+ * Serializes a collection date: "YYYY-MM-DD" for a single date (or a range whose end equals
+ * its start), "YYYY-MM-DD/YYYY-MM-DD" for a range, and "" when no start date is set.
  */
-export function getLocalTimeHHMM(now: Date = new Date()): string {
-  const h = String(now.getHours()).padStart(2, "0");
-  const m = String(now.getMinutes()).padStart(2, "0");
-  return `${h}:${m}`;
+export function serializeCollectionDate(val: CollectionDateValue): string {
+  if (!val.startDate) return "";
+  if (!val.endDate || val.endDate === val.startDate) return val.startDate;
+  return `${val.startDate}/${val.endDate}`;
 }
 
 /**
- * Builds the canonical start and end datetime representation from user input.
- * In single-date mode or when no end date is provided, end_datetime is strictly null.
- */
-export function buildCollectionDateRange(input: CollectionDateInput): CollectionDateRange {
-  if (!input.startDate) {
-    return { start_datetime: null, end_datetime: null };
-  }
-
-  const start_datetime = input.startTime
-    ? `${input.startDate}T${input.startTime}`
-    : input.startDate;
-
-  if (!input.isRange || !input.endDate) {
-    return { start_datetime, end_datetime: null };
-  }
-
-  const end_datetime = input.endTime
-    ? `${input.endDate}T${input.endTime}`
-    : input.endDate;
-
-  return { start_datetime, end_datetime };
-}
-
-/**
- * Validates collection date boundaries:
- * 1. Dates and times cannot be in the future relative to the user's local clock.
- * 2. Range end date cannot be earlier than start date.
- * 3. Range end time cannot precede start time on the same day.
+ * Validates collection date boundaries against the user's local clock:
+ * start and end cannot be in the future, and end cannot precede start.
  */
 export function validateCollectionDate(
-  input: CollectionDateInput,
+  val: CollectionDateValue,
   now: Date = new Date()
 ): CollectionDateErrors | undefined {
   const today = getLocalTodayIso(now);
-  const nowTime = getLocalTimeHHMM(now);
   const errors: CollectionDateErrors = {};
 
-  if (input.startDate) {
-    if (input.startDate > today) {
-      errors.start = "Start date can't be in the future.";
-    } else if (input.startDate === today && input.startTime && input.startTime > nowTime) {
-      errors.start = "Start time can't be in the future.";
-    }
+  if (val.startDate && val.startDate > today) {
+    errors.start = "Start date can't be in the future.";
   }
 
-  if (input.isRange && input.endDate) {
-    if (input.endDate > today) {
+  if (val.endDate) {
+    if (!val.startDate) {
+      errors.start = "Select a start date.";
+    } else if (val.endDate > today) {
       errors.end = "End date can't be in the future.";
-    } else if (input.endDate === today && input.endTime && input.endTime > nowTime) {
-      errors.end = "End time can't be in the future.";
-    } else if (input.startDate && input.endDate < input.startDate) {
+    } else if (val.endDate < val.startDate) {
       errors.end = "End date can't be before the start date.";
-    } else if (
-      input.startDate &&
-      input.endDate === input.startDate &&
-      input.startTime &&
-      input.endTime &&
-      input.endTime < input.startTime
-    ) {
-      errors.end = "End time can't be before the start time.";
     }
   }
 
-  if (errors.start || errors.end) {
-    return errors;
-  }
-
-  return undefined;
+  return errors.start || errors.end ? errors : undefined;
 }
