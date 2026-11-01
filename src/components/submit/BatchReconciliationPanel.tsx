@@ -192,13 +192,13 @@ export function BatchReconciliationPanel({
           <div className="folder-dropzone-info">
             <span className="folder-dropzone-title">
               {discoveredFiles.length > 0
-                ? `${discoveredFiles.length} Sequence Files Scanned from Local Folder`
-                : "Drag & Drop Local Sequencing Folder (or Folder with Metadata Sheet)"}
+                ? `${discoveredFiles.length} Sequence Files Scanned`
+                : "Drag & Drop Local Sequencing Folder"}
             </span>
             <span className="folder-dropzone-subtext">
               {discoveredFiles.length > 0
-                ? "Local directory linked. FASTQ/FASTA reads will be verified against the matrix below."
-                : "Drop your sequencing directory (FASTQ, FASTA, BAM) and optional TSV/CSV sheet together, or link them individually."}
+                ? "Local directory linked. Read files will be verified against the matrix."
+                : "FASTQ, FASTA, or BAM reads. Validated locally without uploading."}
             </span>
           </div>
         </div>

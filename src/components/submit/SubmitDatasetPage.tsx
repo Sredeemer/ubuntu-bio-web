@@ -650,11 +650,11 @@ export function SubmitDatasetPage() {
                         <div className="scope-card-radio-indicator" />
                         <div className="scope-card-content">
                           <div className="scope-card-header">
-                            <span className="scope-card-title">Quick Single Assay</span>
+                            <span className="scope-card-title">Single Assay</span>
                             <span className="scope-card-badge">1 to 5 samples</span>
                           </div>
                           <p className="scope-card-desc">
-                            Standard multi-step wizard with direct form inputs for individual isolates, reference genomes, or single runs.
+                            Step-by-step form for 1 to 5 isolates or reference genomes.
                           </p>
                         </div>
                       </div>
@@ -680,10 +680,10 @@ export function SubmitDatasetPage() {
                         <div className="scope-card-content">
                           <div className="scope-card-header">
                             <span className="scope-card-title">Batch Surveillance Cohort</span>
-                            <span className="scope-card-badge">Sheet &amp; Folder Drop</span>
+                            <span className="scope-card-badge">Bulk</span>
                           </div>
                           <p className="scope-card-desc">
-                            Streamlined 3-step workflow for outbreaks and surveillance cohorts with spreadsheet editor and folder reconciliation.
+                            Spreadsheet editor and folder drop for surveillance cohorts.
                           </p>
                         </div>
                       </div>
@@ -697,8 +697,8 @@ export function SubmitDatasetPage() {
                   </h2>
                   <p className="step-subheading">
                     {submissionTrack === "batch"
-                      ? "Identify your research namespace, dataset title, target pathogen, and sovereign African Union provenance."
-                      : "Identify your verified researcher namespace and provide the formal title for this genomic dataset."}
+                      ? "Identify dataset namespace, title, target pathogen, and African Union provenance."
+                      : "Identify verified researcher namespace and provide dataset title."}
                   </p>
 
                   <div className="form-grid">
@@ -1161,7 +1161,7 @@ export function SubmitDatasetPage() {
                     <div>
                       <h2 className="step-heading">Step 2: Batch Metadata Matrix &amp; Folder Sequence Ingestion</h2>
                       <p className="step-subheading">
-                        Drop your sequencing folder and provide specimen attributes via spreadsheet upload or the built-in grid editor.
+                        Provide specimen metadata via sheet or table, and link your local sequencing folder.
                       </p>
                     </div>
                   </div>
@@ -1173,11 +1173,11 @@ export function SubmitDatasetPage() {
                         {batchRows.length > 0 ? <CheckCircle2 size={13} /> : <span className="badge-step-num">1</span>}
                       </div>
                       <div className="dual-check-content">
-                        <div className="dual-check-title">Sample Metadata Matrix</div>
+                        <div className="dual-check-title">1. Metadata Sheet</div>
                         <div className="dual-check-status">
                           {batchRows.length > 0
                             ? `${batchRows.length} sample record${batchRows.length === 1 ? "" : "s"} declared`
-                            : "Action needed: Upload spreadsheet (TSV/CSV) or add rows below"}
+                            : "Upload sheet or add rows"}
                         </div>
                       </div>
                     </div>
@@ -1189,11 +1189,11 @@ export function SubmitDatasetPage() {
                         {discoveredFolderFiles.length > 0 ? <CheckCircle2 size={13} /> : <span className="badge-step-num">2</span>}
                       </div>
                       <div className="dual-check-content">
-                        <div className="dual-check-title">Local Read Directory</div>
+                        <div className="dual-check-title">2. Read Directory</div>
                         <div className="dual-check-status">
                           {discoveredFolderFiles.length > 0
                             ? `${discoveredFolderFiles.length} file${discoveredFolderFiles.length === 1 ? "" : "s"} linked on disk`
-                            : "Action needed: Drop local folder containing FASTQ/FASTA reads"}
+                            : "Drop local folder"}
                         </div>
                       </div>
                     </div>
@@ -1220,27 +1220,27 @@ export function SubmitDatasetPage() {
                   <div className={`step-validation-banner ${reconciliationReport.canProceed ? "success" : ""}`}>
                     {reconciliationReport.invalidAttributeCount > 0 ? (
                       <p className="step-validation-hint error">
-                        <ShieldAlert size={14} /> Action Required: Batch metadata has {reconciliationReport.invalidAttributeCount} invalid cell(s). Check highlighted red cells (e.g. Taxon 9606, non-AU country codes, or missing identifiers).
+                        <ShieldAlert size={14} /> Action Required: {reconciliationReport.invalidAttributeCount} invalid cell(s). Check highlighted red cells.
                       </p>
                     ) : reconciliationReport.missingFileCount > 0 ? (
                       <p className="step-validation-hint error">
-                        <AlertTriangle size={14} /> Action Required: {reconciliationReport.missingFileCount} sample row(s) reference files not found in the dropped sequence folder. Drop folder or correct filenames.
+                        <AlertTriangle size={14} /> Action Required: {reconciliationReport.missingFileCount} sample row(s) reference files not found in folder.
                       </p>
                     ) : batchRows.length === 0 && discoveredFolderFiles.length === 0 ? (
                       <p className="step-validation-hint">
-                        <Info size={14} /> Action Required: Upload your metadata spreadsheet (TSV/CSV) or drop your local sequencing folder above to begin.
+                        <Info size={14} /> Upload metadata sheet (TSV/CSV) or drop sequencing folder to begin.
                       </p>
                     ) : batchRows.length > 0 && discoveredFolderFiles.length === 0 ? (
                       <p className="step-validation-hint">
-                        <Info size={14} /> Action Required: {batchRows.length} sample records loaded. Now drop or browse your local sequencing directory above to verify read files on disk.
+                        <Info size={14} /> {batchRows.length} sample record{batchRows.length === 1 ? "" : "s"} loaded. Drop sequencing folder to verify reads on disk.
                       </p>
                     ) : batchRows.length === 0 && discoveredFolderFiles.length > 0 ? (
                       <p className="step-validation-hint">
-                        <Info size={14} /> Action Required: {discoveredFolderFiles.length} sequencing files scanned. Declare metadata by uploading a spreadsheet or clicking &quot;Add Rows from Orphan Files&quot;.
+                        <Info size={14} /> {discoveredFolderFiles.length} file{discoveredFolderFiles.length === 1 ? "" : "s"} scanned. Upload sheet or add metadata rows.
                       </p>
                     ) : reconciliationReport.canProceed ? (
                       <p className="step-validation-hint success">
-                        <CheckCircle2 size={14} /> Cohort Verified: All {batchRows.length} sample records matched with reads on disk and conform to sovereign standards. Ready for review.
+                        <CheckCircle2 size={14} /> Cohort Verified: All {batchRows.length} sample records matched with reads on disk. Ready for review.
                       </p>
                     ) : (
                       <p className="step-validation-hint">
