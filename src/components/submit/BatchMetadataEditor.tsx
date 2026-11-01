@@ -299,8 +299,60 @@ export function BatchMetadataEditor({
           <tbody>
             {rows.length === 0 ? (
               <tr>
-                <td colSpan={isPaired ? 11 : 10} style={{ textAlign: "center", padding: "32px", color: "#64748b" }}>
-                  No sample records in table. Click &quot;Add Row&quot;, upload a spreadsheet, or drop a sequence folder above.
+                <td colSpan={isPaired ? 11 : 10} className="table-empty-container">
+                  <div className="table-empty-box">
+                    <div className="table-empty-title">Specimen Matrix Is Empty</div>
+                    <div className="table-empty-desc">
+                      No sample records in table. Choose how you would like to declare your cohort samples:
+                    </div>
+                    <div className="table-empty-cards">
+                      <button
+                        type="button"
+                        className="empty-action-card"
+                        onClick={() => fileUploadInputRef.current?.click()}
+                      >
+                        <div className="empty-card-icon">
+                          <Upload size={16} />
+                        </div>
+                        <div className="empty-card-text">
+                          <strong>Upload Spreadsheet</strong>
+                          <span>Import TSV, CSV, or Excel file</span>
+                        </div>
+                      </button>
+
+                      <button
+                        type="button"
+                        className="empty-action-card"
+                        onClick={handleAddRow}
+                      >
+                        <div className="empty-card-icon">
+                          <Plus size={16} />
+                        </div>
+                        <div className="empty-card-text">
+                          <strong>Add Row Manually</strong>
+                          <span>Create records row-by-row</span>
+                        </div>
+                      </button>
+
+                      <button
+                        type="button"
+                        className="empty-action-card"
+                        onClick={() => handleDownloadTemplate("tsv")}
+                      >
+                        <div className="empty-card-icon">
+                          <Download size={16} />
+                        </div>
+                        <div className="empty-card-text">
+                          <strong>Download Template</strong>
+                          <span>Pre-filled TSV with headers</span>
+                        </div>
+                      </button>
+                    </div>
+                    <div className="table-empty-footer">
+                      <HelpCircle size={13} />
+                      <span>Tip: You can also copy cells directly from Microsoft Excel or Google Sheets and paste (Ctrl+V) into this table.</span>
+                    </div>
+                  </div>
                 </td>
               </tr>
             ) : (

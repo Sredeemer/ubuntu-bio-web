@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useRef, useState } from "react";
-import { Folder, FolderUp, CheckCircle2, AlertTriangle, AlertCircle, FilePlus2, Trash2 } from "lucide-react";
+import { Folder, FolderUp, CheckCircle2, AlertTriangle, AlertCircle, FilePlus2, Trash2, Upload } from "lucide-react";
 import { DiscoveredSequenceFile, ReconciliationReport } from "../../lib/parityMatcher";
+import { BatchSampleRow, parseBatchSheet } from "../../lib/templateGenerator";
 import "./BatchReconciliationPanel.css";
 
 interface BatchReconciliationPanelProps {
@@ -11,6 +12,7 @@ interface BatchReconciliationPanelProps {
   onFilesDiscovered: (files: DiscoveredSequenceFile[]) => void;
   onClearFiles: () => void;
   onAddRowsFromOrphans: () => void;
+  onSheetDiscovered?: (rows: BatchSampleRow[]) => void;
 }
 
 export function BatchReconciliationPanel({
@@ -19,11 +21,13 @@ export function BatchReconciliationPanel({
   onFilesDiscovered,
   onClearFiles,
   onAddRowsFromOrphans,
+  onSheetDiscovered,
 }: BatchReconciliationPanelProps) {
   const folderInputRef = useRef<HTMLInputElement>(null);
+  const sheetInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
 
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+  const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
@@ -32,11 +36,18 @@ export function BatchReconciliationPanel({
     if (!items || items.length === 0) return;
 
     const filesFound: DiscoveredSequenceFile[] = [];
+    const sheetFiles: File[] = [];
 
     const processEntry = (entry: any): Promise<void> => {
       return new Promise((resolve) => {
         if (entry.isFile) {
           entry.file((file: File) => {
+            if (
+              file.name.match(/\.(tsv|csv|tab)$/i) ||
+              (file.name.endsWith(".txt") && file.name.toLowerCase().includes("sample"))
+            ) {
+              sheetFiles.push(file);
+            }
             filesFound.push({
               name: file.name,
               relativePath: entry.fullPath || file.name,
@@ -70,6 +81,9 @@ export function BatchReconciliationPanel({
       } else if (item.kind === "file") {
         const file = item.getAsFile();
         if (file) {
+          if (file.name.match(/\.(tsv|csv|tab)$/i)) {
+            sheetFiles.push(file);
+          }
           filesFound.push({
             name: file.name,
             sizeBytes: file.size,
@@ -78,21 +92,45 @@ export function BatchReconciliationPanel({
       }
     }
 
-    Promise.all(promises).then(() => {
-      if (filesFound.length > 0) {
-        onFilesDiscovered(filesFound);
+    await Promise.all(promises);
+
+    // If a sheet file was discovered inside the dropped folder/files
+    if (sheetFiles.length > 0 && onSheetDiscovered) {
+      const firstSheet = sheetFiles[0];
+      if (firstSheet) {
+        try {
+          const text = await firstSheet.text();
+          const parsed = parseBatchSheet(text);
+          if (parsed.length > 0) {
+            onSheetDiscovered(parsed);
+          }
+        } catch {
+          // ignore parsing error
+        }
       }
-    });
+    }
+
+    if (filesFound.length > 0) {
+      onFilesDiscovered(filesFound);
+    }
   };
 
-  const handleFolderInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFolderInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const fileList = e.target.files;
     if (!fileList || fileList.length === 0) return;
 
     const filesFound: DiscoveredSequenceFile[] = [];
+    const sheetFiles: File[] = [];
+
     for (let i = 0; i < fileList.length; i++) {
       const file = fileList[i];
       if (!file) continue;
+      if (
+        file.name.match(/\.(tsv|csv|tab)$/i) ||
+        (file.name.endsWith(".txt") && file.name.toLowerCase().includes("sample"))
+      ) {
+        sheetFiles.push(file);
+      }
       filesFound.push({
         name: file.name,
         relativePath: (file as any).webkitRelativePath || file.name,
@@ -100,7 +138,40 @@ export function BatchReconciliationPanel({
       });
     }
 
+    if (sheetFiles.length > 0 && onSheetDiscovered) {
+      const firstSheet = sheetFiles[0];
+      if (firstSheet) {
+        try {
+          const text = await firstSheet.text();
+          const parsed = parseBatchSheet(text);
+          if (parsed.length > 0) {
+            onSheetDiscovered(parsed);
+          }
+        } catch {
+          // ignore parsing error
+        }
+      }
+    }
+
     onFilesDiscovered(filesFound);
+    e.target.value = "";
+  };
+
+  const handleDirectSheetUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !onSheetDiscovered) return;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      const text = evt.target?.result;
+      if (typeof text === "string") {
+        const parsed = parseBatchSheet(text);
+        if (parsed.length > 0) {
+          onSheetDiscovered(parsed);
+        }
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = "";
   };
 
   const hasActivity = report.totalSamples > 0 || discoveredFiles.length > 0;
@@ -140,12 +211,12 @@ export function BatchReconciliationPanel({
             <span className="folder-dropzone-title">
               {discoveredFiles.length > 0
                 ? `${discoveredFiles.length} Sequence Files Scanned from Local Folder`
-                : "Drag & Drop Local Sequencing Folder"}
+                : "Drag & Drop Local Sequencing Folder (or Folder with Metadata Sheet)"}
             </span>
             <span className="folder-dropzone-subtext">
               {discoveredFiles.length > 0
                 ? "Local directory linked. FASTQ/FASTA reads will be verified against the matrix below."
-                : "Scans local filenames to verify reads on disk without uploading gigabytes over the network."}
+                : "Drop your sequencing directory (FASTQ, FASTA, BAM) and optional TSV/CSV sheet together, or link them individually."}
             </span>
           </div>
         </div>
@@ -159,6 +230,27 @@ export function BatchReconciliationPanel({
             <Folder size={14} />
             <span>{discoveredFiles.length > 0 ? "Change Folder" : "Browse Folder"}</span>
           </button>
+
+          {onSheetDiscovered && (
+            <>
+              <button
+                type="button"
+                className="btn-folder-browse"
+                onClick={() => sheetInputRef.current?.click()}
+                title="Upload metadata spreadsheet directly"
+              >
+                <Upload size={13} />
+                <span>Upload Sheet</span>
+              </button>
+              <input
+                ref={sheetInputRef}
+                type="file"
+                accept=".tsv,.csv,.txt,.tab"
+                style={{ display: "none" }}
+                onChange={handleDirectSheetUpload}
+              />
+            </>
+          )}
 
           {discoveredFiles.length > 0 && (
             <button

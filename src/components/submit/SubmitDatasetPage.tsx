@@ -448,6 +448,11 @@ export function SubmitDatasetPage() {
     toast.success(`Generated ${newRows.length} sample row(s) from unlinked files.`);
   };
 
+  const handleSheetDiscovered = (rows: BatchSampleRow[]) => {
+    setBatchRows(rows);
+    toast.success(`Discovered metadata sheet in folder: loaded ${rows.length} sample row(s).`);
+  };
+
   // Handle files dropped in SequenceDropzone
   const handleFilesInspected = (inspected: WebSequenceInspectionResult[]) => {
     setInspectedFiles(inspected);
@@ -1161,6 +1166,39 @@ export function SubmitDatasetPage() {
                     </div>
                   </div>
 
+                  {/* Dual-Requirement Micro-Progress Checklist */}
+                  <div className="batch-dual-checklist" data-testid="batch-dual-checklist">
+                    <div className={`dual-check-card ${batchRows.length > 0 ? "complete" : "pending"}`}>
+                      <div className="dual-check-badge">
+                        {batchRows.length > 0 ? <CheckCircle2 size={13} /> : <span className="badge-step-num">1</span>}
+                      </div>
+                      <div className="dual-check-content">
+                        <div className="dual-check-title">Sample Metadata Matrix</div>
+                        <div className="dual-check-status">
+                          {batchRows.length > 0
+                            ? `${batchRows.length} sample record${batchRows.length === 1 ? "" : "s"} declared`
+                            : "Action needed: Upload spreadsheet (TSV/CSV) or add rows below"}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="dual-check-connector" />
+
+                    <div className={`dual-check-card ${discoveredFolderFiles.length > 0 ? "complete" : "pending"}`}>
+                      <div className="dual-check-badge">
+                        {discoveredFolderFiles.length > 0 ? <CheckCircle2 size={13} /> : <span className="badge-step-num">2</span>}
+                      </div>
+                      <div className="dual-check-content">
+                        <div className="dual-check-title">Local Read Directory</div>
+                        <div className="dual-check-status">
+                          {discoveredFolderFiles.length > 0
+                            ? `${discoveredFolderFiles.length} file${discoveredFolderFiles.length === 1 ? "" : "s"} linked on disk`
+                            : "Action needed: Drop local folder containing FASTQ/FASTA reads"}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                   <div className="batch-workflow-section">
                     <BatchReconciliationPanel
                       report={reconciliationReport}
@@ -1168,6 +1206,7 @@ export function SubmitDatasetPage() {
                       onFilesDiscovered={handleFilesDiscoveredFromFolder}
                       onClearFiles={handleClearDiscoveredFolderFiles}
                       onAddRowsFromOrphans={handleAddRowsFromOrphans}
+                      onSheetDiscovered={handleSheetDiscovered}
                     />
                     <BatchMetadataEditor
                       rows={batchRows}
@@ -1178,27 +1217,37 @@ export function SubmitDatasetPage() {
                     />
                   </div>
 
-                  {!reconciliationReport.canProceed && (
-                    <div className="step-validation-banner">
-                      {reconciliationReport.invalidAttributeCount > 0 ? (
-                        <p className="step-validation-hint error">
-                          <ShieldAlert size={14} /> Batch metadata has {reconciliationReport.invalidAttributeCount} invalid cell(s). Check highlighted red cells (e.g. Taxon 9606, non-AU country codes, or missing identifiers).
-                        </p>
-                      ) : reconciliationReport.missingFileCount > 0 ? (
-                        <p className="step-validation-hint error">
-                          <AlertTriangle size={14} /> {reconciliationReport.missingFileCount} sample row(s) reference files not found in the dropped sequence folder. Drop folder or correct filenames.
-                        </p>
-                      ) : batchRows.length === 0 ? (
-                        <p className="step-validation-hint">
-                          <Info size={14} /> Please add or upload at least one sample row in the table editor above.
-                        </p>
-                      ) : (
-                        <p className="step-validation-hint">
-                          <Info size={14} /> Reconcile sheet rows and dropped sequence files before continuing.
-                        </p>
-                      )}
-                    </div>
-                  )}
+                  <div className={`step-validation-banner ${reconciliationReport.canProceed ? "success" : ""}`}>
+                    {reconciliationReport.invalidAttributeCount > 0 ? (
+                      <p className="step-validation-hint error">
+                        <ShieldAlert size={14} /> Action Required: Batch metadata has {reconciliationReport.invalidAttributeCount} invalid cell(s). Check highlighted red cells (e.g. Taxon 9606, non-AU country codes, or missing identifiers).
+                      </p>
+                    ) : reconciliationReport.missingFileCount > 0 ? (
+                      <p className="step-validation-hint error">
+                        <AlertTriangle size={14} /> Action Required: {reconciliationReport.missingFileCount} sample row(s) reference files not found in the dropped sequence folder. Drop folder or correct filenames.
+                      </p>
+                    ) : batchRows.length === 0 && discoveredFolderFiles.length === 0 ? (
+                      <p className="step-validation-hint">
+                        <Info size={14} /> Step 1 of 2: Upload your metadata spreadsheet (TSV/CSV) or drop your local sequencing folder above to begin.
+                      </p>
+                    ) : batchRows.length > 0 && discoveredFolderFiles.length === 0 ? (
+                      <p className="step-validation-hint">
+                        <Info size={14} /> Step 2 of 2: {batchRows.length} sample records loaded. Now drop or browse your local sequencing directory above to verify read files on disk.
+                      </p>
+                    ) : batchRows.length === 0 && discoveredFolderFiles.length > 0 ? (
+                      <p className="step-validation-hint">
+                        <Info size={14} /> Step 2 of 2: {discoveredFolderFiles.length} sequencing files scanned. Click &quot;Upload Sheet&quot; or &quot;Add Rows from Orphan Files&quot; to declare metadata.
+                      </p>
+                    ) : reconciliationReport.canProceed ? (
+                      <p className="step-validation-hint success">
+                        <CheckCircle2 size={14} /> Cohort Verified: All {batchRows.length} sample records matched with reads on disk and conform to sovereign standards. Ready for review.
+                      </p>
+                    ) : (
+                      <p className="step-validation-hint">
+                        <Info size={14} /> Reconcile sheet rows and dropped sequence files before continuing.
+                      </p>
+                    )}
+                  </div>
 
                   <div className="step-actions split">
                     <button

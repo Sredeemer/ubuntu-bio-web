@@ -82,4 +82,20 @@ describe("BatchReconciliationPanel", () => {
     expect(screen.queryByTestId("batch-parity-strip")).toBeNull();
     expect(screen.queryByText("Matched Samples")).toBeNull();
   });
+
+  it("renders direct Upload Sheet button in dropzone when onSheetDiscovered is provided", () => {
+    const onSheet = vi.fn();
+    render(
+      <BatchReconciliationPanel
+        report={mockReport}
+        discoveredFiles={[]}
+        onFilesDiscovered={vi.fn()}
+        onClearFiles={vi.fn()}
+        onAddRowsFromOrphans={vi.fn()}
+        onSheetDiscovered={onSheet}
+      />
+    );
+
+    expect(screen.getByRole("button", { name: /Upload Sheet/i })).toBeDefined();
+  });
 });

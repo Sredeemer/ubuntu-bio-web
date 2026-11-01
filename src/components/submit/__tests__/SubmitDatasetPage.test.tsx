@@ -395,7 +395,8 @@ describe("SubmitDatasetPage", () => {
 
     // Verify user lands directly on Step 2 (Batch Matrix & Folder Drop)
     expect(screen.getByText(/Step 2: Batch Metadata Matrix & Folder Sequence Ingestion/i)).toBeDefined();
-    expect(screen.getByText("Drag & Drop Local Sequencing Folder")).toBeDefined();
+    expect(screen.getByTestId("batch-dual-checklist")).toBeDefined();
+    expect(screen.getByText(/Drag & Drop Local Sequencing Folder/i)).toBeDefined();
     expect(screen.getByText("TSV")).toBeDefined();
     expect(screen.getByText(/Fill Defaults/i)).toBeDefined();
 
