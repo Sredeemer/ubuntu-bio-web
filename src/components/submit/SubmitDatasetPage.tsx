@@ -47,6 +47,14 @@ import { SequenceDropzone } from "./SequenceDropzone";
 import { OrganismSelector } from "./OrganismSelector";
 import { HostOrganismSelector, HostEntry } from "./HostOrganismSelector";
 import { CollectionDateRangeField } from "./CollectionDateRangeField";
+import { BatchMetadataEditor } from "./BatchMetadataEditor";
+import { BatchReconciliationPanel } from "./BatchReconciliationPanel";
+import { BatchSampleRow, TemplateDefaults } from "../../lib/templateGenerator";
+import {
+  reconcileBatchWithDiscoveredFiles,
+  generateRowsFromOrphanFiles,
+  DiscoveredSequenceFile,
+} from "../../lib/parityMatcher";
 import { DatePicker } from "../ui/DatePicker";
 import { Progress } from "../ui/Progress";
 import {
@@ -139,6 +147,9 @@ export function SubmitDatasetPage() {
 
   // Step 4 File Mode and Inspection State
   const [fileInputMode, setFileInputMode] = useState<"browser" | "remote">("browser");
+  const [batchWorkflow, setBatchWorkflow] = useState<"single" | "batch">("single");
+  const [batchRows, setBatchRows] = useState<BatchSampleRow[]>([]);
+  const [discoveredFolderFiles, setDiscoveredFolderFiles] = useState<DiscoveredSequenceFile[]>([]);
   const [inspectedFiles, setInspectedFiles] = useState<WebSequenceInspectionResult[]>([]);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadStatusText, setUploadStatusText] = useState("");
@@ -302,6 +313,24 @@ export function SubmitDatasetPage() {
     allowedSources.includes(librarySource as SourceId) &&
     !isBslViolation;
 
+  const isPaired = libraryLayout === "PAIRED";
+
+  const templateDefaults: TemplateDefaults = {
+    taxonId: parseInt(taxonId, 10) || 5833,
+    scientificName: taxonName || "Pathogen",
+    countryCode,
+    hostSpecies,
+    sampleType,
+    collectionDate,
+    layout: libraryLayout,
+  };
+
+  const reconciliationReport = reconcileBatchWithDiscoveredFiles(
+    batchRows,
+    discoveredFolderFiles,
+    isPaired
+  );
+
   // Step 4 File Size & Validation Logic
   const totalFileSizeBytes = inspectedFiles.reduce((acc, f) => acc + f.fileSizeBytes, 0);
   const isExceedingUploadThreshold = totalFileSizeBytes > BROWSER_UPLOAD_MAX_BYTES;
@@ -319,9 +348,11 @@ export function SubmitDatasetPage() {
 
   // Compulsory upload in browser mode: user must drop at least 1 file without human markers
   const isStep4Valid =
-    hasValidRuns &&
-    !hasHumanContamination &&
-    (fileInputMode === "remote" || inspectedFiles.length > 0);
+    fileInputMode === "remote"
+      ? hasValidRuns
+      : batchWorkflow === "batch"
+      ? reconciliationReport.canProceed
+      : hasValidRuns && !hasHumanContamination && inspectedFiles.length > 0;
 
   const selectedCountryObj = AU_COUNTRIES.find((c) => c.code === countryCode);
   const currentPlatformConfig = SEQUENCING_PLATFORMS.find((p) => p.id === platformId);
@@ -354,12 +385,35 @@ export function SubmitDatasetPage() {
     librarySource,
     librarySelection,
     libraryLayout,
-    runs,
+    runs: batchWorkflow === "batch" && batchRows.length > 0 ? [] : runs,
+    batchRows: batchWorkflow === "batch" && batchRows.length > 0 ? batchRows : undefined,
     description,
   };
 
   const generatedReadme = generateDatasetReadme(readmeParams);
   const generatedSamplesTsv = generateDatasetSamplesTsv(readmeParams);
+
+  const handleFilesDiscoveredFromFolder = (files: DiscoveredSequenceFile[]) => {
+    setDiscoveredFolderFiles(files);
+    if (batchRows.length === 0 && files.length > 0) {
+      const initialRows = generateRowsFromOrphanFiles(files, templateDefaults, isPaired);
+      setBatchRows(initialRows);
+      toast.success(`Discovered ${files.length} sequence files and initialized ${initialRows.length} sample row(s).`);
+    } else {
+      toast.success(`Scanned ${files.length} sequence file(s) from dropped folder.`);
+    }
+  };
+
+  const handleClearDiscoveredFolderFiles = () => {
+    setDiscoveredFolderFiles([]);
+    toast.info("Cleared folder sequence files.");
+  };
+
+  const handleAddRowsFromOrphans = () => {
+    const newRows = generateRowsFromOrphanFiles(reconciliationReport.orphanFiles, templateDefaults, isPaired);
+    setBatchRows((prev) => [...prev, ...newRows]);
+    toast.success(`Generated ${newRows.length} sample row(s) from unlinked files.`);
+  };
 
   // Handle files dropped in SequenceDropzone
   const handleFilesInspected = (inspected: WebSequenceInspectionResult[]) => {
@@ -1256,9 +1310,11 @@ export function SubmitDatasetPage() {
                         Declare the run accession, flowcell lane, and local FASTQ/BAM file paths.
                       </p>
                     </div>
-                    <button type="button" className="btn-add-run" onClick={handleAddRun}>
-                      <Plus size={15} /> Add Sequencing Run
-                    </button>
+                    {batchWorkflow === "single" && (
+                      <button type="button" className="btn-add-run" onClick={handleAddRun}>
+                        <Plus size={15} /> Add Sequencing Run
+                      </button>
+                    )}
                   </div>
 
                   {/* Ingestion Mode Selector */}
@@ -1286,7 +1342,52 @@ export function SubmitDatasetPage() {
                     </div>
                   </div>
 
-                  {fileInputMode === "browser" ? (
+                  {fileInputMode === "browser" && (
+                    <div className="file-mode-container" style={{ marginTop: "10px", marginBottom: "16px" }}>
+                      <span className="file-mode-label">Cohort Scope:</span>
+                      <div className="file-mode-segmented-control" role="tablist" aria-label="Workflow mode selection">
+                        <button
+                          type="button"
+                          role="tab"
+                          aria-selected={batchWorkflow === "single"}
+                          className={`file-mode-pill ${batchWorkflow === "single" ? "active" : ""}`}
+                          onClick={() => setBatchWorkflow("single")}
+                        >
+                          Quick Single Assay (1 to 5 samples)
+                        </button>
+                        <button
+                          type="button"
+                          role="tab"
+                          aria-selected={batchWorkflow === "batch"}
+                          className={`file-mode-pill ${batchWorkflow === "batch" ? "active" : ""}`}
+                          onClick={() => setBatchWorkflow("batch")}
+                        >
+                          Batch Surveillance Cohort (Sheet and Folder Drop)
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {fileInputMode === "browser" && batchWorkflow === "batch" ? (
+                    <div className="batch-workflow-section">
+                      <BatchReconciliationPanel
+                        report={reconciliationReport}
+                        discoveredFiles={discoveredFolderFiles}
+                        onFilesDiscovered={handleFilesDiscoveredFromFolder}
+                        onClearFiles={handleClearDiscoveredFolderFiles}
+                        onAddRowsFromOrphans={handleAddRowsFromOrphans}
+                      />
+                      <BatchMetadataEditor
+                        rows={batchRows}
+                        onChange={setBatchRows}
+                        report={reconciliationReport}
+                        defaults={templateDefaults}
+                        isPaired={isPaired}
+                      />
+                    </div>
+                  ) : (
+                    <>
+                      {fileInputMode === "browser" ? (
                     <>
                       {/* Browser Dropzone Pre-flight Sniffer */}
                       <div className="dropzone-section-box">
@@ -1535,10 +1636,30 @@ export function SubmitDatasetPage() {
                       </div>
                     ))}
                   </div>
+                    </>
+                  )}
 
                   {!isStep4Valid && (
                     <div className="step-validation-banner">
-                      {fileInputMode === "browser" && inspectedFiles.length === 0 ? (
+                      {batchWorkflow === "batch" ? (
+                        reconciliationReport.invalidAttributeCount > 0 ? (
+                          <p className="step-validation-hint error">
+                            <ShieldAlert size={14} /> Batch metadata has {reconciliationReport.invalidAttributeCount} invalid cell(s). Check highlighted red cells (e.g. Taxon 9606, non-AU country codes, or missing identifiers).
+                          </p>
+                        ) : reconciliationReport.missingFileCount > 0 ? (
+                          <p className="step-validation-hint error">
+                            <AlertTriangle size={14} /> {reconciliationReport.missingFileCount} sample row(s) reference files not found in the dropped sequence folder. Drop folder or correct filenames.
+                          </p>
+                        ) : batchRows.length === 0 ? (
+                          <p className="step-validation-hint">
+                            <Info size={14} /> Please add or upload at least one sample row in the table editor above.
+                          </p>
+                        ) : (
+                          <p className="step-validation-hint">
+                            <Info size={14} /> Reconcile sheet rows and dropped sequence files before continuing.
+                          </p>
+                        )
+                      ) : fileInputMode === "browser" && inspectedFiles.length === 0 ? (
                         <p className="step-validation-hint">
                           <Info size={14} /> Please select or drop at least one sequence file above to proceed.
                         </p>

@@ -1,3 +1,5 @@
+import type { BatchSampleRow } from "./templateGenerator";
+
 /**
  * Generates canonical README.md and samples.tsv with YAML frontmatter conforming to
  * the UbuntuBio schema, client-py validator, and server git-hook validation requirements.
@@ -37,10 +39,11 @@ export interface ReadmeGeneratorParams {
   librarySelection: string;
   libraryLayout: "PAIRED" | "SINGLE";
   runs: SequencingRunEntry[];
+  batchRows?: readonly BatchSampleRow[] | undefined;
   description: string;
-  access?: "public" | "gated" | "private";
-  license?: string;
-  nominalLength?: number;
+  access?: "public" | "gated" | "private" | undefined;
+  license?: string | undefined;
+  nominalLength?: number | undefined;
 }
 
 export function generateDatasetReadme(params: ReadmeGeneratorParams): string {
@@ -54,6 +57,13 @@ export function generateDatasetReadme(params: ReadmeGeneratorParams): string {
   const defaultRuns: SequencingRunEntry[] =
     params.runs.length > 0
       ? params.runs
+      : params.batchRows && params.batchRows.length > 0
+      ? params.batchRows.map((r, idx) => ({
+          run_id: `RUN${String(idx + 1).padStart(3, "0")}`,
+          experiment_id: r.sample_id,
+          forward_read: r.forward_read,
+          reverse_read: layoutLower === "paired" ? r.reverse_read : undefined,
+        }))
       : [
           {
             run_id: "RUN001",
@@ -170,6 +180,22 @@ Biological materials and digital sequence information (DSI) originate from **${p
 export function generateDatasetSamplesTsv(params: ReadmeGeneratorParams): string {
   const today = new Date().toISOString().split("T")[0] ?? "2026-10-22";
   const header = "sample_id\ttaxon_id\tcountry\tcollection_date\tlat\tlon\tadmin1\thost\tisolation_source";
+
+  if (params.batchRows && params.batchRows.length > 0) {
+    const rows = [header];
+    for (const r of params.batchRows) {
+      const tid = r.taxon_id || params.taxonId;
+      const cCode = (r.country || params.countryCode).toUpperCase();
+      const cDate = r.collection_date || params.collectionDate || today;
+      const host = r.host || params.hostSpecies || "Homo sapiens";
+      const source = r.isolation_source || params.sampleType || "clinical specimen";
+      const lat = r.lat || "";
+      const lon = r.lon || "";
+      const admin1 = r.admin1 || "";
+      rows.push(`${r.sample_id}\t${tid}\t${cCode}\t${cDate}\t${lat}\t${lon}\t${admin1}\t${host}\t${source}`);
+    }
+    return rows.join("\n") + "\n";
+  }
 
   const defaultRuns =
     params.runs.length > 0

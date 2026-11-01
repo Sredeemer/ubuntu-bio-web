@@ -363,4 +363,37 @@ describe("SubmitDatasetPage", () => {
     expect(bslSelect.value).toBe("BSL-4");
     expect(screen.getByText(/Biosafety Notice:/i)).toBeDefined();
   });
+
+  it("Step 4 batch surveillance workflow: switches to batch editor and folder drop", () => {
+    render(<SubmitDatasetPage />);
+
+    // Step 1
+    fireEvent.change(screen.getByLabelText(/Namespace Identifier/i), { target: { value: "ceri" } });
+    fireEvent.change(screen.getByLabelText(/Dataset Slug ID/i), { target: { value: "mpox-batch-2026" } });
+    fireEvent.change(screen.getByLabelText(/Formal Dataset Name/i), { target: { value: "Mpox Surveillance Cohort" } });
+    fireEvent.change(screen.getByLabelText(/Contributing Institution/i), { target: { value: "CERI" } });
+    fireEvent.click(screen.getByRole("button", { name: /Proceed to Taxonomy & Safety/i }));
+
+    // Step 2
+    fireEvent.change(screen.getByLabelText(/NCBI Taxonomy ID/i), { target: { value: "10244" } });
+    fireEvent.change(screen.getByLabelText(/Scientific Name/i), { target: { value: "Monkeypox virus" } });
+    fireEvent.click(screen.getByRole("button", { name: /Continue to Sequencing Specs/i }));
+
+    // Step 3
+    fireEvent.click(screen.getByRole("checkbox"));
+    fireEvent.click(screen.getByRole("button", { name: /Continue to Runs & Sequence Files/i }));
+
+    // Step 4: Switch to Batch Surveillance Cohort mode
+    const batchPill = screen.getByRole("tab", { name: /Batch Surveillance Cohort/i });
+    fireEvent.click(batchPill);
+
+    // Verify batch components are rendered
+    expect(screen.getByText(/Drag and Drop Sequencing Folder/i)).toBeDefined();
+    expect(screen.getByText(/Download TSV/i)).toBeDefined();
+    expect(screen.getByText(/Fill Study Defaults/i)).toBeDefined();
+
+    // Click Add Row
+    fireEvent.click(screen.getByText("Add Row"));
+    expect(screen.getByDisplayValue("SAMPLE_001")).toBeDefined();
+  });
 });
