@@ -1621,6 +1621,120 @@
 
 /* Responsive Breakpoints */
 /* ==========================================================================
+   Step 1 Submission Scope Track Selector Styles
+   ========================================================================== */
+
+.submission-scope-card-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 26px;
+}
+
+.submission-scope-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 14px;
+}
+
+.scope-select-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 18px;
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  user-select: none;
+}
+
+.scope-select-card:hover {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+
+.scope-select-card.active {
+  border-color: #0284c7;
+  background: #f0f9ff;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.08);
+}
+
+.scope-card-radio-indicator {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid #cbd5e1;
+  margin-top: 3px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.scope-select-card.active .scope-card-radio-indicator {
+  border-color: #0284c7;
+  background: #0284c7;
+}
+
+.scope-select-card.active .scope-card-radio-indicator::after {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ffffff;
+}
+
+.scope-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.scope-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.scope-card-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.scope-select-card.active .scope-card-title {
+  color: #0369a1;
+}
+
+.scope-card-badge {
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.scope-card-badge.badge-accent {
+  background: #e0f2fe;
+  color: #0284c7;
+  font-weight: 600;
+}
+
+.scope-card-desc {
+  font-size: 0.8125rem;
+  color: #64748b;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* ==========================================================================
    Step 4 Ingestion Mode & Compulsory Upload Threshold Styles
    ========================================================================== */
 

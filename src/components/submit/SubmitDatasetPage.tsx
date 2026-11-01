@@ -66,12 +66,18 @@ import {
 import { generateDatasetReadme, generateDatasetSamplesTsv, SequencingRunEntry } from "../../lib/readmeGenerator";
 import { WebSequenceInspectionResult } from "../../lib/sequenceSnifferWeb";
 
-const WIZARD_STEPS = [
+const SINGLE_WIZARD_STEPS = [
   { step: 1 as const, num: "01", label: "Identification & Metadata" },
   { step: 2 as const, num: "02", label: "Taxonomy & Human Exclusion" },
   { step: 3 as const, num: "03", label: "Sequencing Specifications" },
   { step: 4 as const, num: "04", label: "Runs & Sequence Files" },
   { step: 5 as const, num: "05", label: "Review & Ingest Dataset" },
+];
+
+const BATCH_WIZARD_STEPS = [
+  { step: 1 as const, num: "01", label: "Study & Sovereign Provenance" },
+  { step: 2 as const, num: "02", label: "Batch Matrix & Folder Drop" },
+  { step: 3 as const, num: "03", label: "Review & Sovereign Ingestion" },
 ];
 
 export const BROWSER_UPLOAD_MAX_BYTES = 500 * 1024 * 1024; // 500 MB
@@ -145,9 +151,10 @@ export function SubmitDatasetPage() {
     },
   ]);
 
-  // Step 4 File Mode and Inspection State
+  // Submission Track & Step 4 File Mode
+  const [submissionTrack, setSubmissionTrack] = useState<"single" | "batch">("single");
+  const activeSteps = submissionTrack === "batch" ? BATCH_WIZARD_STEPS : SINGLE_WIZARD_STEPS;
   const [fileInputMode, setFileInputMode] = useState<"browser" | "remote">("browser");
-  const [batchWorkflow, setBatchWorkflow] = useState<"single" | "batch">("single");
   const [batchRows, setBatchRows] = useState<BatchSampleRow[]>([]);
   const [discoveredFolderFiles, setDiscoveredFolderFiles] = useState<DiscoveredSequenceFile[]>([]);
   const [inspectedFiles, setInspectedFiles] = useState<WebSequenceInspectionResult[]>([]);
@@ -292,6 +299,32 @@ export function SubmitDatasetPage() {
     setCurrentStep(2);
   };
 
+  const isBatchStep1Valid =
+    isStep1Valid &&
+    taxonId.trim().length > 0 &&
+    parseInt(taxonId, 10) > 0 &&
+    !isHumanTaxon &&
+    taxonName.trim().length >= 3 &&
+    countryCode.length === 2 &&
+    nagoyaAgreed;
+
+  const handleProceedToBatchStep2 = () => {
+    setStep1Attempted(true);
+    if (!isBatchStep1Valid) {
+      if (!isStep1Valid) {
+        handleProceedToStep2();
+      } else if (!taxonId || parseInt(taxonId, 10) <= 0 || isHumanTaxon || taxonName.trim().length < 3) {
+        toast.error("Valid non-human target pathogen taxonomy is required.");
+      } else if (countryCode.length !== 2) {
+        toast.error("Please select an African Union member state origin.");
+      } else if (!nagoyaAgreed) {
+        toast.error("Please agree to the AU Sovereign Data & Nagoya Protocol declaration.");
+      }
+      return;
+    }
+    setCurrentStep(2);
+  };
+
   const isStep2Valid =
     taxonId.trim().length > 0 &&
     parseInt(taxonId, 10) > 0 &&
@@ -350,7 +383,7 @@ export function SubmitDatasetPage() {
   const isStep4Valid =
     fileInputMode === "remote"
       ? hasValidRuns
-      : batchWorkflow === "batch"
+      : submissionTrack === "batch"
       ? reconciliationReport.canProceed
       : hasValidRuns && !hasHumanContamination && inspectedFiles.length > 0;
 
@@ -372,10 +405,10 @@ export function SubmitDatasetPage() {
     countryCode,
     countryName: selectedCountryObj?.name || "African Union Member State",
     institution: leadInstitution || "Contributing Institution",
-    collectionDate,
-    sampleType,
+    collectionDate: submissionTrack === "batch" ? (batchRows[0]?.collection_date || collectionDate || "2026-01-01") : collectionDate,
+    sampleType: submissionTrack === "batch" ? (batchRows[0]?.isolation_source || sampleType) : sampleType,
     hostTaxonId: hostTaxonId ? parseInt(hostTaxonId, 10) : undefined,
-    hostSpecies: hostSpecies || undefined,
+    hostSpecies: submissionTrack === "batch" ? (batchRows[0]?.host || hostSpecies || undefined) : (hostSpecies || undefined),
     hosts,
     taxonId: parseInt(taxonId, 10) || 0,
     scientificName: taxonName || "Pathogen",
@@ -385,8 +418,8 @@ export function SubmitDatasetPage() {
     librarySource,
     librarySelection,
     libraryLayout,
-    runs: batchWorkflow === "batch" && batchRows.length > 0 ? [] : runs,
-    batchRows: batchWorkflow === "batch" && batchRows.length > 0 ? batchRows : undefined,
+    runs: submissionTrack === "batch" && batchRows.length > 0 ? [] : runs,
+    batchRows: submissionTrack === "batch" && batchRows.length > 0 ? batchRows : undefined,
     description,
   };
 
@@ -588,10 +621,79 @@ export function SubmitDatasetPage() {
               {/* Step 1: Identification */}
               {currentStep === 1 && (
                 <div className="step-content">
-                  <h2 className="step-heading">Step 1: Dataset Namespace & Metadata</h2>
+                  {/* Submission Scope Track Selector */}
+                  <div className="submission-scope-card-container">
+                    <span className="file-mode-label">Submission Scope:</span>
+                    <div className="submission-scope-grid" role="radiogroup" aria-label="Submission scope selection">
+                      <div
+                        role="radio"
+                        aria-checked={submissionTrack === "single"}
+                        tabIndex={0}
+                        className={`scope-select-card ${submissionTrack === "single" ? "active" : ""}`}
+                        onClick={() => {
+                          setSubmissionTrack("single");
+                          setCurrentStep(1);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            setSubmissionTrack("single");
+                            setCurrentStep(1);
+                          }
+                        }}
+                      >
+                        <div className="scope-card-radio-indicator" />
+                        <div className="scope-card-content">
+                          <div className="scope-card-header">
+                            <span className="scope-card-title">Quick Single Assay</span>
+                            <span className="scope-card-badge">1 to 5 samples</span>
+                          </div>
+                          <p className="scope-card-desc">
+                            Standard multi-step wizard with direct form inputs for individual isolates, reference genomes, or single runs.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div
+                        role="radio"
+                        aria-checked={submissionTrack === "batch"}
+                        tabIndex={0}
+                        className={`scope-select-card ${submissionTrack === "batch" ? "active" : ""}`}
+                        onClick={() => {
+                          setSubmissionTrack("batch");
+                          setCurrentStep(1);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            setSubmissionTrack("batch");
+                            setCurrentStep(1);
+                          }
+                        }}
+                      >
+                        <div className="scope-card-radio-indicator" />
+                        <div className="scope-card-content">
+                          <div className="scope-card-header">
+                            <span className="scope-card-title">Batch Surveillance Cohort</span>
+                            <span className="scope-card-badge badge-accent">Sheet &amp; Folder Drop</span>
+                          </div>
+                          <p className="scope-card-desc">
+                            Streamlined 3-step workflow for outbreaks and surveillance cohorts with spreadsheet editor and folder reconciliation.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <h2 className="step-heading">
+                    {submissionTrack === "batch"
+                      ? "Step 1: Cohort Study & Sovereign Provenance"
+                      : "Step 1: Dataset Namespace & Metadata"}
+                  </h2>
                   <p className="step-subheading">
-                    Identify your verified researcher namespace and provide the formal title for
-                    this genomic dataset.
+                    {submissionTrack === "batch"
+                      ? "Identify your research namespace, dataset title, target pathogen, and sovereign African Union provenance."
+                      : "Identify your verified researcher namespace and provide the formal title for this genomic dataset."}
                   </p>
 
                   <div className="form-grid">
@@ -803,20 +905,319 @@ export function SubmitDatasetPage() {
                     </div>
                   </div>
 
+                  {submissionTrack === "batch" && (
+                    <>
+                      {/* Target Pathogen & Taxonomy Section */}
+                      <div className="form-section-divider" style={{ marginTop: "24px", marginBottom: "16px" }}>
+                        <h3 className="form-section-title">Cohort Target Pathogen &amp; Taxonomy</h3>
+                        <p className="form-section-subtitle">
+                          Specify the primary pathogen or biological classification for this surveillance cohort.
+                        </p>
+                      </div>
+
+                      {/* Human Taxon Violation Banner */}
+                      {isHumanTaxon && (
+                        <div className="violation-banner" role="alert" style={{ marginBottom: "16px" }}>
+                          <ShieldAlert size={24} className="violation-icon" />
+                          <div className="violation-content">
+                            <h4 className="violation-title">Prohibited Taxon Invariant Triggered!</h4>
+                            <p className="violation-text">
+                              Human genomic data (<strong>NCBI Taxon ID 9606 / <em>Homo sapiens</em></strong>) is strictly prohibited under the African Union Data Sovereignty &amp; Genomic Privacy Invariants. Submissions of human genomic DNA/RNA cannot proceed.
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="form-grid">
+                        <div className="form-field">
+                          <label htmlFor="input-batch-pathogen-type" className="form-label">
+                            Pathogen / Biological Category <span className="req">*</span>
+                          </label>
+                          <select
+                            id="input-batch-pathogen-type"
+                            className="form-select"
+                            value={pathogenType}
+                            onChange={(e) =>
+                              handlePathogenTypeChange(
+                                e.target.value as "Virus" | "Bacteria" | "Parasite" | "Vector" | "Fungus"
+                              )
+                            }
+                          >
+                            <option value="Virus">Virus (e.g. Lassa, Ebola, Mpox, SARS-CoV-2)</option>
+                            <option value="Bacteria">Bacteria (e.g. Mycobacterium tuberculosis, Vibrio cholerae)</option>
+                            <option value="Parasite">Parasite (e.g. Plasmodium falciparum, Schistosoma)</option>
+                            <option value="Vector">Vector (e.g. Anopheles gambiae, Aedes aegypti)</option>
+                            <option value="Fungus">Fungi (e.g. Candida auris, Cryptococcus neoformans)</option>
+                          </select>
+                        </div>
+
+                        <div className="form-field full-width">
+                          <label className="form-label">
+                            Target Pathogen (NCBI Taxonomy Search) <span className="req">*</span>
+                          </label>
+                          <OrganismSelector
+                            valueTaxonId={taxonId}
+                            valueTaxonName={taxonName}
+                            onChange={(sel) => {
+                              setTaxonId(sel.taxonId);
+                              setTaxonName(sel.taxonName);
+                              if (sel.domain) {
+                                let nextType: "Virus" | "Bacteria" | "Parasite" | "Vector" | "Fungus" = "Virus";
+                                if (sel.domain === "virus") nextType = "Virus";
+                                else if (sel.domain === "bacteria") nextType = "Bacteria";
+                                else if (sel.domain === "parasite") nextType = "Parasite";
+                                else if (sel.domain === "vector") nextType = "Vector";
+                                else if (sel.domain === "fungus") nextType = "Fungus";
+                                handlePathogenTypeChange(nextType);
+                              }
+                            }}
+                          />
+                        </div>
+
+                        <div className="form-field">
+                          <label htmlFor="input-batch-taxon-id" className="form-label">
+                            NCBI Taxonomy ID <span className="req">*</span>
+                          </label>
+                          <input
+                            id="input-batch-taxon-id"
+                            type="number"
+                            className={`form-input font-mono ${isHumanTaxon ? "input-error" : ""}`}
+                            placeholder="e.g. 10244, 5833, 1773"
+                            value={taxonId}
+                            onChange={(e) => setTaxonId(e.target.value)}
+                          />
+                        </div>
+
+                        <div className="form-field">
+                          <label htmlFor="input-batch-taxon-name" className="form-label">
+                            Scientific Name <span className="req">*</span>
+                          </label>
+                          <input
+                            id="input-batch-taxon-name"
+                            type="text"
+                            className="form-input"
+                            placeholder="e.g. Monkeypox virus, Plasmodium falciparum"
+                            value={taxonName}
+                            onChange={(e) => setTaxonName(e.target.value)}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Hardware Platform & Sovereign Provenance Section */}
+                      <div className="form-section-divider" style={{ marginTop: "24px", marginBottom: "16px" }}>
+                        <h3 className="form-section-title">Hardware Platform &amp; Sovereign AU Provenance</h3>
+                        <p className="form-section-subtitle">
+                          Declare the sequencing platform, hardware model, and sovereign African Union legal compliance.
+                        </p>
+                      </div>
+
+                      <div className="form-grid">
+                        <div className="form-field">
+                          <label htmlFor="input-batch-platform" className="form-label">
+                            Sequencing Platform <span className="req">*</span>
+                          </label>
+                          <select
+                            id="input-batch-platform"
+                            className="form-select"
+                            value={platformId}
+                            onChange={(e) => handlePlatformChange(e.target.value as PlatformId)}
+                          >
+                            {SEQUENCING_PLATFORMS.map((p) => (
+                              <option key={p.id} value={p.id}>
+                                {p.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="form-field">
+                          <label htmlFor="input-batch-model" className="form-label">
+                            Instrument Model <span className="req">*</span>
+                          </label>
+                          <select
+                            id="input-batch-model"
+                            className="form-select"
+                            value={instrumentModel}
+                            onChange={(e) => setInstrumentModel(e.target.value)}
+                          >
+                            {currentPlatformConfig?.instruments.map((inst) => (
+                              <option key={inst} value={inst}>
+                                {inst}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="form-field">
+                          <label htmlFor="input-batch-strategy" className="form-label">
+                            Library Strategy <span className="req">*</span>
+                          </label>
+                          <select
+                            id="input-batch-strategy"
+                            className="form-select"
+                            value={libraryStrategy}
+                            onChange={(e) => handleStrategyChange(e.target.value as StrategyId)}
+                          >
+                            {LIBRARY_STRATEGIES.map((s) => (
+                              <option key={s.id} value={s.id}>
+                                {s.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="form-field">
+                          <label htmlFor="input-batch-layout" className="form-label">
+                            Library Layout <span className="req">*</span>
+                          </label>
+                          <select
+                            id="input-batch-layout"
+                            className="form-select"
+                            value={libraryLayout}
+                            onChange={(e) => setLibraryLayout(e.target.value as "PAIRED" | "SINGLE")}
+                          >
+                            <option value="PAIRED" disabled={!allowedLayouts.includes("PAIRED")}>
+                              PAIRED (Forward R1 &amp; Reverse R2 Reads)
+                            </option>
+                            <option value="SINGLE">SINGLE (Forward R1 Read Only)</option>
+                          </select>
+                        </div>
+
+                        <div className="form-field">
+                          <label htmlFor="input-batch-country" className="form-label">
+                            AU Country of Origin <span className="req">*</span>
+                          </label>
+                          <select
+                            id="input-batch-country"
+                            className="form-select"
+                            value={countryCode}
+                            onChange={(e) => setCountryCode(e.target.value)}
+                          >
+                            {AU_COUNTRIES.map((c) => (
+                              <option key={c.code} value={c.code}>
+                                {c.name} ({c.code}) - AU Member State
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+
+                      {/* Nagoya Declaration */}
+                      <div className="nagoya-consent-box" style={{ marginTop: "18px", marginBottom: "18px" }}>
+                        <label className="nagoya-checkbox-label">
+                          <input
+                            type="checkbox"
+                            className="nagoya-checkbox"
+                            checked={nagoyaAgreed}
+                            onChange={(e) => setNagoyaAgreed(e.target.checked)}
+                          />
+                          <span className="nagoya-text">
+                            <strong>African Union Sovereign Data &amp; Nagoya Protocol Declaration</strong>
+                            <br />
+                            I certify that biological materials and digital sequence information (DSI) in this cohort originate from <strong>{selectedCountryObj?.name || "the designated AU Member State"}</strong> and conform to national prior informed consent (PIC) and mutually agreed terms (MAT) pursuant to the Nagoya Protocol and AU sovereign genomic frameworks.
+                          </span>
+                        </label>
+                      </div>
+                    </>
+                  )}
+
                   <div className="step-actions right">
+                    {submissionTrack === "batch" ? (
+                      <button
+                        type="button"
+                        className="btn-pill-primary"
+                        disabled={step1Attempted && !isBatchStep1Valid}
+                        onClick={handleProceedToBatchStep2}
+                      >
+                        Proceed to Batch Matrix &amp; Folder Drop <ArrowRight size={16} />
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        className="btn-pill-primary"
+                        disabled={step1Attempted && !isStep1Valid}
+                        onClick={handleProceedToStep2}
+                      >
+                        Proceed to Taxonomy &amp; Safety <ArrowRight size={16} />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Step 2 Batch: Batch Metadata Matrix & Folder Sequence Ingestion */}
+              {currentStep === 2 && submissionTrack === "batch" && (
+                <div className="step-content">
+                  <div className="step-header-row">
+                    <div>
+                      <h2 className="step-heading">Step 2: Batch Metadata Matrix &amp; Folder Sequence Ingestion</h2>
+                      <p className="step-subheading">
+                        Drop your sequencing folder and provide specimen attributes via spreadsheet upload or the built-in grid editor.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="batch-workflow-section">
+                    <BatchReconciliationPanel
+                      report={reconciliationReport}
+                      discoveredFiles={discoveredFolderFiles}
+                      onFilesDiscovered={handleFilesDiscoveredFromFolder}
+                      onClearFiles={handleClearDiscoveredFolderFiles}
+                      onAddRowsFromOrphans={handleAddRowsFromOrphans}
+                    />
+                    <BatchMetadataEditor
+                      rows={batchRows}
+                      onChange={setBatchRows}
+                      report={reconciliationReport}
+                      defaults={templateDefaults}
+                      isPaired={isPaired}
+                    />
+                  </div>
+
+                  {!reconciliationReport.canProceed && (
+                    <div className="step-validation-banner">
+                      {reconciliationReport.invalidAttributeCount > 0 ? (
+                        <p className="step-validation-hint error">
+                          <ShieldAlert size={14} /> Batch metadata has {reconciliationReport.invalidAttributeCount} invalid cell(s). Check highlighted red cells (e.g. Taxon 9606, non-AU country codes, or missing identifiers).
+                        </p>
+                      ) : reconciliationReport.missingFileCount > 0 ? (
+                        <p className="step-validation-hint error">
+                          <AlertTriangle size={14} /> {reconciliationReport.missingFileCount} sample row(s) reference files not found in the dropped sequence folder. Drop folder or correct filenames.
+                        </p>
+                      ) : batchRows.length === 0 ? (
+                        <p className="step-validation-hint">
+                          <Info size={14} /> Please add or upload at least one sample row in the table editor above.
+                        </p>
+                      ) : (
+                        <p className="step-validation-hint">
+                          <Info size={14} /> Reconcile sheet rows and dropped sequence files before continuing.
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="step-actions split">
+                    <button
+                      type="button"
+                      className="btn-secondary"
+                      onClick={() => setCurrentStep(1)}
+                    >
+                      <ArrowLeft size={16} /> Back to Study Specs
+                    </button>
                     <button
                       type="button"
                       className="btn-pill-primary"
-                      onClick={handleProceedToStep2}
+                      disabled={!reconciliationReport.canProceed}
+                      onClick={() => setCurrentStep(3)}
                     >
-                      Proceed to Taxonomy & Safety <ArrowRight size={16} />
+                      Review &amp; Ingest Cohort <ArrowRight size={16} />
                     </button>
                   </div>
                 </div>
               )}
 
               {/* Step 2: Taxonomy & Strict Human Exclusion Verification */}
-              {currentStep === 2 && (
+              {currentStep === 2 && submissionTrack === "single" && (
                 <div className="step-content">
                   <h2 className="step-heading">
                     Step 2: Taxonomy & Strict Human Exclusion Verification
@@ -1049,8 +1450,8 @@ export function SubmitDatasetPage() {
                 </div>
               )}
 
-              {/* Step 3: Sequencing Technology & Protocol Specs */}
-              {currentStep === 3 && (
+              {/* Step 3: Sequencing Technology & Protocol Specs (Single Track) */}
+              {currentStep === 3 && submissionTrack === "single" && (
                 <div className="step-content">
                   <h2 className="step-heading">Step 3: Sequencing Technology & Protocol Specs</h2>
                   <p className="step-subheading">
@@ -1300,8 +1701,8 @@ export function SubmitDatasetPage() {
                 </div>
               )}
 
-              {/* Step 4: Sequencing Runs & Sequence Files */}
-              {currentStep === 4 && (
+              {/* Step 4: Sequencing Runs & Sequence Files (Single Track) */}
+              {currentStep === 4 && submissionTrack === "single" && (
                 <div className="step-content">
                   <div className="step-header-row">
                     <div>
@@ -1310,11 +1711,9 @@ export function SubmitDatasetPage() {
                         Declare the run accession, flowcell lane, and local FASTQ/BAM file paths.
                       </p>
                     </div>
-                    {batchWorkflow === "single" && (
-                      <button type="button" className="btn-add-run" onClick={handleAddRun}>
-                        <Plus size={15} /> Add Sequencing Run
-                      </button>
-                    )}
+                    <button type="button" className="btn-add-run" onClick={handleAddRun}>
+                      <Plus size={15} /> Add Sequencing Run
+                    </button>
                   </div>
 
                   {/* Ingestion Mode Selector */}
@@ -1342,52 +1741,7 @@ export function SubmitDatasetPage() {
                     </div>
                   </div>
 
-                  {fileInputMode === "browser" && (
-                    <div className="file-mode-container" style={{ marginTop: "10px", marginBottom: "16px" }}>
-                      <span className="file-mode-label">Cohort Scope:</span>
-                      <div className="file-mode-segmented-control" role="tablist" aria-label="Workflow mode selection">
-                        <button
-                          type="button"
-                          role="tab"
-                          aria-selected={batchWorkflow === "single"}
-                          className={`file-mode-pill ${batchWorkflow === "single" ? "active" : ""}`}
-                          onClick={() => setBatchWorkflow("single")}
-                        >
-                          Quick Single Assay (1 to 5 samples)
-                        </button>
-                        <button
-                          type="button"
-                          role="tab"
-                          aria-selected={batchWorkflow === "batch"}
-                          className={`file-mode-pill ${batchWorkflow === "batch" ? "active" : ""}`}
-                          onClick={() => setBatchWorkflow("batch")}
-                        >
-                          Batch Surveillance Cohort (Sheet and Folder Drop)
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {fileInputMode === "browser" && batchWorkflow === "batch" ? (
-                    <div className="batch-workflow-section">
-                      <BatchReconciliationPanel
-                        report={reconciliationReport}
-                        discoveredFiles={discoveredFolderFiles}
-                        onFilesDiscovered={handleFilesDiscoveredFromFolder}
-                        onClearFiles={handleClearDiscoveredFolderFiles}
-                        onAddRowsFromOrphans={handleAddRowsFromOrphans}
-                      />
-                      <BatchMetadataEditor
-                        rows={batchRows}
-                        onChange={setBatchRows}
-                        report={reconciliationReport}
-                        defaults={templateDefaults}
-                        isPaired={isPaired}
-                      />
-                    </div>
-                  ) : (
-                    <>
-                      {fileInputMode === "browser" ? (
+                  {fileInputMode === "browser" ? (
                     <>
                       {/* Browser Dropzone Pre-flight Sniffer */}
                       <div className="dropzone-section-box">
@@ -1636,30 +1990,10 @@ export function SubmitDatasetPage() {
                       </div>
                     ))}
                   </div>
-                    </>
-                  )}
 
                   {!isStep4Valid && (
                     <div className="step-validation-banner">
-                      {batchWorkflow === "batch" ? (
-                        reconciliationReport.invalidAttributeCount > 0 ? (
-                          <p className="step-validation-hint error">
-                            <ShieldAlert size={14} /> Batch metadata has {reconciliationReport.invalidAttributeCount} invalid cell(s). Check highlighted red cells (e.g. Taxon 9606, non-AU country codes, or missing identifiers).
-                          </p>
-                        ) : reconciliationReport.missingFileCount > 0 ? (
-                          <p className="step-validation-hint error">
-                            <AlertTriangle size={14} /> {reconciliationReport.missingFileCount} sample row(s) reference files not found in the dropped sequence folder. Drop folder or correct filenames.
-                          </p>
-                        ) : batchRows.length === 0 ? (
-                          <p className="step-validation-hint">
-                            <Info size={14} /> Please add or upload at least one sample row in the table editor above.
-                          </p>
-                        ) : (
-                          <p className="step-validation-hint">
-                            <Info size={14} /> Reconcile sheet rows and dropped sequence files before continuing.
-                          </p>
-                        )
-                      ) : fileInputMode === "browser" && inspectedFiles.length === 0 ? (
+                      {fileInputMode === "browser" && inspectedFiles.length === 0 ? (
                         <p className="step-validation-hint">
                           <Info size={14} /> Please select or drop at least one sequence file above to proceed.
                         </p>
@@ -1695,12 +2029,15 @@ export function SubmitDatasetPage() {
                 </div>
               )}
 
-              {/* Step 5: Review & Ingest Command */}
-              {currentStep === 5 && (
+              {/* Step 5 / Step 3 Review: Review & Ingest Command */}
+              {((currentStep === 5 && submissionTrack === "single") ||
+                (currentStep === 3 && submissionTrack === "batch")) && (
                 <div className="step-content">
-                  <h2 className="step-heading">Step 5: Review, README.md & UbuntuBio Push</h2>
+                  <h2 className="step-heading">
+                    Step {submissionTrack === "batch" ? "3" : "5"}: Review, README.md & UbuntuBio Push
+                  </h2>
                   <p className="step-subheading">
-                    Your dataset declaration and sequencing runs are validated and ready for
+                    Your dataset declaration and sequencing {submissionTrack === "batch" ? "cohort" : "runs"} are validated and ready for
                     ingestion into the sovereign hub.
                   </p>
 
@@ -1922,7 +2259,7 @@ export function SubmitDatasetPage() {
                           type="button"
                           className="btn-secondary"
                           disabled={isSubmitting}
-                          onClick={() => setCurrentStep(4)}
+                          onClick={() => setCurrentStep(submissionTrack === "batch" ? 2 : 4)}
                         >
                           <ArrowLeft size={16} /> Back
                         </button>
@@ -1953,10 +2290,10 @@ export function SubmitDatasetPage() {
             <div className="submit-rail-card rail-stepper-card">
               <div className="rail-stepper-header">
                 <span className="rail-stepper-title">Ingestion Progress</span>
-                <span className="rail-step-badge font-mono">Step {currentStep} of 5</span>
+                <span className="rail-step-badge font-mono">Step {currentStep} of {activeSteps.length}</span>
               </div>
               <ol className="rail-vertical-steps" aria-label="Submission Steps">
-                {WIZARD_STEPS.map((s) => {
+                {activeSteps.map((s) => {
                   const isCompleted = currentStep > s.step;
                   const isActive = currentStep === s.step;
                   return (
@@ -1990,7 +2327,7 @@ export function SubmitDatasetPage() {
                         ) : (
                           <span className="rail-step-dot pending">{s.step}</span>
                         )}
-                        {s.step < 5 && (
+                        {s.step < activeSteps.length && (
                           <div
                             className={`rail-step-connector ${
                               currentStep > s.step ? "connector-completed" : ""
@@ -2042,7 +2379,7 @@ export function SubmitDatasetPage() {
                 </div>
                 <div className="rail-spec-item">
                   <span className="rail-spec-label">AU Origin</span>
-                  {currentStep >= 3 ? (
+                  {submissionTrack === "batch" || currentStep >= 3 ? (
                     <span className="rail-spec-val font-mono">
                       {countryCode} ({selectedCountryObj?.name || "AU"})
                     </span>
@@ -2052,7 +2389,7 @@ export function SubmitDatasetPage() {
                 </div>
                 <div className="rail-spec-item">
                   <span className="rail-spec-label">Biosafety</span>
-                  {currentStep >= 3 ? (
+                  {submissionTrack === "batch" || currentStep >= 3 ? (
                     <span className="rail-spec-val badge-bsl">{biocontainment}</span>
                   ) : (
                     <span className="rail-spec-val text-muted">Pending Step 3</span>
@@ -2060,15 +2397,21 @@ export function SubmitDatasetPage() {
                 </div>
                 <div className="rail-spec-item">
                   <span className="rail-spec-label">Platform</span>
-                  {currentStep >= 3 ? (
+                  {submissionTrack === "batch" || currentStep >= 3 ? (
                     <span className="rail-spec-val text-truncate">{platformId}</span>
                   ) : (
                     <span className="rail-spec-val text-muted">Pending Step 3</span>
                   )}
                 </div>
                 <div className="rail-spec-item">
-                  <span className="rail-spec-label">Runs</span>
-                  {currentStep >= 4 ? (
+                  <span className="rail-spec-label">
+                    {submissionTrack === "batch" ? "Samples" : "Runs"}
+                  </span>
+                  {submissionTrack === "batch" ? (
+                    <span className="rail-spec-val font-mono">
+                      {batchRows.length} declared
+                    </span>
+                  ) : currentStep >= 4 ? (
                     <span className="rail-spec-val font-mono">{runs.length} declared</span>
                   ) : (
                     <span className="rail-spec-val text-muted">Pending Step 4</span>

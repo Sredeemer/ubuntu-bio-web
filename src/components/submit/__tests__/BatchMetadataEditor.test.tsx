@@ -59,7 +59,7 @@ describe("BatchMetadataEditor", () => {
 
     fireEvent.click(screen.getByText("Add Row"));
     expect(onChange).toHaveBeenCalledTimes(1);
-    const addedRows: BatchSampleRow[] = onChange.mock.calls[0][0];
+    const addedRows: BatchSampleRow[] = onChange.mock.calls[0]![0];
     expect(addedRows.length).toBe(1);
     expect(addedRows[0]?.sample_id).toBe("SAMPLE_001");
     expect(addedRows[0]?.country).toBe("NG");
@@ -94,7 +94,7 @@ describe("BatchMetadataEditor", () => {
     fireEvent.change(sampleInput, { target: { value: "SAM_EDITED" } });
 
     expect(onChange).toHaveBeenCalledTimes(1);
-    const updatedRows: BatchSampleRow[] = onChange.mock.calls[0][0];
+    const updatedRows: BatchSampleRow[] = onChange.mock.calls[0]![0];
     expect(updatedRows[0]?.sample_id).toBe("SAM_EDITED");
   });
 
