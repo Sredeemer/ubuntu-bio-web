@@ -274,205 +274,205 @@ export function BatchMetadataEditor({
         </div>
       </div>
 
-      <div className="batch-paste-hint">
-        <HelpCircle size={13} />
-        <span>Tip: You can copy cells directly from Microsoft Excel or Google Sheets and paste (Ctrl+V) into this table.</span>
-      </div>
+      {rows.length === 0 ? (
+        <div className="table-empty-container">
+          <div className="table-empty-box">
+            <div className="table-empty-title">Specimen Matrix Is Empty</div>
+            <div className="table-empty-desc">
+              No sample records in table. Choose how you would like to declare your cohort samples:
+            </div>
+            <div className="table-empty-cards">
+              <button
+                type="button"
+                className="empty-action-card"
+                onClick={() => fileUploadInputRef.current?.click()}
+              >
+                <div className="empty-card-icon">
+                  <Upload size={16} />
+                </div>
+                <div className="empty-card-text">
+                  <strong>Upload Spreadsheet</strong>
+                  <span>Import TSV, CSV, or Excel file</span>
+                </div>
+              </button>
 
-      <div className="batch-table-container">
-        <table className="batch-table">
-          <thead>
-            <tr>
-              <th style={{ width: "36px", textAlign: "center" }}>#</th>
-              <th style={{ width: "105px" }}>Status</th>
-              <th style={{ minWidth: "130px" }}>Sample ID *</th>
-              <th style={{ minWidth: "90px" }}>Taxon ID *</th>
-              <th style={{ minWidth: "80px" }}>AU Country *</th>
-              <th style={{ minWidth: "120px" }}>Collection Date *</th>
-              <th style={{ minWidth: "140px" }}>Host Organism *</th>
-              <th style={{ minWidth: "140px" }}>Specimen Source *</th>
-              <th style={{ minWidth: "180px" }}>Forward Read (R1) *</th>
-              {isPaired && <th style={{ minWidth: "180px" }}>Reverse Read (R2) *</th>}
-              <th style={{ width: "38px", textAlign: "center" }}>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.length === 0 ? (
-              <tr>
-                <td colSpan={isPaired ? 11 : 10} className="table-empty-container">
-                  <div className="table-empty-box">
-                    <div className="table-empty-title">Specimen Matrix Is Empty</div>
-                    <div className="table-empty-desc">
-                      No sample records in table. Choose how you would like to declare your cohort samples:
-                    </div>
-                    <div className="table-empty-cards">
-                      <button
-                        type="button"
-                        className="empty-action-card"
-                        onClick={() => fileUploadInputRef.current?.click()}
-                      >
-                        <div className="empty-card-icon">
-                          <Upload size={16} />
-                        </div>
-                        <div className="empty-card-text">
-                          <strong>Upload Spreadsheet</strong>
-                          <span>Import TSV, CSV, or Excel file</span>
-                        </div>
-                      </button>
+              <button
+                type="button"
+                className="empty-action-card"
+                onClick={handleAddRow}
+              >
+                <div className="empty-card-icon">
+                  <Plus size={16} />
+                </div>
+                <div className="empty-card-text">
+                  <strong>Add Row Manually</strong>
+                  <span>Create records row-by-row</span>
+                </div>
+              </button>
 
-                      <button
-                        type="button"
-                        className="empty-action-card"
-                        onClick={handleAddRow}
-                      >
-                        <div className="empty-card-icon">
-                          <Plus size={16} />
-                        </div>
-                        <div className="empty-card-text">
-                          <strong>Add Row Manually</strong>
-                          <span>Create records row-by-row</span>
-                        </div>
-                      </button>
+              <button
+                type="button"
+                className="empty-action-card"
+                onClick={() => handleDownloadTemplate("tsv")}
+              >
+                <div className="empty-card-icon">
+                  <Download size={16} />
+                </div>
+                <div className="empty-card-text">
+                  <strong>Download Template</strong>
+                  <span>Pre-filled TSV with headers</span>
+                </div>
+              </button>
+            </div>
+            <div className="table-empty-footer">
+              <HelpCircle size={13} />
+              <span>Tip: You can also copy cells directly from Microsoft Excel or Google Sheets and paste (Ctrl+V) into this table.</span>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className="batch-paste-hint">
+            <HelpCircle size={13} />
+            <span>Tip: You can copy cells directly from Microsoft Excel or Google Sheets and paste (Ctrl+V) into this table.</span>
+          </div>
 
-                      <button
-                        type="button"
-                        className="empty-action-card"
-                        onClick={() => handleDownloadTemplate("tsv")}
-                      >
-                        <div className="empty-card-icon">
-                          <Download size={16} />
-                        </div>
-                        <div className="empty-card-text">
-                          <strong>Download Template</strong>
-                          <span>Pre-filled TSV with headers</span>
-                        </div>
-                      </button>
-                    </div>
-                    <div className="table-empty-footer">
-                      <HelpCircle size={13} />
-                      <span>Tip: You can also copy cells directly from Microsoft Excel or Google Sheets and paste (Ctrl+V) into this table.</span>
-                    </div>
-                  </div>
-                </td>
-              </tr>
-            ) : (
-              rows.map((row, idx) => {
-                const recon = getRowReconciliation(idx);
-                const status = recon?.status || "pending_folder";
+          <div className="batch-table-container">
+            <table className="batch-table">
+              <thead>
+                <tr>
+                  <th style={{ width: "36px", textAlign: "center" }}>#</th>
+                  <th style={{ width: "105px" }}>Status</th>
+                  <th style={{ minWidth: "130px" }}>Sample ID *</th>
+                  <th style={{ minWidth: "90px" }}>Taxon ID *</th>
+                  <th style={{ minWidth: "80px" }}>AU Country *</th>
+                  <th style={{ minWidth: "120px" }}>Collection Date *</th>
+                  <th style={{ minWidth: "140px" }}>Host Organism *</th>
+                  <th style={{ minWidth: "140px" }}>Specimen Source *</th>
+                  <th style={{ minWidth: "180px" }}>Forward Read (R1) *</th>
+                  {isPaired && <th style={{ minWidth: "180px" }}>Reverse Read (R2) *</th>}
+                  <th style={{ width: "38px", textAlign: "center" }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((row, idx) => {
+                  const recon = getRowReconciliation(idx);
+                  const status = recon?.status || "pending_folder";
 
-                const sampleIdIssue = getCellIssue(idx, "sample_id");
-                const taxonIssue = getCellIssue(idx, "taxon_id");
-                const countryIssue = getCellIssue(idx, "country");
-                const dateIssue = getCellIssue(idx, "collection_date");
-                const fwdIssue = getCellIssue(idx, "forward_read");
-                const revIssue = getCellIssue(idx, "reverse_read");
+                  const sampleIdIssue = getCellIssue(idx, "sample_id");
+                  const taxonIssue = getCellIssue(idx, "taxon_id");
+                  const countryIssue = getCellIssue(idx, "country");
+                  const dateIssue = getCellIssue(idx, "collection_date");
+                  const fwdIssue = getCellIssue(idx, "forward_read");
+                  const revIssue = getCellIssue(idx, "reverse_read");
 
-                return (
-                  <tr key={idx}>
-                    <td style={{ textAlign: "center", color: "#64748b", fontWeight: 600 }}>{idx + 1}</td>
-                    <td>
-                      <span className={`status-badge-cell status-cell-${status}`}>
-                        {status === "matched"
-                          ? "Matched"
-                          : status === "pending_folder"
-                          ? "Folder Pending"
-                          : status === "missing_file"
-                          ? "Missing File"
-                          : "Invalid"}
-                      </span>
-                    </td>
-                    <td>
-                      <input
-                        type="text"
-                        className={`cell-input font-mono ${sampleIdIssue ? "cell-input-error" : ""}`}
-                        title={sampleIdIssue}
-                        value={row.sample_id}
-                        onChange={(e) => handleUpdateCell(idx, "sample_id", e.target.value)}
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="text"
-                        className={`cell-input font-mono ${taxonIssue ? "cell-input-error" : ""}`}
-                        title={taxonIssue}
-                        value={row.taxon_id}
-                        onChange={(e) => handleUpdateCell(idx, "taxon_id", e.target.value)}
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="text"
-                        maxLength={2}
-                        className={`cell-input font-mono ${countryIssue ? "cell-input-error" : ""}`}
-                        title={countryIssue}
-                        style={{ textTransform: "uppercase" }}
-                        value={row.country}
-                        onChange={(e) => handleUpdateCell(idx, "country", e.target.value)}
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="text"
-                        className={`cell-input ${dateIssue ? "cell-input-error" : ""}`}
-                        title={dateIssue}
-                        placeholder="YYYY-MM-DD"
-                        value={row.collection_date}
-                        onChange={(e) => handleUpdateCell(idx, "collection_date", e.target.value)}
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="text"
-                        className="cell-input"
-                        value={row.host}
-                        onChange={(e) => handleUpdateCell(idx, "host", e.target.value)}
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="text"
-                        className="cell-input"
-                        value={row.isolation_source}
-                        onChange={(e) => handleUpdateCell(idx, "isolation_source", e.target.value)}
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="text"
-                        className={`cell-input font-mono ${fwdIssue ? "cell-input-error" : ""}`}
-                        title={fwdIssue}
-                        value={row.forward_read}
-                        onChange={(e) => handleUpdateCell(idx, "forward_read", e.target.value)}
-                      />
-                    </td>
-                    {isPaired && (
+                  return (
+                    <tr key={idx}>
+                      <td style={{ textAlign: "center", color: "#64748b", fontWeight: 600 }}>{idx + 1}</td>
+                      <td>
+                        <span className={`status-badge-cell status-cell-${status}`}>
+                          {status === "matched"
+                            ? "Matched"
+                            : status === "pending_folder"
+                            ? "Folder Pending"
+                            : status === "missing_file"
+                            ? "Missing File"
+                            : "Invalid"}
+                        </span>
+                      </td>
                       <td>
                         <input
                           type="text"
-                          className={`cell-input font-mono ${revIssue ? "cell-input-error" : ""}`}
-                          title={revIssue}
-                          value={row.reverse_read || ""}
-                          onChange={(e) => handleUpdateCell(idx, "reverse_read", e.target.value)}
+                          className={`cell-input font-mono ${sampleIdIssue ? "cell-input-error" : ""}`}
+                          title={sampleIdIssue}
+                          value={row.sample_id}
+                          onChange={(e) => handleUpdateCell(idx, "sample_id", e.target.value)}
                         />
                       </td>
-                    )}
-                    <td style={{ textAlign: "center" }}>
-                      <button
-                        type="button"
-                        className="btn-row-delete"
-                        title="Delete row"
-                        onClick={() => handleDeleteRow(idx)}
-                      >
-                        <Trash2 size={13} />
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
-      </div>
+                      <td>
+                        <input
+                          type="text"
+                          className={`cell-input font-mono ${taxonIssue ? "cell-input-error" : ""}`}
+                          title={taxonIssue}
+                          value={row.taxon_id}
+                          onChange={(e) => handleUpdateCell(idx, "taxon_id", e.target.value)}
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="text"
+                          maxLength={2}
+                          className={`cell-input font-mono ${countryIssue ? "cell-input-error" : ""}`}
+                          title={countryIssue}
+                          style={{ textTransform: "uppercase" }}
+                          value={row.country}
+                          onChange={(e) => handleUpdateCell(idx, "country", e.target.value)}
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="text"
+                          className={`cell-input ${dateIssue ? "cell-input-error" : ""}`}
+                          title={dateIssue}
+                          placeholder="YYYY-MM-DD"
+                          value={row.collection_date}
+                          onChange={(e) => handleUpdateCell(idx, "collection_date", e.target.value)}
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="text"
+                          className="cell-input"
+                          value={row.host}
+                          onChange={(e) => handleUpdateCell(idx, "host", e.target.value)}
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="text"
+                          className="cell-input"
+                          value={row.isolation_source}
+                          onChange={(e) => handleUpdateCell(idx, "isolation_source", e.target.value)}
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="text"
+                          className={`cell-input font-mono ${fwdIssue ? "cell-input-error" : ""}`}
+                          title={fwdIssue}
+                          value={row.forward_read}
+                          onChange={(e) => handleUpdateCell(idx, "forward_read", e.target.value)}
+                        />
+                      </td>
+                      {isPaired && (
+                        <td>
+                          <input
+                            type="text"
+                            className={`cell-input font-mono ${revIssue ? "cell-input-error" : ""}`}
+                            title={revIssue}
+                            value={row.reverse_read || ""}
+                            onChange={(e) => handleUpdateCell(idx, "reverse_read", e.target.value)}
+                          />
+                        </td>
+                      )}
+                      <td style={{ textAlign: "center" }}>
+                        <button
+                          type="button"
+                          className="btn-row-delete"
+                          title="Delete row"
+                          onClick={() => handleDeleteRow(idx)}
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
     </div>
   );
 }

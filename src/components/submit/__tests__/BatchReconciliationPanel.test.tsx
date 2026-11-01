@@ -83,8 +83,7 @@ describe("BatchReconciliationPanel", () => {
     expect(screen.queryByText("Matched Samples")).toBeNull();
   });
 
-  it("renders direct Upload Sheet button in dropzone when onSheetDiscovered is provided", () => {
-    const onSheet = vi.fn();
+  it("renders Browse Folder action button in dropzone", () => {
     render(
       <BatchReconciliationPanel
         report={mockReport}
@@ -92,10 +91,9 @@ describe("BatchReconciliationPanel", () => {
         onFilesDiscovered={vi.fn()}
         onClearFiles={vi.fn()}
         onAddRowsFromOrphans={vi.fn()}
-        onSheetDiscovered={onSheet}
       />
     );
 
-    expect(screen.getByRole("button", { name: /Upload Sheet/i })).toBeDefined();
+    expect(screen.getByRole("button", { name: /Browse Folder/i })).toBeDefined();
   });
 });

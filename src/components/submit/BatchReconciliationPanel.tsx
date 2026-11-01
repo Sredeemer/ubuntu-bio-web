@@ -24,7 +24,6 @@ export function BatchReconciliationPanel({
   onSheetDiscovered,
 }: BatchReconciliationPanelProps) {
   const folderInputRef = useRef<HTMLInputElement>(null);
-  const sheetInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
 
   const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
@@ -157,23 +156,6 @@ export function BatchReconciliationPanel({
     e.target.value = "";
   };
 
-  const handleDirectSheetUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !onSheetDiscovered) return;
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      const text = evt.target?.result;
-      if (typeof text === "string") {
-        const parsed = parseBatchSheet(text);
-        if (parsed.length > 0) {
-          onSheetDiscovered(parsed);
-        }
-      }
-    };
-    reader.readAsText(file);
-    e.target.value = "";
-  };
-
   const hasActivity = report.totalSamples > 0 || discoveredFiles.length > 0;
 
   return (
@@ -230,27 +212,6 @@ export function BatchReconciliationPanel({
             <Folder size={14} />
             <span>{discoveredFiles.length > 0 ? "Change Folder" : "Browse Folder"}</span>
           </button>
-
-          {onSheetDiscovered && (
-            <>
-              <button
-                type="button"
-                className="btn-folder-browse"
-                onClick={() => sheetInputRef.current?.click()}
-                title="Upload metadata spreadsheet directly"
-              >
-                <Upload size={13} />
-                <span>Upload Sheet</span>
-              </button>
-              <input
-                ref={sheetInputRef}
-                type="file"
-                accept=".tsv,.csv,.txt,.tab"
-                style={{ display: "none" }}
-                onChange={handleDirectSheetUpload}
-              />
-            </>
-          )}
 
           {discoveredFiles.length > 0 && (
             <button

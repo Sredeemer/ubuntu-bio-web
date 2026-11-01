@@ -680,7 +680,7 @@ export function SubmitDatasetPage() {
                         <div className="scope-card-content">
                           <div className="scope-card-header">
                             <span className="scope-card-title">Batch Surveillance Cohort</span>
-                            <span className="scope-card-badge badge-accent">Sheet &amp; Folder Drop</span>
+                            <span className="scope-card-badge">Sheet &amp; Folder Drop</span>
                           </div>
                           <p className="scope-card-desc">
                             Streamlined 3-step workflow for outbreaks and surveillance cohorts with spreadsheet editor and folder reconciliation.
@@ -1228,15 +1228,15 @@ export function SubmitDatasetPage() {
                       </p>
                     ) : batchRows.length === 0 && discoveredFolderFiles.length === 0 ? (
                       <p className="step-validation-hint">
-                        <Info size={14} /> Step 1 of 2: Upload your metadata spreadsheet (TSV/CSV) or drop your local sequencing folder above to begin.
+                        <Info size={14} /> Action Required: Upload your metadata spreadsheet (TSV/CSV) or drop your local sequencing folder above to begin.
                       </p>
                     ) : batchRows.length > 0 && discoveredFolderFiles.length === 0 ? (
                       <p className="step-validation-hint">
-                        <Info size={14} /> Step 2 of 2: {batchRows.length} sample records loaded. Now drop or browse your local sequencing directory above to verify read files on disk.
+                        <Info size={14} /> Action Required: {batchRows.length} sample records loaded. Now drop or browse your local sequencing directory above to verify read files on disk.
                       </p>
                     ) : batchRows.length === 0 && discoveredFolderFiles.length > 0 ? (
                       <p className="step-validation-hint">
-                        <Info size={14} /> Step 2 of 2: {discoveredFolderFiles.length} sequencing files scanned. Click &quot;Upload Sheet&quot; or &quot;Add Rows from Orphan Files&quot; to declare metadata.
+                        <Info size={14} /> Action Required: {discoveredFolderFiles.length} sequencing files scanned. Declare metadata by uploading a spreadsheet or clicking &quot;Add Rows from Orphan Files&quot;.
                       </p>
                     ) : reconciliationReport.canProceed ? (
                       <p className="step-validation-hint success">
@@ -1700,12 +1700,12 @@ export function SubmitDatasetPage() {
                             color: isBslViolation ? "#be123c" : "#059669",
                             fontSize: "0.8rem",
                             display: "flex",
-                            alignItems: "center",
+                            alignItems: "flex-start",
                             gap: "8px",
                           }}
                         >
-                          <AlertTriangle size={16} />
-                          <span>
+                          <AlertTriangle size={15} style={{ flexShrink: 0, marginTop: "2px" }} />
+                          <span style={{ flex: 1, lineHeight: "1.4" }}>
                             <strong>Biosafety Notice:</strong> Viral Hemorrhagic Fever pathogens (Lassa, Ebola, Marburg, CCHF) mandate BSL-4 maximum biocontainment under WHO guidelines.
                           </span>
                         </div>

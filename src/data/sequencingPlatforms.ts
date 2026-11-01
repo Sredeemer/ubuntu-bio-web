@@ -92,10 +92,10 @@ export const LIBRARY_SELECTIONS = [
 ] as const;
 
 export const BIOSAFETY_LEVELS = [
-  { id: "BSL-1", label: "BSL-1 (Minimal Hazard / Benign Microbes)" },
-  { id: "BSL-2", label: "BSL-2 (Moderate Hazard / Bloodborne Pathogens)" },
-  { id: "BSL-3", label: "BSL-3 (High Risk Indigenous Aerosols - e.g. TB, Mpox)" },
-  { id: "BSL-4", label: "BSL-4 (Maximum Biohazard / VHF - e.g. Lassa, Ebola, Marburg)" },
+  { id: "BSL-1", label: "BSL-1 (Minimal Hazard / Benign)" },
+  { id: "BSL-2", label: "BSL-2 (Moderate Hazard / Bloodborne)" },
+  { id: "BSL-3", label: "BSL-3 (High Risk Aerosols - TB, Mpox)" },
+  { id: "BSL-4", label: "BSL-4 (Maximum Biohazard / VHF)" },
 ] as const;
 
 export type PlatformId = (typeof SEQUENCING_PLATFORMS)[number]["id"];
