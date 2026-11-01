@@ -239,4 +239,128 @@ describe("SubmitDatasetPage", () => {
     expect(screen.getByText(/Runs & Sequence Files/i)).toBeDefined();
     expect(screen.getByText(/Review & Ingest Dataset/i)).toBeDefined();
   });
+
+  it("Step 3 constraint: locks library layout to SINGLE and disables PAIRED when long-read platform is selected", () => {
+    render(<SubmitDatasetPage />);
+
+    // Advance to Step 3
+    fireEvent.change(screen.getByLabelText(/Namespace Identifier/i), { target: { value: "acegid" } });
+    fireEvent.change(screen.getByLabelText(/Dataset Slug ID/i), { target: { value: "surv-test" } });
+    fireEvent.change(screen.getByLabelText(/Formal Dataset Name/i), { target: { value: "Surveillance Test" } });
+    fireEvent.change(screen.getByLabelText(/Contributing Institution/i), { target: { value: "ACEGID" } });
+    fireEvent.click(screen.getByRole("button", { name: /Proceed to Taxonomy & Safety/i }));
+
+    fireEvent.change(screen.getByLabelText(/NCBI Taxonomy ID/i), { target: { value: "11620" } });
+    fireEvent.change(screen.getByLabelText(/Scientific Name/i), { target: { value: "Lassa mammarenavirus" } });
+    fireEvent.click(screen.getByRole("button", { name: /Continue to Sequencing Specs/i }));
+
+    // By default Illumina allows PAIRED
+    const platformSelect = screen.getByLabelText(/Sequencing Platform/i);
+    const layoutSelect = screen.getByLabelText(/Library Layout/i) as HTMLSelectElement;
+    expect(layoutSelect.disabled).toBe(false);
+
+    // Switch to PacBio
+    fireEvent.change(platformSelect, { target: { value: "PACBIO" } });
+    expect(layoutSelect.value).toBe("SINGLE");
+    expect(layoutSelect.disabled).toBe(true);
+
+    // Switch to Oxford Nanopore
+    fireEvent.change(platformSelect, { target: { value: "OXFORD_NANOPORE" } });
+    expect(layoutSelect.value).toBe("SINGLE");
+    expect(layoutSelect.disabled).toBe(true);
+
+    // Switch back to Illumina
+    fireEvent.change(platformSelect, { target: { value: "ILLUMINA" } });
+    expect(layoutSelect.disabled).toBe(false);
+  });
+
+  it("Step 3 constraint: prevents WGS from selecting PCR, restricting selection to non-amplicon protocols", () => {
+    render(<SubmitDatasetPage />);
+
+    // Advance to Step 3
+    fireEvent.change(screen.getByLabelText(/Namespace Identifier/i), { target: { value: "acegid" } });
+    fireEvent.change(screen.getByLabelText(/Dataset Slug ID/i), { target: { value: "wgs-test" } });
+    fireEvent.change(screen.getByLabelText(/Formal Dataset Name/i), { target: { value: "WGS Test" } });
+    fireEvent.change(screen.getByLabelText(/Contributing Institution/i), { target: { value: "ACEGID" } });
+    fireEvent.click(screen.getByRole("button", { name: /Proceed to Taxonomy & Safety/i }));
+
+    fireEvent.change(screen.getByLabelText(/NCBI Taxonomy ID/i), { target: { value: "1773" } });
+    fireEvent.change(screen.getByLabelText(/Scientific Name/i), { target: { value: "Mycobacterium tuberculosis" } });
+    fireEvent.click(screen.getByRole("button", { name: /Continue to Sequencing Specs/i }));
+
+    const strategySelect = screen.getByLabelText(/Library Strategy/i) as HTMLSelectElement;
+    const selectionSelect = screen.getByLabelText(/Library Selection/i) as HTMLSelectElement;
+
+    // Strategy is WGS by default -> PCR must NOT be an option
+    expect(strategySelect.value).toBe("WGS");
+    const optionValues = Array.from(selectionSelect.options).map((o) => o.value);
+    expect(optionValues).not.toContain("PCR");
+    expect(optionValues).toContain("RANDOM");
+
+    // Switching to AMPLICON requires PCR
+    fireEvent.change(strategySelect, { target: { value: "AMPLICON" } });
+    expect(selectionSelect.value).toBe("PCR");
+    const ampliconOptions = Array.from(selectionSelect.options).map((o) => o.value);
+    expect(ampliconOptions).toEqual(["PCR"]);
+  });
+
+  it("Step 3 & Step 2: supports Parasite pathogen category, restricts VIRAL_RNA, and outputs parasite domain", () => {
+    render(<SubmitDatasetPage />);
+
+    // Step 1
+    fireEvent.change(screen.getByLabelText(/Namespace Identifier/i), { target: { value: "acegid" } });
+    fireEvent.change(screen.getByLabelText(/Dataset Slug ID/i), { target: { value: "pf-malaria-2026" } });
+    fireEvent.change(screen.getByLabelText(/Formal Dataset Name/i), { target: { value: "Plasmodium falciparum Malaria Study" } });
+    fireEvent.change(screen.getByLabelText(/Contributing Institution/i), { target: { value: "ACEGID" } });
+    fireEvent.click(screen.getByRole("button", { name: /Proceed to Taxonomy & Safety/i }));
+
+    // Step 2: Select Parasite category
+    const pathogenCategorySelect = screen.getByLabelText(/Pathogen \/ Biological Category/i) as HTMLSelectElement;
+    fireEvent.change(pathogenCategorySelect, { target: { value: "Parasite" } });
+    expect(pathogenCategorySelect.value).toBe("Parasite");
+
+    fireEvent.change(screen.getByLabelText(/NCBI Taxonomy ID/i), { target: { value: "5833" } });
+    fireEvent.change(screen.getByLabelText(/Scientific Name/i), { target: { value: "Plasmodium falciparum" } });
+    fireEvent.click(screen.getByRole("button", { name: /Continue to Sequencing Specs/i }));
+
+    // Step 3: Library source must default to GENOMIC and exclude VIRAL_RNA for Parasite
+    const sourceSelect = screen.getByLabelText(/Library Source/i) as HTMLSelectElement;
+    expect(sourceSelect.value).toBe("GENOMIC");
+    const sourceOptions = Array.from(sourceSelect.options).map((o) => o.value);
+    expect(sourceOptions).not.toContain("VIRAL_RNA");
+
+    // Agree to Nagoya and continue
+    fireEvent.click(screen.getByRole("checkbox"));
+    fireEvent.click(screen.getByRole("button", { name: /Continue to Runs & Sequence Files/i }));
+
+    // Step 4: Remote cluster mode
+    const remoteBtn = screen.getByRole("tab", { name: /Remote Server \/ HPC Cluster Declaration/i });
+    fireEvent.click(remoteBtn);
+    fireEvent.click(screen.getByRole("button", { name: /Review & Ingest Dataset/i }));
+
+    // Step 5: Verify parasite domain in generated README and review card
+    expect(screen.getByText(/domain: parasite/i)).toBeDefined();
+    expect(screen.getAllByText(/Parasite/i).length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("Step 3 biosafety: auto-selects BSL-4 and displays warning for VHF pathogens", () => {
+    render(<SubmitDatasetPage />);
+
+    // Advance to Step 2
+    fireEvent.change(screen.getByLabelText(/Namespace Identifier/i), { target: { value: "inrb" } });
+    fireEvent.change(screen.getByLabelText(/Dataset Slug ID/i), { target: { value: "ebola-vhf" } });
+    fireEvent.change(screen.getByLabelText(/Formal Dataset Name/i), { target: { value: "Ebola Outbreak" } });
+    fireEvent.change(screen.getByLabelText(/Contributing Institution/i), { target: { value: "INRB" } });
+    fireEvent.click(screen.getByRole("button", { name: /Proceed to Taxonomy & Safety/i }));
+
+    // Ebola virus
+    fireEvent.change(screen.getByLabelText(/NCBI Taxonomy ID/i), { target: { value: "186538" } });
+    fireEvent.change(screen.getByLabelText(/Scientific Name/i), { target: { value: "Zaire ebolavirus" } });
+    fireEvent.click(screen.getByRole("button", { name: /Continue to Sequencing Specs/i }));
+
+    // Step 3
+    const bslSelect = screen.getByLabelText(/Biosafety Level/i) as HTMLSelectElement;
+    expect(bslSelect.value).toBe("BSL-4");
+    expect(screen.getByText(/Biosafety Notice:/i)).toBeDefined();
+  });
 });

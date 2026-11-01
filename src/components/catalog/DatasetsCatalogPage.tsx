@@ -226,7 +226,7 @@ export function DatasetsCatalogPage() {
             <div className="filter-section">
               <h3 className="filter-section-title">Pathogen Type</h3>
               <div className="catalog-filter-list">
-                {["Virus", "Bacteria", "Vector", "Fungus"].map((type) => (
+                {["Virus", "Bacteria", "Parasite", "Vector", "Fungus"].map((type) => (
                   <label
                     key={type}
                     className="catalog-filter-label"

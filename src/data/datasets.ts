@@ -25,7 +25,7 @@ export interface DatasetItem {
   countryName: string;
   taxonId: number;
   taxonName: string;
-  pathogenType: "Virus" | "Bacteria" | "Vector" | "Fungus";
+  pathogenType: "Virus" | "Bacteria" | "Parasite" | "Vector" | "Fungus";
   samplesCount: number;
   totalSizeMb: number;
   biocontainment: "BSL-1" | "BSL-2" | "BSL-3" | "BSL-4";
@@ -280,6 +280,40 @@ export const DATASETS: DatasetItem[] = [
         format: "VCF",
         casHash: "xet:sha256:11aa004499ff382001a88491029cba0018f39100",
         chunksCount: 45,
+      },
+    ],
+  },
+  {
+    id: "acegid/plasmodium-falciparum-surveillance-2026",
+    namespace: "acegid",
+    datasetId: "plasmodium-falciparum-surveillance-2026",
+    name: "Plasmodium falciparum Artemisinin Resistance Surveillance",
+    countryCode: "NG",
+    countryName: "Nigeria",
+    taxonId: 5833,
+    taxonName: "Plasmodium falciparum",
+    pathogenType: "Parasite",
+    samplesCount: 450,
+    totalSizeMb: 52000,
+    biocontainment: "BSL-2",
+    accessGate: "public",
+    description:
+      "Targeted whole-genome surveillance of Plasmodium falciparum investigating kelch13 artemisinin resistance mutations in Nigeria.",
+    longDescription:
+      "Deep genomic sequencing of clinical Plasmodium falciparum isolates across southwestern and north-central Nigeria. Monitors kelch13 propeller domain variants, plasmepsin 2-3 copy number amplification, and chloroquine resistance transporter (crt) reversions.",
+    leadInstitution: "ACEGID Redeemer's University",
+    updatedAt: "2026-10-15",
+    license: "CC-BY-4.0",
+    seqPlatforms: ["Illumina NovaSeq 6000"],
+    citation: "ACEGID. (2026). Malaria Drug Resistance Genomic Callsets. UbuntuBio Data Hub.",
+    files: [
+      {
+        name: "pf_k13_variants.vcf.gz",
+        path: "vcf/pf_k13_variants.vcf.gz",
+        sizeBytes: 420000000,
+        format: "VCF",
+        casHash: "xet:sha256:99bb882200ff382001a88491029cba0018f39100",
+        chunksCount: 22,
       },
     ],
   },

@@ -32,6 +32,14 @@ import {
   LIBRARY_SOURCES,
   LIBRARY_SELECTIONS,
   BIOSAFETY_LEVELS,
+  getValidLayoutsForPlatform,
+  getValidSelectionsForStrategy,
+  getValidSourcesForPathogenAndStrategy,
+  isBSL4Pathogen,
+  PlatformId,
+  StrategyId,
+  SelectionId,
+  SourceId,
 } from "../../data/sequencingPlatforms";
 import { createRepository } from "../../lib/api";
 import { useAuth } from "../../context/AuthContext";
@@ -83,7 +91,7 @@ export function SubmitDatasetPage() {
   // Step 2: Taxonomy & Non-Human Biological Verification
   const [taxonId, setTaxonId] = useState("");
   const [taxonName, setTaxonName] = useState("");
-  const [pathogenType, setPathogenType] = useState<"Virus" | "Bacteria" | "Vector" | "Fungus">("Virus");
+  const [pathogenType, setPathogenType] = useState<"Virus" | "Bacteria" | "Parasite" | "Vector" | "Fungus">("Virus");
   const [hosts, setHosts] = useState<HostEntry[]>([
     {
       id: "9606",
@@ -110,7 +118,7 @@ export function SubmitDatasetPage() {
   const [instrumentModel, setInstrumentModel] = useState("Illumina NovaSeq 6000");
   const [libraryStrategy, setLibraryStrategy] = useState("WGS");
   const [librarySource, setLibrarySource] = useState("VIRAL_RNA");
-  const [librarySelection, setLibrarySelection] = useState("PCR");
+  const [librarySelection, setLibrarySelection] = useState("RANDOM");
   const [libraryLayout, setLibraryLayout] = useState<"PAIRED" | "SINGLE">("PAIRED");
   const [biocontainment, setBiocontainment] = useState("BSL-3");
   const [nagoyaAgreed, setNagoyaAgreed] = useState(false);
@@ -151,12 +159,46 @@ export function SubmitDatasetPage() {
     }
   }, [isAuthenticated, userNamespace, isCustomNamespace, namespace]);
 
-  // When platform changes, update instrument model to default for platform
+  // Auto-detect BSL-4 Viral Hemorrhagic Fever pathogens on taxon change
+  React.useEffect(() => {
+    const taxIdNum = parseInt(taxonId, 10) || 0;
+    if (isBSL4Pathogen(taxIdNum, taxonName)) {
+      setBiocontainment("BSL-4");
+    }
+  }, [taxonId, taxonName]);
+
+  // When platform changes, update instrument model to default and enforce valid layout constraints
   const handlePlatformChange = (newPlatformId: "ILLUMINA" | "OXFORD_NANOPORE" | "PACBIO" | "MGI" | "ION_TORRENT") => {
     setPlatformId(newPlatformId);
     const platformConfig = SEQUENCING_PLATFORMS.find((p) => p.id === newPlatformId);
     if (platformConfig) {
       setInstrumentModel(platformConfig.defaultModel);
+    }
+    const allowed = getValidLayoutsForPlatform(newPlatformId);
+    if (!allowed.includes(libraryLayout)) {
+      setLibraryLayout(allowed[0] || "SINGLE");
+    }
+  };
+
+  // When strategy changes, constrain valid selection methods and library sources
+  const handleStrategyChange = (newStrategy: string) => {
+    setLibraryStrategy(newStrategy);
+    const validSelections = getValidSelectionsForStrategy(newStrategy as StrategyId);
+    if (!validSelections.includes(librarySelection as SelectionId)) {
+      setLibrarySelection(validSelections[0] || "RANDOM");
+    }
+    const validSources = getValidSourcesForPathogenAndStrategy(pathogenType, newStrategy as StrategyId);
+    if (!validSources.includes(librarySource as SourceId)) {
+      setLibrarySource(validSources[0] || "GENOMIC");
+    }
+  };
+
+  // When pathogen type changes, align library source
+  const handlePathogenTypeChange = (newType: "Virus" | "Bacteria" | "Parasite" | "Vector" | "Fungus") => {
+    setPathogenType(newType);
+    const validSources = getValidSourcesForPathogenAndStrategy(newType, libraryStrategy as StrategyId);
+    if (!validSources.includes(librarySource as SourceId)) {
+      setLibrarySource(validSources[0] || "GENOMIC");
     }
   };
 
@@ -246,7 +288,19 @@ export function SubmitDatasetPage() {
     taxonName.trim().length >= 3 &&
     !collectionDateErrors;
 
-  const isStep3Valid = countryCode.length === 2 && nagoyaAgreed;
+  const allowedLayouts = getValidLayoutsForPlatform(platformId);
+  const allowedSelections = getValidSelectionsForStrategy(libraryStrategy as StrategyId);
+  const allowedSources = getValidSourcesForPathogenAndStrategy(pathogenType, libraryStrategy as StrategyId);
+  const isVHFPathogen = isBSL4Pathogen(parseInt(taxonId, 10) || 0, taxonName);
+  const isBslViolation = isVHFPathogen && (biocontainment === "BSL-1" || biocontainment === "BSL-2");
+
+  const isStep3Valid =
+    countryCode.length === 2 &&
+    nagoyaAgreed &&
+    allowedLayouts.includes(libraryLayout) &&
+    allowedSelections.includes(librarySelection as SelectionId) &&
+    allowedSources.includes(librarySource as SourceId) &&
+    !isBslViolation;
 
   // Step 4 File Size & Validation Logic
   const totalFileSizeBytes = inspectedFiles.reduce((acc, f) => acc + f.fileSizeBytes, 0);
@@ -294,7 +348,7 @@ export function SubmitDatasetPage() {
     hosts,
     taxonId: parseInt(taxonId, 10) || 0,
     scientificName: taxonName || "Pathogen",
-    platform: platformId,
+    platform: platformId === "PACBIO" ? "PACBIO_SMRT" : platformId,
     instrumentModel,
     libraryStrategy,
     librarySource,
@@ -748,10 +802,17 @@ export function SubmitDatasetPage() {
                         setTaxonId(sel.taxonId);
                         setTaxonName(sel.taxonName);
                         if (sel.domain) {
-                          if (sel.domain === "virus") setPathogenType("Virus");
-                          else if (sel.domain === "bacteria") setPathogenType("Bacteria");
-                          else if (sel.domain === "parasite" || sel.domain === "vector") setPathogenType("Vector");
-                          else if (sel.domain === "plant") setPathogenType("Fungus");
+                          let nextType: "Virus" | "Bacteria" | "Parasite" | "Vector" | "Fungus" = "Virus";
+                          if (sel.domain === "virus") nextType = "Virus";
+                          else if (sel.domain === "bacteria") nextType = "Bacteria";
+                          else if (sel.domain === "parasite") nextType = "Parasite";
+                          else if (sel.domain === "vector") nextType = "Vector";
+                          else if (sel.domain === "plant") nextType = "Fungus";
+                          handlePathogenTypeChange(nextType);
+                        }
+                        const taxIdNum = parseInt(sel.taxonId, 10) || 0;
+                        if (isBSL4Pathogen(taxIdNum, sel.taxonName)) {
+                          setBiocontainment("BSL-4");
                         }
                       }}
                       error={touchedFields.taxonId && !taxonId ? "Target organism is required" : undefined}
@@ -820,10 +881,11 @@ export function SubmitDatasetPage() {
                         id="select-pathogen-type"
                         className="form-select"
                         value={pathogenType}
-                        onChange={(e) => setPathogenType(e.target.value as any)}
+                        onChange={(e) => handlePathogenTypeChange(e.target.value as any)}
                       >
                         <option value="Virus">Virus (e.g. Lassa, Ebola, Marburg, H5N1)</option>
                         <option value="Bacteria">Bacteria (e.g. M. tuberculosis, Vibrio cholerae)</option>
+                        <option value="Parasite">Parasite (e.g. Plasmodium falciparum, Trypanosoma, Schistosoma)</option>
                         <option value="Vector">Vector (e.g. Anopheles funestus, Aedes aegypti)</option>
                         <option value="Fungus">Fungus / Agricultural Crop Pathogen</option>
                       </select>
@@ -959,6 +1021,13 @@ export function SubmitDatasetPage() {
                           </option>
                         ))}
                       </select>
+                      <span className="field-hint">
+                        {platformId === "OXFORD_NANOPORE" || platformId === "PACBIO"
+                          ? "Long-read single molecule platform (produces single continuous reads)."
+                          : platformId === "ION_TORRENT"
+                          ? "Semiconductor platform (produces single-end reads)."
+                          : "Short-read platform with dual paired-end read support."}
+                      </span>
                     </div>
 
                     <div className="form-field">
@@ -987,7 +1056,7 @@ export function SubmitDatasetPage() {
                         id="select-strategy"
                         className="form-select"
                         value={libraryStrategy}
-                        onChange={(e) => setLibraryStrategy(e.target.value)}
+                        onChange={(e) => handleStrategyChange(e.target.value)}
                       >
                         {LIBRARY_STRATEGIES.map((s) => (
                           <option key={s.id} value={s.id}>
@@ -1007,12 +1076,17 @@ export function SubmitDatasetPage() {
                         value={librarySource}
                         onChange={(e) => setLibrarySource(e.target.value)}
                       >
-                        {LIBRARY_SOURCES.map((s) => (
+                        {LIBRARY_SOURCES.filter((s) => allowedSources.includes(s.id)).map((s) => (
                           <option key={s.id} value={s.id}>
                             {s.label}
                           </option>
                         ))}
                       </select>
+                      <span className="field-hint">
+                        {pathogenType === "Virus"
+                          ? "Viral genome source (VIRAL RNA or GENOMIC DNA for poxviruses)."
+                          : `Genomic DNA source aligned with ${pathogenType} specimens.`}
+                      </span>
                     </div>
 
                     <div className="form-field">
@@ -1025,12 +1099,19 @@ export function SubmitDatasetPage() {
                         value={librarySelection}
                         onChange={(e) => setLibrarySelection(e.target.value)}
                       >
-                        {LIBRARY_SELECTIONS.map((s) => (
+                        {LIBRARY_SELECTIONS.filter((s) => allowedSelections.includes(s.id)).map((s) => (
                           <option key={s.id} value={s.id}>
                             {s.label}
                           </option>
                         ))}
                       </select>
+                      <span className="field-hint">
+                        {libraryStrategy === "WGS"
+                          ? "WGS uses unbiased random shotgun fragmentation / tagmentation (multiplex PCR is restricted)."
+                          : libraryStrategy === "AMPLICON"
+                          ? "Multiplex tiled PCR amplification (e.g. ARTIC primer network)."
+                          : "Selection protocol aligned with library strategy."}
+                      </span>
                     </div>
 
                     <div className="form-field">
@@ -1041,11 +1122,22 @@ export function SubmitDatasetPage() {
                         id="select-layout"
                         className="form-select font-mono"
                         value={libraryLayout}
+                        disabled={allowedLayouts.length === 1}
                         onChange={(e) => setLibraryLayout(e.target.value as any)}
                       >
-                        <option value="PAIRED">PAIRED (Forward R1 & Reverse R2 Reads)</option>
-                        <option value="SINGLE">SINGLE (Forward Reads Only)</option>
+                        {allowedLayouts.map((layout) => (
+                          <option key={layout} value={layout}>
+                            {layout === "PAIRED"
+                              ? "PAIRED (Forward R1 & Reverse R2 Reads)"
+                              : "SINGLE (Forward Reads Only)"}
+                          </option>
+                        ))}
                       </select>
+                      <span className="field-hint">
+                        {allowedLayouts.length === 1
+                          ? `${currentPlatformConfig?.name || "Selected platform"} generates single continuous reads (PAIRED layout disabled).`
+                          : "Paired-end sequencing recommended for short-read assemblers."}
+                      </span>
                     </div>
 
                     <div className="form-field">
@@ -1075,7 +1167,7 @@ export function SubmitDatasetPage() {
                       </label>
                       <select
                         id="select-bsl"
-                        className="form-select"
+                        className={`form-select ${isBslViolation ? "input-error" : ""}`}
                         value={biocontainment}
                         onChange={(e) => setBiocontainment(e.target.value)}
                       >
@@ -1088,6 +1180,28 @@ export function SubmitDatasetPage() {
                       <span className="field-hint">
                         Pathogen containment protocol under WHO/CDC laboratory guidelines.
                       </span>
+                      {isVHFPathogen && (
+                        <div
+                          className="alert-bsl4"
+                          style={{
+                            marginTop: "8px",
+                            padding: "8px 12px",
+                            borderRadius: "6px",
+                            backgroundColor: isBslViolation ? "rgba(225, 29, 72, 0.1)" : "rgba(16, 185, 129, 0.1)",
+                            border: `1px solid ${isBslViolation ? "rgba(225, 29, 72, 0.3)" : "rgba(16, 185, 129, 0.3)"}`,
+                            color: isBslViolation ? "#be123c" : "#059669",
+                            fontSize: "0.8rem",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                          }}
+                        >
+                          <AlertTriangle size={16} />
+                          <span>
+                            <strong>Biosafety Notice:</strong> Viral Hemorrhagic Fever pathogens (Lassa, Ebola, Marburg, CCHF) mandate BSL-4 maximum biocontainment under WHO guidelines.
+                          </span>
+                        </div>
+                      )}
                     </div>
 
                     <div className="form-field full-width">

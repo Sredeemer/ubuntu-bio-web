@@ -30,6 +30,16 @@ describe("DatasetsCatalogPage", () => {
     expect(screen.queryByText(/Lassa Mammarenavirus Genomic Surveillance/i)).toBeNull();
   });
 
+  it("filters datasets by Parasite category checkbox", () => {
+    render(<DatasetsCatalogPage />);
+    const parasiteCheckbox = screen.getByRole("checkbox", { name: /Parasite/i });
+    fireEvent.click(parasiteCheckbox);
+
+    expect(screen.getByText(/Plasmodium falciparum Artemisinin Resistance Surveillance/i)).toBeDefined();
+    expect(screen.queryByText(/Lassa Mammarenavirus Genomic Surveillance/i)).toBeNull();
+    expect(screen.queryByText(/Vibrio cholerae O1/i)).toBeNull();
+  });
+
   it("filters datasets by biocontainment level checkbox", () => {
     render(<DatasetsCatalogPage />);
     const bsl4Checkbox = screen.getByRole("checkbox", { name: /BSL-4/i });

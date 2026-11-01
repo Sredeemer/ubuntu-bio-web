@@ -153,12 +153,14 @@ export function repoToDatasetItem(repo: RepoResponse | SearchHit): DatasetItem {
 
   // Derive domain / pathogen classification
   const domain = ("domain" in repo ? repo.domain : "virus") || "virus";
-  let pathogenType: "Virus" | "Bacteria" | "Vector" | "Fungus" = "Virus";
+  let pathogenType: "Virus" | "Bacteria" | "Parasite" | "Vector" | "Fungus" = "Virus";
   const dLower = domain.toLowerCase();
   const textToScan = `${slug} ${repo.name || ""} ${repo.description || ""}`.toLowerCase();
 
   if (dLower.includes("bacteri") || dLower.includes("tb") || dLower.includes("cholera") || textToScan.includes("coli") || textToScan.includes("bacteria")) {
     pathogenType = "Bacteria";
+  } else if (dLower.includes("parasit") || dLower.includes("plasmod") || dLower.includes("malaria") || dLower.includes("trypanos") || dLower.includes("schistosom") || textToScan.includes("plasmodium") || textToScan.includes("malaria")) {
+    pathogenType = "Parasite";
   } else if (dLower.includes("vector") || dLower.includes("anopheles") || dLower.includes("mosquito")) {
     pathogenType = "Vector";
   } else if (dLower.includes("fung") || dLower.includes("myco")) {

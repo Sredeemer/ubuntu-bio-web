@@ -12,7 +12,7 @@ export interface DatasetItem {
   countryName: string;
   taxonId: number;
   taxonName: string;
-  pathogenType: "Virus" | "Bacteria" | "Vector" | "Fungus";
+  pathogenType: "Virus" | "Bacteria" | "Parasite" | "Vector" | "Fungus";
   samplesCount: number;
   totalSizeMb: number;
   biocontainment: string;
@@ -211,7 +211,7 @@ export function DatasetSearch() {
         {/* Segmented Control Bar & Country Dropdown */}
         <div className="ubio-filter-row">
           <div className="filter-segmented-control" role="radiogroup" aria-label="Pathogen Type">
-            {["all", "Virus", "Bacteria", "Vector"].map((t) => (
+            {["all", "Virus", "Bacteria", "Parasite", "Vector"].map((t) => (
               <button
                 key={t}
                 onClick={() => setSelectedType(t)}

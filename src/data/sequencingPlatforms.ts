@@ -78,16 +78,17 @@ export const LIBRARY_STRATEGIES = [
 
 export const LIBRARY_SOURCES = [
   { id: "VIRAL_RNA", label: "VIRAL RNA (Pathogen Viral Genome)" },
-  { id: "GENOMIC", label: "GENOMIC (Bacterial / Vector Genomic DNA)" },
+  { id: "GENOMIC", label: "GENOMIC (Bacterial / Parasite / Vector Genomic DNA)" },
   { id: "METAGENOMIC", label: "METAGENOMIC (Host Swab / Environmental Pool)" },
   { id: "TRANSCRIPTOMIC", label: "TRANSCRIPTOMIC (Host & Pathogen Expression)" },
 ] as const;
 
 export const LIBRARY_SELECTIONS = [
-  { id: "PCR", label: "PCR (Target Multiplex Amplification)" },
-  { id: "RANDOM", label: "RANDOM (Random Hexamers / Primer Sets)" },
-  { id: "HYBRID_SELECTION", label: "HYBRID_SELECTION (Bait Capture Probes)" },
-  { id: "UNSELECTED", label: "UNSELECTED (Direct Native Sequencing)" },
+  { id: "RANDOM", label: "RANDOM (Shotgun Tagmentation / Random Priming)" },
+  { id: "PCR", label: "PCR (Target Multiplex Amplification - e.g. ARTIC)" },
+  { id: "POLYA", label: "POLYA (PolyA Oligo-dT Selection for mRNA)" },
+  { id: "SIZE_FRACTIONATION", label: "SIZE_FRACTIONATION (Size-Selected Native DNA)" },
+  { id: "OTHER", label: "OTHER (Direct PCR-Free / Bait Capture / Hybrid)" },
 ] as const;
 
 export const BIOSAFETY_LEVELS = [
@@ -96,3 +97,85 @@ export const BIOSAFETY_LEVELS = [
   { id: "BSL-3", label: "BSL-3 (High Risk Indigenous Aerosols - e.g. TB, Mpox)" },
   { id: "BSL-4", label: "BSL-4 (Maximum Biohazard / VHF - e.g. Lassa, Ebola, Marburg)" },
 ] as const;
+
+export type PlatformId = (typeof SEQUENCING_PLATFORMS)[number]["id"];
+export type StrategyId = (typeof LIBRARY_STRATEGIES)[number]["id"];
+export type SelectionId = (typeof LIBRARY_SELECTIONS)[number]["id"];
+export type SourceId = (typeof LIBRARY_SOURCES)[number]["id"];
+
+/**
+ * Returns allowed library layouts for a sequencing platform.
+ * Long-read platforms (ONT, PacBio) and semiconductor (Ion Torrent) generate
+ * single continuous reads; Illumina and MGI support paired-end and single-end.
+ */
+export function getValidLayoutsForPlatform(platformId: PlatformId): ("PAIRED" | "SINGLE")[] {
+  if (platformId === "OXFORD_NANOPORE" || platformId === "PACBIO" || platformId === "ION_TORRENT") {
+    return ["SINGLE"];
+  }
+  return ["PAIRED", "SINGLE"];
+}
+
+/**
+ * Returns allowed library selection methods for a given strategy.
+ * Prevents metadata contradictions like WGS + PCR (which should be AMPLICON).
+ */
+export function getValidSelectionsForStrategy(strategyId: StrategyId): SelectionId[] {
+  switch (strategyId) {
+    case "WGS":
+      return ["RANDOM", "SIZE_FRACTIONATION", "OTHER"];
+    case "AMPLICON":
+      return ["PCR"];
+    case "RNA-SEQ":
+      return ["POLYA", "RANDOM", "OTHER"];
+    case "TARGETED-CAPTURE":
+      return ["OTHER", "RANDOM"];
+    case "METAGENOMIC":
+      return ["RANDOM", "SIZE_FRACTIONATION", "OTHER"];
+    default:
+      return ["RANDOM", "OTHER"];
+  }
+}
+
+/**
+ * Returns allowed library sources based on pathogen domain and sequencing strategy.
+ * Restricts VIRAL_RNA to viral pathogens and enforces RNA sources for RNA-Seq.
+ */
+export function getValidSourcesForPathogenAndStrategy(
+  pathogenType: "Virus" | "Bacteria" | "Parasite" | "Vector" | "Fungus",
+  strategyId: StrategyId
+): SourceId[] {
+  if (strategyId === "RNA-SEQ") {
+    return ["TRANSCRIPTOMIC", "VIRAL_RNA"];
+  }
+  if (pathogenType === "Virus") {
+    return ["VIRAL_RNA", "GENOMIC", "METAGENOMIC"];
+  }
+  // Bacteria, Parasite, Vector, Fungus genomes are dsDNA
+  return ["GENOMIC", "METAGENOMIC", "TRANSCRIPTOMIC"];
+}
+
+/**
+ * Checks if a taxon is a known Viral Hemorrhagic Fever / BSL-4 pathogen.
+ */
+export function isBSL4Pathogen(taxonId: number, taxonName: string): boolean {
+  const bsl4Taxa = new Set([
+    11620,   // Lassa mammarenavirus
+    186538,  // Zaire ebolavirus
+    186540,  // Sudan ebolavirus
+    186539,  // Reston ebolavirus
+    186541,  // Tai Forest ebolavirus
+    186542,  // Bundibugyo ebolavirus
+    11269,   // Marburg virus
+    1980519, // Crimean-Congo hemorrhagic fever orthonairovirus
+  ]);
+
+  if (bsl4Taxa.has(taxonId)) return true;
+  const lower = taxonName.toLowerCase();
+  return (
+    lower.includes("lassa") ||
+    lower.includes("ebola") ||
+    lower.includes("marburg") ||
+    lower.includes("crimean-congo") ||
+    lower.includes("cchf")
+  );
+}
