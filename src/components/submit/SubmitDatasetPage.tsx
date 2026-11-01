@@ -37,6 +37,7 @@ import { createRepository } from "../../lib/api";
 import { useAuth } from "../../context/AuthContext";
 import { SequenceDropzone } from "./SequenceDropzone";
 import { OrganismSelector } from "./OrganismSelector";
+import { HostOrganismSelector, HostEntry } from "./HostOrganismSelector";
 import { CollectionDateRangeField } from "./CollectionDateRangeField";
 import { DatePicker } from "../ui/DatePicker";
 import { Progress } from "../ui/Progress";
@@ -48,14 +49,6 @@ import {
 } from "../../lib/submitValidation";
 import { generateDatasetReadme, generateDatasetSamplesTsv, SequencingRunEntry } from "../../lib/readmeGenerator";
 import { WebSequenceInspectionResult } from "../../lib/sequenceSnifferWeb";
-
-const HOST_PRESETS = [
-  { label: "Human Patient (9606)", species: "Homo sapiens (Clinical isolate)", taxonId: "9606" },
-  { label: "Mosquito Vector (7165)", species: "Anopheles gambiae (Vector)", taxonId: "7165" },
-  { label: "Bovine / Cattle (9913)", species: "Bos taurus (Livestock)", taxonId: "9913" },
-  { label: "Rodent Reservoir (10090)", species: "Mastomys natalensis (Rodent)", taxonId: "10090" },
-  { label: "Environmental (None)", species: "Environmental / Water isolate", taxonId: "" },
-];
 
 const WIZARD_STEPS = [
   { step: 1 as const, num: "01", label: "Identification & Metadata" },
@@ -91,10 +84,19 @@ export function SubmitDatasetPage() {
   const [taxonId, setTaxonId] = useState("");
   const [taxonName, setTaxonName] = useState("");
   const [pathogenType, setPathogenType] = useState<"Virus" | "Bacteria" | "Vector" | "Fungus">("Virus");
-  const [hostTaxonId, setHostTaxonId] = useState("");
-  const [hostSpecies, setHostSpecies] = useState("");
+  const [hosts, setHosts] = useState<HostEntry[]>([
+    {
+      id: "9606",
+      name: "Homo sapiens",
+      commonName: "Human Patient",
+      taxonId: 9606,
+    },
+  ]);
   const [collectionDateInput, setCollectionDateInput] = useState<CollectionDateInput>(EMPTY_COLLECTION_DATE_INPUT);
   const [sampleType, setSampleType] = useState("Blood / Swab specimen");
+
+  const hostSpecies = hosts.map((h) => h.name).join(", ");
+  const hostTaxonId = hosts[0]?.taxonId ? String(hosts[0].taxonId) : "";
 
   const collectionDateErrors = validateCollectionDate(collectionDateInput);
   const dateRange = buildCollectionDateRange(collectionDateInput);
@@ -289,6 +291,7 @@ export function SubmitDatasetPage() {
     sampleType,
     hostTaxonId: hostTaxonId ? parseInt(hostTaxonId, 10) : undefined,
     hostSpecies: hostSpecies || undefined,
+    hosts,
     taxonId: parseInt(taxonId, 10) || 0,
     scientificName: taxonName || "Pathogen",
     platform: platformId,
@@ -843,10 +846,10 @@ export function SubmitDatasetPage() {
                       </div>
                     </div>
 
-                    <div className="form-field">
+                    <div className="form-field full-width">
                       <div className="form-label-row">
-                        <label htmlFor="input-host-species" className="form-label">
-                          Host Organism / Source
+                        <label htmlFor="input-host-organisms" className="form-label">
+                          Host Organism(s) / Reservoir
                         </label>
                         <Tooltip.Root>
                           <Tooltip.Trigger asChild>
@@ -860,61 +863,20 @@ export function SubmitDatasetPage() {
                           </Tooltip.Trigger>
                           <Tooltip.Portal>
                             <Tooltip.Content className="tooltip-content" sideOffset={5}>
-                              Patient or reservoir from which the pathogen isolate was sampled.
+                              Patient, animal reservoir, vector, or environmental matrix from which the pathogen isolate was sampled.
+                              Multi-host selection is supported for One Health surveillance cohorts.
                               <Tooltip.Arrow className="tooltip-arrow" />
                             </Tooltip.Content>
                           </Tooltip.Portal>
                         </Tooltip.Root>
                       </div>
-                      <input
-                        id="input-host-species"
-                        type="text"
-                        className="form-input"
-                        placeholder="e.g. Homo sapiens (Clinical isolate), Mastomys natalensis"
-                        value={hostSpecies}
-                        onChange={(e) => setHostSpecies(e.target.value)}
+                      <HostOrganismSelector
+                        id="input-host-organisms"
+                        value={hosts}
+                        onChange={setHosts}
                       />
                       <span className="field-hint">
-                        Clinical pathogen isolates from human patients (Homo sapiens) are permitted and encouraged.
-                      </span>
-
-                      {/* Common African Host Presets */}
-                      <div className="host-presets-wrapper">
-                        <span className="host-presets-label">Quick Host Presets:</span>
-                        <div className="host-presets-chips">
-                          {HOST_PRESETS.map((hp) => (
-                            <button
-                              key={hp.label}
-                              type="button"
-                              className={`host-preset-chip ${
-                                hostTaxonId === hp.taxonId && hostSpecies === hp.species ? "active" : ""
-                              }`}
-                              onClick={() => {
-                                setHostSpecies(hp.species);
-                                setHostTaxonId(hp.taxonId);
-                              }}
-                            >
-                              {hp.label}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="form-field">
-                      <label htmlFor="input-host-tax-id" className="form-label">
-                        Host NCBI Taxon ID
-                      </label>
-                      <input
-                        id="input-host-tax-id"
-                        type="number"
-                        className="form-input font-mono"
-                        placeholder="e.g. 9606 (Human), 10090 (Rodent), 7165 (Mosquito)"
-                        value={hostTaxonId}
-                        onChange={(e) => setHostTaxonId(e.target.value)}
-                      />
-                      <span className="field-hint">
-                        Specimen source NCBI ID (e.g. 9606 if isolated from human patient).
+                        Clinical pathogen isolates from human patients (Homo sapiens, Taxon ID 9606) are permitted and encouraged. Search by common or scientific name to add multiple hosts.
                       </span>
                     </div>
 

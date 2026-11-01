@@ -27,6 +27,7 @@ export interface ReadmeGeneratorParams {
   sampleType: string;
   hostTaxonId?: number | undefined;
   hostSpecies?: string | undefined;
+  hosts?: readonly { name: string; taxonId?: number | null | undefined }[] | undefined;
   taxonId: number;
   scientificName: string;
   platform: string;
@@ -81,6 +82,23 @@ ${fileList}`;
 
   const nominalLengthLine = layoutLower === "paired" ? `  nominal_length: ${nominalLen}\n` : "";
 
+  const resolvedHostSpecies =
+    params.hosts && params.hosts.length > 0
+      ? params.hosts.map((h) => h.name).join(", ")
+      : params.hostSpecies || "Unknown host";
+
+  const resolvedHostTaxId =
+    params.hosts && params.hosts.length > 0
+      ? params.hosts[0]?.taxonId || 0
+      : params.hostTaxonId || 0;
+
+  const hostDescription =
+    params.hosts && params.hosts.length > 0
+      ? params.hosts
+          .map((h) => `${h.name}${h.taxonId ? ` (NCBI Taxon ID: \`${h.taxonId}\`)` : ""}`)
+          .join(", ")
+      : `${params.hostSpecies || "N/A"}${params.hostTaxonId ? ` (NCBI Taxon ID: \`${params.hostTaxonId}\`)` : ""}`;
+
   const frontmatter = `---
 title: "${params.title || "Genomic Surveillance Cohort"}"
 domain: ${params.domain.toLowerCase()}
@@ -99,8 +117,8 @@ provenance:
   collecting_institution: "${params.institution || "National Surveillance Lab"}"
   collection_date: "${params.collectionDate || today}"
   sample_type: "${params.sampleType || "Blood swab"}"
-  host_tax_id: ${params.hostTaxonId || 0}
-  host_species: "${params.hostSpecies || "Unknown host"}"
+  host_tax_id: ${resolvedHostTaxId}
+  host_species: "${resolvedHostSpecies}"
 taxonomy:
   tax_id: ${params.taxonId || 0}
   scientific_name: "${params.scientificName || "Pathogen"}"
@@ -125,7 +143,7 @@ ${params.description || "Genomic surveillance and pathogen sequencing cohort."}
 ## Biological Context
 
 - **Pathogen**: ${params.scientificName || "Taxon"} (NCBI Taxon ID: \`${params.taxonId}\`)
-- **Host**: ${params.hostSpecies || "N/A"}${params.hostTaxonId ? ` (NCBI Taxon ID: \`${params.hostTaxonId}\`)` : ""}
+- **Host**: ${hostDescription}
 - **Geographic Provenance**: ${params.countryName} (\`${params.countryCode.toUpperCase()}\`) — African Union Member State
 - **Collection Date**: ${params.collectionDate || today}
 - **Specimen Source**: ${params.sampleType || "Swab / Blood specimen"}
