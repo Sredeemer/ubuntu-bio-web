@@ -1582,6 +1582,124 @@
 
 /* Responsive Breakpoints */
 /* ==========================================================================
+   Step 1 Submission Scope Track Selector Styles
+   ========================================================================== */
+
+.submission-scope-card-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 26px;
+}
+
+.submission-scope-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 14px;
+}
+
+.scope-select-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 18px;
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  user-select: none;
+}
+
+.scope-select-card:hover {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+
+.scope-select-card.active {
+  border-color: #0284c7;
+  background: #f0f9ff;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.08);
+}
+
+.scope-card-radio-indicator {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid #cbd5e1;
+  margin-top: 3px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.scope-select-card.active .scope-card-radio-indicator {
+  border-color: #0284c7;
+  background: #0284c7;
+}
+
+.scope-select-card.active .scope-card-radio-indicator::after {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ffffff;
+}
+
+.scope-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.scope-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+
+.scope-card-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #0f172a;
+  white-space: nowrap;
+}
+
+.scope-select-card.active .scope-card-title {
+  color: #0369a1;
+}
+
+.scope-card-badge {
+  font-size: 0.72rem;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: #f1f5f9;
+  color: #64748b;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.scope-select-card.active .scope-card-badge {
+  background: #e0f2fe;
+  color: #0284c7;
+  font-weight: 600;
+}
+
+.scope-card-desc {
+  font-size: 0.8125rem;
+  color: #64748b;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* ==========================================================================
    Step 4 Ingestion Mode & Compulsory Upload Threshold Styles
    ========================================================================== */
 
@@ -1637,6 +1755,14 @@
   color: #0f172a;
   font-weight: 600;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+}
+
+.batch-workflow-section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-top: 10px;
+  margin-bottom: 24px;
 }
 
 /* Threshold & Advisory Banners */
@@ -1764,6 +1890,112 @@
 .step-validation-hint.error {
   color: #dc2626;
   font-weight: 600;
+}
+
+.step-validation-banner.success {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+.step-validation-hint.success {
+  color: #15803d;
+  font-weight: 600;
+}
+
+/* Dual-Requirement Micro-Progress Checklist */
+.batch-dual-checklist {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-top: 14px;
+  margin-bottom: 6px;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.dual-check-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  transition: all 0.15s ease;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.dual-check-card.pending {
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+}
+
+.dual-check-card.complete {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+}
+
+.dual-check-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  font-size: 0.72rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.dual-check-card.pending .dual-check-badge {
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.dual-check-card.complete .dual-check-badge {
+  background: #16a34a;
+  color: #ffffff;
+}
+
+.dual-check-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.dual-check-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #1e293b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dual-check-status {
+  font-size: 0.72rem;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dual-check-card.complete .dual-check-status {
+  color: #15803d;
+  font-weight: 500;
+}
+
+.dual-check-connector {
+  width: 1px;
+  height: 28px;
+  background: #e2e8f0;
 }
 
 /* Upload Progress Container */

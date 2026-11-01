@@ -363,4 +363,45 @@ describe("SubmitDatasetPage", () => {
     expect(bslSelect.value).toBe("BSL-4");
     expect(screen.getByText(/Biosafety Notice:/i)).toBeDefined();
   });
+
+  it("Step 1 batch surveillance workflow: switches to 3-step streamlined cohort ingestion", () => {
+    render(<SubmitDatasetPage />);
+
+    // In Step 1: Select Batch Surveillance Cohort track
+    const batchCard = screen.getByRole("radio", { name: /Batch Surveillance Cohort/i });
+    fireEvent.click(batchCard);
+
+    // Verify stepper rail displays 3 steps
+    expect(screen.getByText(/Step 1 of 3/i)).toBeDefined();
+    expect(screen.getByText("Batch Matrix & Folder Drop")).toBeDefined();
+
+    // Fill Step 1 Study & Sovereign Provenance
+    fireEvent.change(screen.getByLabelText(/Namespace Identifier/i), { target: { value: "ceri" } });
+    fireEvent.change(screen.getByLabelText(/Dataset Slug ID/i), { target: { value: "mpox-batch-2026" } });
+    fireEvent.change(screen.getByLabelText(/Formal Dataset Name/i), { target: { value: "Mpox Surveillance Cohort" } });
+    fireEvent.change(screen.getByLabelText(/Contributing Institution/i), { target: { value: "CERI" } });
+
+    // Target Pathogen
+    fireEvent.change(screen.getByLabelText(/NCBI Taxonomy ID/i), { target: { value: "10244" } });
+    fireEvent.change(screen.getByLabelText(/Scientific Name/i), { target: { value: "Monkeypox virus" } });
+
+    // AU Sovereign Nagoya Checkbox
+    fireEvent.click(screen.getByRole("checkbox"));
+
+    // Click Proceed to Batch Matrix & Folder Drop
+    const proceedBtn = screen.getByRole("button", { name: /Proceed to Batch Matrix & Folder Drop/i });
+    expect((proceedBtn as HTMLButtonElement).disabled).toBe(false);
+    fireEvent.click(proceedBtn);
+
+    // Verify user lands directly on Step 2 (Batch Matrix & Folder Drop)
+    expect(screen.getByText(/Step 2: Batch Metadata Matrix & Folder Sequence Ingestion/i)).toBeDefined();
+    expect(screen.getByTestId("batch-dual-checklist")).toBeDefined();
+    expect(screen.getByText(/Drag & Drop Local Sequencing Folder/i)).toBeDefined();
+    expect(screen.getByText("TSV")).toBeDefined();
+    expect(screen.getByText(/Fill Defaults/i)).toBeDefined();
+
+    // Add a sample row in the table editor
+    fireEvent.click(screen.getByText("Add Row"));
+    expect(screen.getByDisplayValue("SAMPLE_001")).toBeDefined();
+  });
 });
