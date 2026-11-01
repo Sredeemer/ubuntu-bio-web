@@ -514,6 +514,101 @@
   font-weight: 600;
 }
 
+/* Selected host chips (removable) */
+.host-selected-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 26px;
+  margin-bottom: 6px;
+}
+
+.host-selected-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: default;
+}
+
+.host-selected-chip-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin-left: 2px;
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  border-radius: 50%;
+}
+
+.host-selected-chip-remove:hover,
+.host-selected-chip-remove:focus-visible {
+  color: #dc2626;
+}
+
+.host-custom-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.host-custom-row .form-input:first-child {
+  flex: 2;
+}
+
+.host-custom-row .form-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.host-add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+/* Collection date: single date or range with optional times */
+.collection-date-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.collection-date-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #334155;
+  cursor: pointer;
+  width: fit-content;
+}
+
+.collection-date-toggle .form-checkbox {
+  margin-top: 0;
+  width: 15px;
+  height: 15px;
+}
+
+.collection-date-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Range mode: two pills side by side, wrapping onto two lines when the column is narrow. */
+.collection-date-pills > .date-picker-root {
+  flex: 1 1 100%;
+}
+
+.collection-date-pills.is-range > .date-picker-root {
+  flex: 1 1 220px;
+}
+
 /* Checkbox Card (Nagoya Protocol) */
 .checkbox-card {
   display: flex;
