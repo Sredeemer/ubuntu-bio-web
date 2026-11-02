@@ -65,6 +65,28 @@ describe("BatchMetadataEditor", () => {
     expect(addedRows[0]?.country).toBe("NG");
   });
 
+  it("does not use a collection-date range as an individual sample default", () => {
+    const onChange = vi.fn();
+    const rangeDefaults = {
+      ...sampleDefaults,
+      collectionDate: "2026-05-01/2026-05-10",
+    };
+    render(
+      <BatchMetadataEditor
+        rows={[]}
+        onChange={onChange}
+        report={dummyReport}
+        defaults={rangeDefaults}
+        isPaired={true}
+      />
+    );
+
+    fireEvent.click(screen.getByText("Add Row"));
+    const addedRows: BatchSampleRow[] = onChange.mock.calls[0]![0];
+    expect(addedRows[0]?.collection_date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(addedRows[0]?.collection_date).not.toContain("/");
+  });
+
   it("renders rows and updates cell on change", () => {
     const initialRows: BatchSampleRow[] = [
       {
