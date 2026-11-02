@@ -39,12 +39,16 @@ export function BatchMetadataEditor({
   isPaired,
 }: BatchMetadataEditorProps) {
   const fileUploadInputRef = useRef<HTMLInputElement>(null);
+  const collectionDateDefault = defaults.collectionDate?.includes("/")
+    ? ""
+    : defaults.collectionDate;
+  const templateDefaults = { ...defaults, collectionDate: collectionDateDefault };
 
   const handleDownloadTemplate = (format: "tsv" | "csv") => {
     const content =
       format === "tsv"
-        ? generateSampleTemplateTsv(defaults)
-        : generateSampleTemplateCsv(defaults);
+        ? generateSampleTemplateTsv(templateDefaults)
+        : generateSampleTemplateCsv(templateDefaults);
 
     const mime = format === "tsv" ? "text/tab-separated-values" : "text/csv";
     const blob = new Blob([content], { type: mime });
@@ -92,7 +96,7 @@ export function BatchMetadataEditor({
   const handleAddRow = () => {
     const nextIdx = rows.length + 1;
     const fallbackDate = new Date().toISOString().split("T")[0] ?? "2026-01-01";
-    const dateStr = defaults.collectionDate || fallbackDate;
+    const dateStr = collectionDateDefault || fallbackDate;
 
     const newRow: BatchSampleRow = {
       sample_id: `SAMPLE_${String(nextIdx).padStart(3, "0")}`,
@@ -134,7 +138,7 @@ export function BatchMetadataEditor({
 
   const handleFillDefaults = () => {
     const fallbackDate = new Date().toISOString().split("T")[0] ?? "2026-01-01";
-    const dateStr = defaults.collectionDate || fallbackDate;
+    const dateStr = collectionDateDefault || fallbackDate;
     const updated: BatchSampleRow[] = rows.map((r) => ({
       ...r,
       taxon_id: r.taxon_id || defaults.taxonId || 5833,
