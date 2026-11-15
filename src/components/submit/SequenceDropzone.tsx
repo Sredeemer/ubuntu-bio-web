@@ -45,6 +45,7 @@ export function SequenceDropzone({ onFilesInspected, onClearFiles }: SequenceDro
             estimatedReadLength: 0,
             humanContaminationDetected: false,
             issues: ["Failed to inspect file in browser."],
+            file,
           });
         }
       }

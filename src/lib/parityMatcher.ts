@@ -5,6 +5,7 @@ export interface DiscoveredSequenceFile {
   name: string;
   relativePath?: string | undefined;
   sizeBytes: number;
+  file?: File | undefined;
 }
 
 export interface PairedFileGroup {

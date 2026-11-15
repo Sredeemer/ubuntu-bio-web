@@ -13,6 +13,7 @@ export interface WebSequenceInspectionResult {
   readonly estimatedReadLength: number;
   readonly humanContaminationDetected: boolean;
   readonly issues: readonly string[];
+  readonly file?: File | undefined;
 }
 
 const HUMAN_HEADER_REGEX = /(?:chr(?:[1-9]|1[0-9]|2[0-2]|x|y|m|mt)|grch3[78]|homo\s+sapiens|nc_0000[0-2][0-9])/i;
@@ -21,6 +22,11 @@ const HUMAN_HEADER_REGEX = /(?:chr(?:[1-9]|1[0-9]|2[0-2]|x|y|m|mt)|grch3[78]|hom
  * Inspect a browser File or Blob by reading its first 16 KB.
  */
 export async function inspectSequenceFileWeb(file: File): Promise<WebSequenceInspectionResult> {
+  const result = await inspectSequenceFileMetadataWeb(file);
+  return { ...result, file };
+}
+
+async function inspectSequenceFileMetadataWeb(file: File): Promise<WebSequenceInspectionResult> {
   const sliceSize = Math.min(file.size, 16384);
   const slice = file.slice(0, sliceSize);
   const issues: string[] = [];

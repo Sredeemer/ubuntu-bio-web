@@ -27,11 +27,15 @@ function getApiBaseUrl(): string {
     process.env.INTERNAL_API_URL ||
     process.env.API_BASE_URL ||
     process.env.NEXT_PUBLIC_API_URL ||
-    "http://52.19.144.208"
+    "http://localhost:8000"
   );
 }
 
 export const API_BASE_URL = getApiBaseUrl();
+
+export function isStrictLiveMode(): boolean {
+  return process.env.NEXT_PUBLIC_STRICT_LIVE_DATA === "true";
+}
 
 function getApiOrigin(): string {
   if (typeof window !== "undefined" && window.location?.origin) {
@@ -41,7 +45,7 @@ function getApiOrigin(): string {
     process.env.INTERNAL_API_URL ||
     process.env.API_BASE_URL ||
     process.env.NEXT_PUBLIC_API_URL ||
-    "http://52.19.144.208"
+    "http://localhost:8000"
   );
 }
 
@@ -317,15 +321,15 @@ export async function fetchRepositories(domain?: string): Promise<DatasetItem[]>
       next: { revalidate: 30 },
     });
     if (!res.ok) {
-      return DATASETS;
+      return isStrictLiveMode() ? [] : DATASETS;
     }
     const repos: RepoResponse[] = await res.json();
-    if (!Array.isArray(repos) || repos.length === 0) {
-      return DATASETS;
+    if (!Array.isArray(repos)) {
+      return isStrictLiveMode() ? [] : DATASETS;
     }
     return repos.map(repoToDatasetItem);
   } catch {
-    return DATASETS;
+    return isStrictLiveMode() ? [] : DATASETS;
   }
 }
 
@@ -346,7 +350,7 @@ export async function fetchRepository(
       next: { revalidate: 0 },
     });
     if (!res.ok) {
-      return local || null;
+      return isStrictLiveMode() ? null : local || null;
     }
     const repo: RepoResponse = await res.json();
     const item = repoToDatasetItem(repo);
@@ -434,7 +438,7 @@ export async function fetchRepository(
 
     return item;
   } catch {
-    return local || null;
+    return isStrictLiveMode() ? null : local || null;
   }
 }
 
@@ -470,11 +474,14 @@ export async function searchDatasets(
     const data: SearchResponse = await res.json();
     const items = data.hits.map(repoToDatasetItem);
     return {
-      items: items.length > 0 ? items : DATASETS,
-      total: data.total || items.length,
+      items,
+      total: data.total ?? items.length,
       isLive: true,
     };
   } catch {
+    if (isStrictLiveMode()) {
+      return { items: [], total: 0, isLive: false };
+    }
     // Graceful offline fallback to local dataset filtering
     let filtered = DATASETS;
     if (query.trim()) {
@@ -547,31 +554,52 @@ export async function fetchCommitHistory(
   }
 }
 
+async function ensureHubAuthToken(token?: string): Promise<string | undefined> {
+  if (token) return token;
+  const devLoginRes = await fetch(`${API_BASE_URL}/api/auth/dev-login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      orcid_id: "0000-0002-1825-0097",
+      name: "UbuntuBio Researcher",
+      email: "researcher@ubuntubio.org",
+    }),
+  });
+  if (devLoginRes.ok) {
+    const loginData = await devLoginRes.json();
+    return loginData.raw_token as string | undefined;
+  }
+  return undefined;
+}
+
+function formatApiErrorDetail(detail: unknown, fallback: string): string {
+  if (typeof detail === "string" && detail.trim()) return detail;
+  if (Array.isArray(detail) && detail.length > 0) {
+    return detail
+      .map((item) =>
+        typeof item === "object" && item !== null && "msg" in item
+          ? String((item as { msg: unknown }).msg)
+          : String(item)
+      )
+      .join("; ");
+  }
+  return fallback;
+}
+
 /**
  * Create a new dataset repository on the FastAPI hub.
  */
 export async function createRepository(
   payload: CreateRepoPayload,
   token?: string
-): Promise<{ success: boolean; data?: RepoResponse; error?: string }> {
+): Promise<{
+  success: boolean;
+  data?: RepoResponse | undefined;
+  error?: string | undefined;
+  authToken?: string | undefined;
+}> {
   try {
-    // If no token is provided, obtain a quick developer login token
-    let authToken = token;
-    if (!authToken) {
-      const devLoginRes = await fetch(`${API_BASE_URL}/api/auth/dev-login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          orcid_id: "0000-0002-1825-0097",
-          name: "UbuntuBio Researcher",
-          email: "researcher@ubuntubio.org",
-        }),
-      });
-      if (devLoginRes.ok) {
-        const loginData = await devLoginRes.json();
-        authToken = loginData.raw_token;
-      }
-    }
+    const authToken = await ensureHubAuthToken(token);
 
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
@@ -597,13 +625,208 @@ export async function createRepository(
 
     if (!res.ok) {
       const err = await res.json().catch(() => ({ detail: "Request failed" }));
-      return { success: false, error: err.detail || `Server error (${res.status})` };
+      return {
+        success: false,
+        error: formatApiErrorDetail(err.detail, `Server error (${res.status})`),
+      };
     }
 
     const data: RepoResponse = await res.json();
-    return { success: true, data };
+    return { success: true, data, authToken };
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Failed to connect to UbuntuBio Hub API";
+    return { success: false, error: msg };
+  }
+}
+
+export interface WebCommitFileInput {
+  path: string;
+  blob: Blob;
+}
+
+async function computeSha256Hex(blob: Blob): Promise<string> {
+  if (!globalThis.crypto?.subtle) {
+    throw new Error("Web Crypto SHA-256 API is unavailable in this browser context.");
+  }
+  const buffer = await blob.arrayBuffer();
+  const digest = await globalThis.crypto.subtle.digest("SHA-256", buffer);
+  return Array.from(new Uint8Array(digest))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+function normalizeLfsTransferUrl(rawHref: string): string {
+  if (typeof window !== "undefined") {
+    try {
+      const parsed = new URL(rawHref);
+      if (parsed.pathname.startsWith("/api/repos/")) {
+        return `${API_BASE_URL}${parsed.pathname}${parsed.search}`;
+      }
+    } catch {
+      // Relative href or invalid URL: fall through
+    }
+  }
+  return rawHref;
+}
+
+/**
+ * Hash, negotiate Git LFS batch, stream non-duplicate payloads, and register commit on UbuntuBio Hub.
+ */
+export async function commitWebDatasetFiles(
+  repoSlug: string,
+  files: WebCommitFileInput[],
+  message: string,
+  token?: string,
+  onProgress?: (pct: number, statusText: string) => void
+): Promise<{
+  success: boolean;
+  error?: string | undefined;
+  committedCount?: number | undefined;
+  deduplicatedCount?: number | undefined;
+}> {
+  const validFiles = files.filter((f) => f.blob.size > 0);
+  if (validFiles.length === 0) {
+    return { success: false, error: "No non-empty files provided to commit." };
+  }
+
+  try {
+    const authToken = await ensureHubAuthToken(token);
+    if (!authToken) {
+      return { success: false, error: "Authentication required to commit dataset files." };
+    }
+
+    const authHeaders: Record<string, string> = {
+      Authorization: `Bearer ${authToken}`,
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    };
+
+    onProgress?.(25, `Computing SHA-256 digests for ${validFiles.length} file(s)...`);
+    const prepared = await Promise.all(
+      validFiles.map(async (f) => ({
+        path: f.path.replace(/^\/+/, ""),
+        blob: f.blob,
+        sizeBytes: f.blob.size,
+        sha256: await computeSha256Hex(f.blob),
+      }))
+    );
+
+    const [owner, name] = repoSlug.split("/", 2);
+    if (!owner || !name) {
+      return { success: false, error: `Invalid repository slug '${repoSlug}'.` };
+    }
+
+    onProgress?.(40, "Authorizing CAS preupload token...");
+    const preRes = await fetch(`${API_BASE_URL}/api/repos/${owner}/${name}/preupload`, {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({ filenames: prepared.map((p) => p.path) }),
+    });
+    if (!preRes.ok) {
+      const err = await preRes.json().catch(() => ({ detail: "Preupload authorization failed" }));
+      return {
+        success: false,
+        error: formatApiErrorDetail(err.detail, `Preupload failed (${preRes.status})`),
+      };
+    }
+    const preData = (await preRes.json()) as { cas_write_token: string };
+
+    onProgress?.(52, "Negotiating Git LFS batch & checking CAS deduplication...");
+    const batchRes = await fetch(`${API_BASE_URL}/${owner}/${name}.git/info/lfs/objects/batch`, {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        operation: "upload",
+        transfers: ["basic"],
+        objects: prepared.map((p) => ({ oid: p.sha256, size: p.sizeBytes })),
+      }),
+    });
+    if (!batchRes.ok) {
+      const err = await batchRes.json().catch(() => ({ detail: "LFS batch negotiation failed" }));
+      return {
+        success: false,
+        error: formatApiErrorDetail(err.detail, `LFS batch failed (${batchRes.status})`),
+      };
+    }
+    const batchData = (await batchRes.json()) as {
+      objects: Array<{
+        oid: string;
+        actions?: {
+          upload?: { href: string; header?: Record<string, string> };
+        } | null;
+      }>;
+    };
+
+    const actionByOid = new Map(batchData.objects.map((o) => [o.oid, o.actions?.upload]));
+    let deduplicatedCount = 0;
+
+    for (let i = 0; i < prepared.length; i++) {
+      const item = prepared[i]!;
+      const uploadAction = actionByOid.get(item.sha256);
+      if (!uploadAction) {
+        deduplicatedCount += 1;
+        continue;
+      }
+
+      const pct = 55 + Math.round(((i + 1) / prepared.length) * 30);
+      onProgress?.(pct, `Uploading ${item.path} (${i + 1}/${prepared.length})...`);
+
+      const putHeaders: Record<string, string> = {
+        ...(uploadAction.header || {}),
+      };
+      if (!putHeaders["Authorization"]) {
+        putHeaders["Authorization"] = `Bearer ${preData.cas_write_token}`;
+      }
+
+      const putRes = await fetch(normalizeLfsTransferUrl(uploadAction.href), {
+        method: "PUT",
+        headers: putHeaders,
+        body: item.blob,
+      });
+      if (!putRes.ok) {
+        const err = await putRes.json().catch(() => ({ detail: "Object upload failed" }));
+        return {
+          success: false,
+          error: formatApiErrorDetail(
+            err.detail,
+            `Failed uploading '${item.path}' (${putRes.status})`
+          ),
+        };
+      }
+    }
+
+    onProgress?.(92, "Recording Git tree, validating policy & indexing search...");
+    const commitRes = await fetch(`${API_BASE_URL}/api/repos/${owner}/${name}/commit`, {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        branch: "main",
+        message,
+        files: prepared.map((p) => ({
+          path: p.path,
+          sha256: p.sha256,
+          xet_hash: p.sha256,
+          size_bytes: p.sizeBytes,
+        })),
+      }),
+    });
+
+    if (!commitRes.ok) {
+      const err = await commitRes.json().catch(() => ({ detail: "Commit registration failed" }));
+      return {
+        success: false,
+        error: formatApiErrorDetail(err.detail, `Commit rejected (${commitRes.status})`),
+      };
+    }
+
+    onProgress?.(100, "Ingestion & policy verification complete!");
+    return {
+      success: true,
+      committedCount: prepared.length,
+      deduplicatedCount,
+    };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "Failed to commit files to UbuntuBio Hub.";
     return { success: false, error: msg };
   }
 }

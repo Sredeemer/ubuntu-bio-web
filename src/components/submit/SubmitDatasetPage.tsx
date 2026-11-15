@@ -41,7 +41,7 @@ import {
   SelectionId,
   SourceId,
 } from "../../data/sequencingPlatforms";
-import { createRepository } from "../../lib/api";
+import { createRepository, commitWebDatasetFiles, WebCommitFileInput } from "../../lib/api";
 import { useAuth } from "../../context/AuthContext";
 import { SequenceDropzone } from "./SequenceDropzone";
 import { OrganismSelector } from "./OrganismSelector";
@@ -158,8 +158,10 @@ export function SubmitDatasetPage() {
   const [uploadStatusText, setUploadStatusText] = useState("");
 
   // Submission Result State
+  const [accessTier, setAccessTier] = useState<"public" | "gated">("public");
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [hubRepoSlug, setHubRepoSlug] = useState<string | null>(null);
 
   // Auto-detect personal namespace when authenticated user is loaded
@@ -417,6 +419,7 @@ export function SubmitDatasetPage() {
     runs: submissionTrack === "batch" && batchRows.length > 0 ? [] : runs,
     batchRows: submissionTrack === "batch" && batchRows.length > 0 ? batchRows : undefined,
     description,
+    access: accessTier,
   };
 
   const generatedReadme = generateDatasetReadme(readmeParams);
@@ -544,6 +547,7 @@ export function SubmitDatasetPage() {
   const handleFinalSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isHumanTaxon) return;
+    setSubmitError(null);
     setIsSubmitting(true);
     setUploadProgress(15);
     setUploadStatusText("Initializing sovereign repository on UbuntuBio Hub...");
@@ -555,41 +559,91 @@ export function SubmitDatasetPage() {
           name: datasetId.trim().toLowerCase(),
           description: description.trim(),
           domain: pathogenType.toLowerCase(),
-          access: "public",
+          access: accessTier,
           license: "cc-by-4.0",
         },
         token || undefined
       );
 
-      if (fileInputMode === "browser" && !isExceedingUploadThreshold && inspectedFiles.length > 0) {
-        setUploadProgress(45);
-        setUploadStatusText("Streaming sequence reads to OpenXet Content-Addressable Storage...");
-        await new Promise((resolve) => setTimeout(resolve, 500));
-
-        setUploadProgress(75);
-        setUploadStatusText("Validating SHA-256 chunk hashes and FASTQ Phred quality...");
-        await new Promise((resolve) => setTimeout(resolve, 500));
-
-        setUploadProgress(95);
-        setUploadStatusText("Generating content-addressable Git pointers and manifest...");
-        await new Promise((resolve) => setTimeout(resolve, 350));
-
-        setUploadProgress(100);
-        setUploadStatusText("Ingestion complete!");
-      } else {
-        setUploadProgress(100);
-        setUploadStatusText("Manifest registered on Hub!");
+      if (!res.success || !res.data) {
+        const msg = res.error || "Failed to initialize repository on UbuntuBio Hub.";
+        setSubmitError(msg);
+        toast.error(msg);
+        return;
       }
 
-      if (res.success && res.data) {
-        setHubRepoSlug(res.data.slug);
-        toast.success(`Repository created: ${res.data.slug}`);
+      const activeToken = token || res.authToken;
+      setHubRepoSlug(res.data.slug);
+
+      const stagedMap = new Map<string, Blob>();
+      stagedMap.set("README.md", new Blob([generatedReadme], { type: "text/markdown;charset=utf-8" }));
+      stagedMap.set(
+        "samples.tsv",
+        new Blob([generatedSamplesTsv], { type: "text/tab-separated-values;charset=utf-8" })
+      );
+
+      if (fileInputMode === "browser" && !isExceedingUploadThreshold) {
+        if (submissionTrack === "batch") {
+          for (const rec of reconciliationReport.reconciledRows) {
+            const fwdPath = rec.row.forward_read.trim().replace(/^\/+/, "");
+            if (rec.matchedForward?.file && fwdPath) {
+              stagedMap.set(fwdPath, rec.matchedForward.file);
+            }
+            const revPath = rec.row.reverse_read?.trim().replace(/^\/+/, "");
+            if (isPaired && rec.matchedReverse?.file && revPath) {
+              stagedMap.set(revPath, rec.matchedReverse.file);
+            }
+          }
+        } else {
+          const declaredPaths = runs.flatMap((r) =>
+            [r.forward_read, r.reverse_read].filter((p): p is string => Boolean(p))
+          );
+          for (const item of inspectedFiles) {
+            if (!item.file) continue;
+            const matchedDecl = declaredPaths.find(
+              (p) => p === item.fileName || p.endsWith(`/${item.fileName}`)
+            );
+            const targetPath = (matchedDecl || `reads/${item.fileName}`).replace(/^\/+/, "");
+            stagedMap.set(targetPath, item.file);
+          }
+        }
       }
-    } catch {
-      // Proceed gracefully with local instructions
+
+      const filesToCommit: WebCommitFileInput[] = Array.from(stagedMap.entries()).map(
+        ([path, blob]) => ({ path, blob })
+      );
+
+      const commitRes = await commitWebDatasetFiles(
+        res.data.slug,
+        filesToCommit,
+        "Initial dataset submission via UbuntuBio Web",
+        activeToken,
+        (pct, statusText) => {
+          setUploadProgress(pct);
+          setUploadStatusText(statusText);
+        }
+      );
+
+      if (!commitRes.success) {
+        const msg = commitRes.error || "Failed to commit files to repository.";
+        setSubmitError(msg);
+        toast.error(msg);
+        return;
+      }
+
+      const dedupNote =
+        commitRes.deduplicatedCount && commitRes.deduplicatedCount > 0
+          ? ` (${commitRes.deduplicatedCount} deduplicated via CAS)`
+          : "";
+      toast.success(`Repository published: ${res.data.slug}${dedupNote}`);
+      setSubmitted(true);
+    } catch (err: unknown) {
+      const msg =
+        err instanceof Error ? err.message : "Unexpected error committing dataset to UbuntuBio Hub.";
+      setSubmitError(msg);
+      toast.error(msg);
     } finally {
       setIsSubmitting(false);
-      setSubmitted(true);
     }
   };
 
@@ -903,6 +957,24 @@ export function SubmitDatasetPage() {
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
                       />
+                    </div>
+
+                    <div className="form-field full-width">
+                      <label htmlFor="input-access-tier" className="form-label">
+                        Data Access Governance Tier
+                      </label>
+                      <select
+                        id="input-access-tier"
+                        className="form-input"
+                        value={accessTier}
+                        onChange={(e) => setAccessTier(e.target.value as "public" | "gated")}
+                      >
+                        <option value="public">Open Public Access (CC-BY-4.0)</option>
+                        <option value="gated">Gated Governance (DUA Approval & Audit Required)</option>
+                      </select>
+                      <span className="field-hint">
+                        Gated datasets enforce Data Use Agreement acceptance before issuing read tokens.
+                      </span>
                     </div>
                   </div>
 
@@ -2306,6 +2378,15 @@ export function SubmitDatasetPage() {
                           </div>
                           <Progress value={uploadProgress} />
                           <span className="upload-progress-status">{uploadStatusText}</span>
+                        </div>
+                      )}
+
+                      {submitError && (
+                        <div className="taxon-alert-banner danger" role="alert" style={{ marginBottom: "1rem" }}>
+                          <AlertTriangle size={18} />
+                          <div>
+                            <strong>Submission Blocked:</strong> {submitError}
+                          </div>
                         </div>
                       )}
 

@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { Search, Check, Copy, ArrowRight } from "lucide-react";
 import { AU_COUNTRIES } from "../../data/auCountries";
-import { searchDatasets } from "../../lib/api";
+import { searchDatasets, isStrictLiveMode } from "../../lib/api";
 
 export interface DatasetItem {
   id: string;
@@ -122,7 +122,9 @@ const SAMPLE_DATASETS: DatasetItem[] = [
 ];
 
 export function DatasetSearch() {
-  const [datasetsList, setDatasetsList] = useState<DatasetItem[]>(SAMPLE_DATASETS);
+  const [datasetsList, setDatasetsList] = useState<DatasetItem[]>(
+    isStrictLiveMode() ? [] : SAMPLE_DATASETS
+  );
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState<string>("all");
   const [selectedCountry, setSelectedCountry] = useState<string>("all");
@@ -136,13 +138,17 @@ export function DatasetSearch() {
         country: selectedCountry !== "all" ? selectedCountry : undefined,
       }).then((result) => {
         if (!active) return;
-        if (result.isLive && result.items.length > 0) {
-          const liveIds = new Set(result.items.map((i) => i.id));
-          const merged = [
-            ...result.items,
-            ...SAMPLE_DATASETS.filter((d) => !liveIds.has(d.id)),
-          ];
-          setDatasetsList(merged);
+        if (result.isLive) {
+          if (isStrictLiveMode()) {
+            setDatasetsList(result.items);
+          } else if (result.items.length > 0) {
+            const liveIds = new Set(result.items.map((i) => i.id));
+            const merged = [
+              ...result.items,
+              ...SAMPLE_DATASETS.filter((d) => !liveIds.has(d.id)),
+            ];
+            setDatasetsList(merged);
+          }
         }
       });
     }, 200);

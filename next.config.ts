@@ -4,7 +4,7 @@ const BACKEND_URL =
   process.env.INTERNAL_API_URL ||
   process.env.API_BASE_URL ||
   process.env.NEXT_PUBLIC_API_URL ||
-  "http://52.19.144.208";
+  "http://localhost:8000";
 
 const nextConfig: NextConfig = {
   output: "standalone",

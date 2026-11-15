@@ -51,6 +51,7 @@ export function BatchReconciliationPanel({
               name: file.name,
               relativePath: entry.fullPath || file.name,
               sizeBytes: file.size,
+              file,
             });
             resolve();
           });
@@ -86,6 +87,7 @@ export function BatchReconciliationPanel({
           filesFound.push({
             name: file.name,
             sizeBytes: file.size,
+            file,
           });
         }
       }
@@ -134,6 +136,7 @@ export function BatchReconciliationPanel({
         name: file.name,
         relativePath: (file as any).webkitRelativePath || file.name,
         sizeBytes: file.size,
+        file,
       });
     }
 

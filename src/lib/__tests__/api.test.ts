@@ -7,6 +7,7 @@ import {
   fetchRepository,
   fetchRepoTree,
   createRepository,
+  commitWebDatasetFiles,
   RepoResponse,
 } from "../api";
 import { DATASETS } from "../../data/datasets";
@@ -226,6 +227,81 @@ describe("UbuntuBio API Client (FastAPI Integration)", () => {
 
       expect(res.success).toBe(true);
       expect(res.data?.slug).toBe("inrb/mpox-isolate-2026");
+    });
+  });
+
+  describe("live zero-hit search & commitWebDatasetFiles", () => {
+    it("returns empty items array with isLive=true when live search returns 0 hits", async () => {
+      vi.spyOn(global, "fetch").mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          hits: [],
+          total: 0,
+          limit: 20,
+          offset: 0,
+        }),
+      } as Response);
+
+      const result = await searchDatasets("nonexistent-pathogen-xyz");
+      expect(result.isLive).toBe(true);
+      expect(result.items).toEqual([]);
+      expect(result.total).toBe(0);
+    });
+
+    it("executes preupload -> LFS batch -> PUT (skipping dedup) -> commit", async () => {
+      const fetchSpy = vi
+        .spyOn(global, "fetch")
+        // 1. preupload
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ cas_write_token: "cas_jwt" }),
+        } as Response)
+        // 2. LFS batch: first file needs upload, second is deduplicated (actions: null)
+        .mockImplementationOnce(async (_url, init) => {
+          const parsed = JSON.parse(String(init?.body || "{}")) as {
+            objects: Array<{ oid: string; size: number }>;
+          };
+          return {
+            ok: true,
+            json: async () => ({
+              transfer: "basic",
+              objects: [
+                {
+                  oid: parsed.objects[0]!.oid,
+                  actions: {
+                    upload: {
+                      href: `http://localhost:8000/api/repos/acegid/ebola/lfs/${parsed.objects[0]!.oid}`,
+                      header: { Authorization: "Bearer cas_jwt" },
+                    },
+                  },
+                },
+                {
+                  oid: parsed.objects[1]!.oid,
+                  actions: null,
+                },
+              ],
+            }),
+          } as Response;
+        })
+        // 3. Single PUT for the non-deduplicated file
+        .mockResolvedValueOnce({ ok: true, json: async () => ({ status: "uploaded" }) } as Response)
+        // 4. Commit
+        .mockResolvedValueOnce({ ok: true, json: async () => ({ status: "committed" }) } as Response);
+
+      const res = await commitWebDatasetFiles(
+        "acegid/ebola",
+        [
+          { path: "README.md", blob: new Blob(["# Study\n"], { type: "text/markdown" }) },
+          { path: "samples.tsv", blob: new Blob(["sample_id\nS1\n"], { type: "text/tab-separated-values" }) },
+        ],
+        "Web commit",
+        "ubp_test_token"
+      );
+
+      expect(res.success).toBe(true);
+      expect(res.committedCount).toBe(2);
+      expect(res.deduplicatedCount).toBe(1);
+      expect(fetchSpy).toHaveBeenCalledTimes(4);
     });
   });
 });
