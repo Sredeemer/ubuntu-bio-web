@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import React from "react";
 import { SubmitDatasetPage } from "../SubmitDatasetPage";
@@ -403,5 +403,54 @@ describe("SubmitDatasetPage", () => {
     // Add a sample row in the table editor
     fireEvent.click(screen.getByText("Add Row"));
     expect(screen.getByDisplayValue("SAMPLE_001")).toBeDefined();
+  });
+
+  describe("Collection Date Range field", () => {
+    beforeEach(() => {
+      vi.useFakeTimers({ toFake: ["Date"] });
+      vi.setSystemTime(new Date(2026, 5, 15, 12, 0, 0)); // 15 Jun 2026
+    });
+    afterEach(() => vi.useRealTimers());
+
+    const toStep2 = () => {
+      render(<SubmitDatasetPage />);
+      fireEvent.change(screen.getByLabelText(/Namespace Identifier/i), { target: { value: "inrb-kinshasa" } });
+      fireEvent.change(screen.getByLabelText(/Dataset Slug ID/i), { target: { value: "ebola-drc-2026" } });
+      fireEvent.change(screen.getByLabelText(/Formal Dataset Name/i), { target: { value: "Ebola Virus Outbreak" } });
+      fireEvent.change(screen.getByLabelText(/Contributing Institution/i), { target: { value: "INRB Kinshasa" } });
+      fireEvent.click(screen.getByRole("button", { name: /Proceed to Taxonomy & Safety/i }));
+      fireEvent.change(screen.getByLabelText(/NCBI Taxonomy ID/i), { target: { value: "186538" } });
+      fireEvent.change(screen.getByLabelText(/Scientific Name/i), { target: { value: "Zaire ebolavirus" } });
+    };
+
+    it("is labelled 'Collection Date Range' and shows the ISO-8601 hint", () => {
+      toStep2();
+      expect(screen.getByText("Collection Date Range")).toBeDefined();
+      expect(screen.queryByText(/^Collection Date$/)).toBeNull();
+      expect(
+        screen.getByText(
+          "Sample collection date or date range (ISO-8601 date): YYYY-MM-DD or YYYY-MM-DD/YYYY-MM-DD."
+        )
+      ).toBeDefined();
+    });
+
+    it("captures a start and end date, displays them as YYYY-MM-DD, and carries them to the README payload", () => {
+      toStep2();
+      fireEvent.click(document.getElementById("input-sample-date")!);
+      fireEvent.click(screen.getByRole("button", { name: "1 June 2026" }));
+      fireEvent.click(screen.getByRole("button", { name: "10 June 2026" }));
+
+      expect(document.getElementById("input-sample-date")!.textContent).toContain("2026-06-01 – 2026-06-10");
+
+      fireEvent.click(screen.getByRole("button", { name: /Continue to Sequencing Specs/i }));
+      fireEvent.click(screen.getByRole("checkbox"));
+      fireEvent.click(screen.getByRole("button", { name: /Continue to Runs & Sequence Files/i }));
+      fireEvent.click(screen.getByRole("tab", { name: /Remote Server \/ HPC Cluster Declaration/i }));
+      fireEvent.click(screen.getByRole("button", { name: /Review & Ingest Dataset/i }));
+
+      // The range survived every step and reached the generated README / samples payload.
+      expect(document.body.textContent).toContain("2026-06-01/2026-06-10");
+      expect(document.body.textContent).not.toMatch(/2026-06-01T/);
+    });
   });
 });

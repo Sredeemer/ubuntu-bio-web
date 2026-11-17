@@ -18,7 +18,7 @@ export function DocsLayout({ currentPath, tocItems, children }: DocsLayoutProps)
     <div className="ubio-landing-wrapper">
       <Navbar />
       <DocsHeaderBar currentPath={currentPath} />
-      <main id="main-content" className="ubio-docs-wrapper">
+      <main id="main-content" tabIndex={-1} className="ubio-docs-wrapper">
         <div className={`ubio-docs-container ${hasRightRail ? "has-right-rail" : ""}`}>
           <DocsSidebar currentPath={currentPath} />
           <article className="ubio-docs-article">{children}</article>

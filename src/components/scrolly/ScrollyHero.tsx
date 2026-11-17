@@ -5,7 +5,7 @@ import { InteractiveTerminal } from "../terminal/InteractiveTerminal";
 
 interface ScrollyStep {
   id: string;
-  tabKey: "auth" | "push" | "search";
+  tabKey: "upload" | "auth" | "search";
   badge: string;
   title: string;
   description: string;
@@ -16,7 +16,7 @@ interface ScrollyStep {
 const STEPS: ScrollyStep[] = [
   {
     id: "step-1",
-    tabKey: "push",
+    tabKey: "upload",
     badge: "Bandwidth-Optimized Transfer",
     title: "Streamlined Sequence Uploads Over Limited Uplinks",
     description:
@@ -77,6 +77,14 @@ export function ScrollyHero() {
 
   const activeStep = STEPS[activeStepIndex] ?? STEPS[0]!;
 
+  // A manual tab click updates the same state as scrolling does, so the badge,
+  // metric and narrative highlight always agree with the terminal. The observer
+  // only fires when a section crosses the viewport band, so it never undoes a click.
+  const handleTabChange = (tabId: string) => {
+    const index = STEPS.findIndex((s) => s.tabKey === tabId);
+    if (index >= 0) setActiveStepIndex(index);
+  };
+
   return (
     <section className="ubio-scrolly-section" id="architecture" aria-label="UbuntuBio Technology Overview">
       <div className="ubio-scrolly-grid">
@@ -91,7 +99,7 @@ export function ScrollyHero() {
             </div>
 
             {/* Central Interactive Terminal */}
-            <InteractiveTerminal activeTabOverride={activeStep.tabKey} />
+            <InteractiveTerminal activeTabOverride={activeStep.tabKey} onTabChange={handleTabChange} />
 
             {/* Bottom Micro-Dashboard */}
             <div className="ubio-stage-footer">

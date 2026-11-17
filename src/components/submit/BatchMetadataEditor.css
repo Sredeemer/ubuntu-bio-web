@@ -282,3 +282,35 @@
   color: #64748b;
   line-height: 1.45;
 }
+
+/* Status feedback after toolbar actions (Fill Defaults / Normalize Dates). */
+.batch-feedback-region { min-height: 0; }
+.batch-feedback {
+  margin: 8px 0 0;
+  padding: 7px 12px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  border: 1px solid transparent;
+}
+.batch-feedback-success { background: #f0fdf4; border-color: #86efac; color: #14532d; }
+.batch-feedback-warning { background: #fffbeb; border-color: #fcd34d; color: #78350f; }
+.batch-feedback-info { background: #f1f5f9; border-color: #cbd5e1; color: #334155; }
+
+/* Header "?" help buttons (keyboard-focusable tooltip triggers). */
+.th-help-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: #64748b;
+  cursor: help;
+  vertical-align: middle;
+}
+.th-help-btn:hover { color: #0f172a; background: #e2e8f0; }
+.th-help-btn:focus-visible { outline: 2px solid #15803d; outline-offset: 1px; }

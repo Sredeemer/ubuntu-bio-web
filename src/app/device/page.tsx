@@ -13,7 +13,7 @@ export default function DevicePage() {
   return (
     <div className="ubio-landing-wrapper">
       <Navbar />
-      <main id="main-content">
+      <main id="main-content" tabIndex={-1}>
         <Suspense fallback={<div style={{ minHeight: "80vh" }} />}>
           <DeviceVerificationPage />
         </Suspense>

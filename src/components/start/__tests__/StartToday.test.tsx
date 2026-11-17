@@ -7,7 +7,9 @@ describe("StartToday Component", () => {
   it("renders the CTA card and resource links inside the light band", () => {
     const { container } = render(<StartToday />);
     expect(screen.getByRole("heading", { name: /Publish your first isolate/i })).toBeDefined();
-    expect(screen.getByRole("link", { name: "Get started" })).toBeDefined();
+    const cta = screen.getByRole("link", { name: "Explore Documentation" });
+    expect(cta.getAttribute("href")).toBe("/docs");
+    expect(screen.queryByRole("link", { name: "Get started" })).toBeNull();
     expect(screen.getAllByRole("listitem")).toHaveLength(4);
     expect(container.querySelector(".ubio-band-light")).not.toBeNull();
   });

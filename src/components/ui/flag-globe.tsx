@@ -3,6 +3,7 @@
 import * as React from "react";
 import createGlobe from "cobe";
 import * as Flags from "country-flag-icons/react/3x2";
+import "./FlagGlobe.css";
 
 type RGB = [number, number, number];
 type FlagSvg = React.ComponentType<React.SVGProps<SVGSVGElement>>;
@@ -532,6 +533,7 @@ export function FlagGlobe({
   const flagRefs = React.useRef<Array<HTMLDivElement | null>>([]);
   const globeRef = React.useRef<ReturnType<typeof createGlobe> | null>(null);
   const kickRef = React.useRef<() => void>(() => {});
+  const pickRef = React.useRef<(x: number, y: number, tolerance: number) => string | null>(() => null);
   const [measured, setMeasured] = React.useState(size ?? 0);
   const [glState, setGlState] = React.useState<GlState>("pending");
   const [glVersion, setGlVersion] = React.useState(0);
@@ -574,9 +576,30 @@ export function FlagGlobe({
     velocity: 0,
     size: px,
     flags,
+    activeCode: null as string | null,
+    pointerInside: false,
+    pointerX: 0,
+    pointerY: 0,
+    pointerType: "mouse",
+    downX: 0,
+    downY: 0,
+    downAt: 0,
   });
+  const tooltipRef = React.useRef<HTMLDivElement | null>(null);
+  const tooltipId = React.useId();
+  // Mouse hover and touch/pen "pinned" selection are tracked separately so a tap
+  // stays selected after the finger lifts, while a hover follows the pointer.
+  const [hoverCode, setHoverCode] = React.useState<string | null>(null);
+  const [pinnedCode, setPinnedCode] = React.useState<string | null>(null);
+  const activeCode = hoverCode ?? pinnedCode;
+  const activeFlag = React.useMemo(() => flags.find((f) => f.code === activeCode) ?? null, [flags, activeCode]);
 
   React.useEffect(() => setMounted(true), []);
+
+  React.useEffect(() => {
+    live.current.activeCode = activeCode;
+    kickRef.current();
+  }, [activeCode]);
 
   React.useEffect(() => {
     const s = live.current;
@@ -697,10 +720,54 @@ export function FlagGlobe({
         if (zIndex !== prev.zIndex) el.style.zIndex = zIndex;
         if (filter !== prev.filter) el.style.filter = filter;
         written.set(el, { opacity, zIndex, filter });
+        const isActive = flag.code === s.activeCode;
+        if ((el.dataset.active === "true") !== isActive) el.dataset.active = String(isActive);
+        if (isActive) el.style.zIndex = "6";
+        else if (el.style.zIndex === "6") el.style.zIndex = zIndex; // release the raised stacking
         if (opacity === 0) continue;
         el.style.transform = `translate3d(${point.x * diameter}px, ${point.y * diameter}px, 0) translate(-50%, -50%)`;
       }
+
+      // The tooltip rides on the active flag every frame, so it stays attached
+      // while the globe spins and hides once the country rotates out of view.
+      const tip = tooltipRef.current;
+      if (tip) {
+        const active = s.activeCode ? placed.find((f) => f.code === s.activeCode) : undefined;
+        if (active) {
+          const pt = project(active.vector, p, t, s.altitude);
+          if (pt.depth > 0.02) {
+            tip.style.visibility = "visible";
+            tip.style.transform = `translate3d(${pt.x * diameter}px, ${pt.y * diameter}px, 0) translate(-50%, calc(-100% - 22px))`;
+            return;
+          }
+        }
+        tip.style.visibility = "hidden";
+      }
     };
+
+    // Nearest front-facing flag to a viewport point, within a tolerance in px.
+    const pickFlagAt = (clientX: number, clientY: number, tolerance: number): string | null => {
+      const host = canvasHostRef.current;
+      if (!host) return null;
+      const rect = host.getBoundingClientRect();
+      if (rect.width === 0) return null;
+      const diameter = s.size;
+      let best: string | null = null;
+      let bestDist = tolerance;
+      for (const flag of s.flags) {
+        const pt = project(flag.vector, s.phi, s.theta, s.altitude);
+        if (pt.depth <= 0.05) continue;
+        const dx = pt.x * diameter - (clientX - rect.left);
+        const dy = pt.y * diameter - (clientY - rect.top);
+        const dist = Math.hypot(dx, dy);
+        if (dist <= bestDist) {
+          best = flag.code;
+          bestDist = dist;
+        }
+      }
+      return best;
+    };
+    pickRef.current = pickFlagAt;
 
     const isMoving = () =>
       s.dragging || Math.abs(s.velocity) > 1e-4 || (s.auto && s.speed !== 0 && !s.reducedMotion);
@@ -725,6 +792,11 @@ export function FlagGlobe({
         globe.update({ phi: s.phi, theta: s.theta });
       }
       positionFlags();
+      // While the globe spins under a stationary mouse, re-resolve what is hovered.
+      if (s.pointerInside && s.pointerType === "mouse" && !s.dragging) {
+        const hit = pickFlagAt(s.pointerX, s.pointerY, Math.max(flagWidth * 0.8, 14));
+        setHoverCode((prev) => (prev === hit ? prev : hit));
+      }
       if (isMoving() && s.onScreen && !document.hidden) raf = requestAnimationFrame(frame);
       else last = 0;
     };
@@ -764,7 +836,7 @@ export function FlagGlobe({
       }
       setGlState("pending");
     };
-  }, [hasSize, dpr, glVersion]);
+  }, [hasSize, dpr, glVersion, flagWidth]);
 
   // Colors follow the theme tokens unless overridden; dark or light is read
   // from the background itself, whatever mechanism the site uses to switch.
@@ -794,10 +866,10 @@ export function FlagGlobe({
       baseColor: base,
       glowColor: glow,
       markerColor: primary,
-      markers: markerDots ? flags.map((f) => ({ location: f.location, size: 0.025 })) : [],
+      markers: markerDots ? flags.map((f) => ({ location: f.location, size: f.code === activeCode ? 0.06 : 0.025 })) : [],
     });
     kickRef.current();
-  }, [ready, glVersion, themeTick, dark, baseColor, glowColor, markerDots, flags]);
+  }, [ready, glVersion, themeTick, dark, baseColor, glowColor, markerDots, flags, activeCode]);
 
   const rotateBy = (delta: number) => {
     const s = live.current;
@@ -823,6 +895,7 @@ export function FlagGlobe({
       role="region"
       aria-roledescription="globe"
       aria-label={description}
+      aria-describedby={activeFlag ? tooltipId : undefined}
       tabIndex={0}
       className={cx(
         "relative isolate select-none rounded-full",
@@ -836,6 +909,11 @@ export function FlagGlobe({
       onKeyDown={(e) => {
         onKeyDown?.(e);
         if (e.defaultPrevented || e.altKey || e.metaKey || e.ctrlKey || e.shiftKey) return;
+        if (e.key === "Escape") {
+          setPinnedCode(null);
+          setHoverCode(null);
+          return;
+        }
         if (e.key === "ArrowLeft") rotateBy(-KEY_STEP);
         else if (e.key === "ArrowRight") rotateBy(KEY_STEP);
         else return;
@@ -888,11 +966,22 @@ export function FlagGlobe({
             s.lastX = e.clientX;
             s.lastMoveAt = performance.now();
             s.velocity = 0;
+            s.downX = e.clientX;
+            s.downY = e.clientY;
+            s.downAt = performance.now();
             e.currentTarget.setPointerCapture(e.pointerId);
             kickRef.current();
           }}
           onPointerMove={(e) => {
             const s = live.current;
+            s.pointerInside = true;
+            s.pointerX = e.clientX;
+            s.pointerY = e.clientY;
+            s.pointerType = e.pointerType;
+            if (e.pointerType === "mouse" && !s.dragging) {
+              const hit = pickRef.current(e.clientX, e.clientY, Math.max(flagWidth * 0.8, 14));
+              setHoverCode((prev) => (prev === hit ? prev : hit));
+            }
             if (!s.dragging || e.pointerId !== s.pointerId) return;
             const now = performance.now();
             const delta = ((e.clientX - s.lastX) / Math.max(s.size, 1)) * Math.PI;
@@ -905,9 +994,23 @@ export function FlagGlobe({
           onPointerUp={(e) => {
             const s = live.current;
             if (e.pointerId !== s.pointerId) return;
+            // A short press with almost no travel is a tap, not a rotation drag. Touch
+            // and pen have no hover, so a tap pins the nearest flag (or clears the pin).
+            const isTap =
+              Math.hypot(e.clientX - s.downX, e.clientY - s.downY) < 8 &&
+              performance.now() - s.downAt < 600;
+            if (isTap && e.pointerType !== "mouse") {
+              const hit = pickRef.current(e.clientX, e.clientY, Math.max(flagWidth, 24));
+              setPinnedCode((prev) => (hit && hit !== prev ? hit : null));
+            }
             if (s.reducedMotion || performance.now() - s.lastMoveAt > RELEASE_GRACE_MS) s.velocity = 0;
             if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId);
             endDrag();
+          }}
+          onPointerLeave={(e) => {
+            if (e.pointerType !== "mouse") return;
+            live.current.pointerInside = false;
+            setHoverCode(null);
           }}
           onPointerCancel={() => {
             live.current.velocity = 0;
@@ -933,11 +1036,11 @@ export function FlagGlobe({
                 ref={(el) => {
                   flagRefs.current[i] = el;
                 }}
-                className="absolute opacity-0 will-change-transform"
+                className="flag-globe-flag absolute opacity-0 will-change-transform"
                 style={{ left: 0, top: 0 }}
               >
                 <div
-                  className="overflow-hidden rounded-[2px] bg-muted leading-none shadow-sm"
+                  className="flag-globe-flag-inner overflow-hidden rounded-[2px] bg-muted leading-none shadow-sm"
                   style={{ width: flagWidth, height: Math.round((flagWidth * 2) / 3) }}
                 >
                   {Flag ? (
@@ -952,14 +1055,33 @@ export function FlagGlobe({
             );
           })}
         </div>
+
+        {/* Not aria-hidden: the tooltip is the globe's accessible description while active. */}
+        <div className="pointer-events-none absolute inset-0">
+          <div ref={tooltipRef} id={tooltipId} role="tooltip" className="flag-globe-tooltip">
+            {activeFlag && (
+              <>
+                <span className="flag-globe-tooltip-name">{activeFlag.label}</span>
+                <span className="flag-globe-tooltip-code">{activeFlag.code}</span>
+              </>
+            )}
+          </div>
+        </div>
       </div>
 
       {mounted && (
-        <ol className="sr-only">
-          {flags.map((flag) => (
-            <li key={flag.code}>{flag.label}</li>
-          ))}
-        </ol>
+        <>
+          <p className="sr-only" role="status" aria-live="polite">
+            {activeFlag ? `${activeFlag.label}, ISO code ${activeFlag.code}` : ""}
+          </p>
+          <ol className="sr-only">
+            {flags.map((flag) => (
+              <li key={flag.code}>
+                {flag.label} ({flag.code})
+              </li>
+            ))}
+          </ol>
+        </>
       )}
     </div>
   );

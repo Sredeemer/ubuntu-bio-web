@@ -135,7 +135,7 @@ export default function AuthCallbackPage() {
   return (
     <div className="ubio-landing-wrapper">
       <Navbar />
-      <main id="main-content">
+      <main id="main-content" tabIndex={-1}>
         <Suspense fallback={<div style={{ minHeight: "60vh" }} />}>
           <AuthCallbackContent />
         </Suspense>

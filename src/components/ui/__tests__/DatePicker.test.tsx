@@ -36,16 +36,16 @@ afterEach(() => vi.useRealTimers());
 describe("formatDateValue", () => {
   it("formats empty, single and range values", () => {
     expect(formatDateValue({ startDate: "" })).toBe("");
-    expect(formatDateValue({ startDate: "2024-10-15" })).toBe("15 Oct 2024");
-    expect(formatDateValue({ startDate: "2024-10-10", endDate: "2024-10-24" })).toBe("10 Oct 2024 – 24 Oct 2024");
-    expect(formatDateValue({ startDate: "2024-10-10", endDate: "2024-10-10" })).toBe("10 Oct 2024");
+    expect(formatDateValue({ startDate: "2024-10-15" })).toBe("2024-10-15");
+    expect(formatDateValue({ startDate: "2024-10-10", endDate: "2024-10-24" })).toBe("2024-10-10 – 2024-10-24");
+    expect(formatDateValue({ startDate: "2024-10-10", endDate: "2024-10-10" })).toBe("2024-10-10");
   });
 });
 
 describe("DatePicker", () => {
   it("shows the placeholder and no clear button when empty", () => {
     render(<Harness />);
-    expect(screen.getByText("Select date or date range")).toBeDefined();
+    expect(screen.getByText("Select start and end date")).toBeDefined();
     expect(screen.queryByRole("button", { name: "Clear date" })).toBeNull();
   });
 
@@ -76,7 +76,7 @@ describe("DatePicker", () => {
     fireEvent.click(day("20 October 2024"));
     expect(spy).toHaveBeenLastCalledWith({ startDate: "2024-10-05", endDate: "2024-10-20" });
     expect(screen.queryByRole("dialog")).toBeNull();
-    expect(screen.getByText("5 Oct 2024 – 20 Oct 2024")).toBeDefined();
+    expect(screen.getByText("2024-10-05 – 2024-10-20")).toBeDefined();
   });
 
   it("highlights start, end and in-between days", () => {
@@ -97,7 +97,7 @@ describe("DatePicker", () => {
     fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape" });
     expect(screen.queryByRole("dialog")).toBeNull();
     expect(spy).toHaveBeenCalledTimes(1);
-    expect(screen.getByText("5 Oct 2024")).toBeDefined();
+    expect(screen.getByText("2024-10-05")).toBeDefined();
   });
 
   it("treats clicking the same day twice as a single date", () => {
@@ -124,7 +124,7 @@ describe("DatePicker", () => {
     render(<Harness initial={{ startDate: "2024-10-05" }} spy={spy} />);
     fireEvent.click(screen.getByRole("button", { name: "Clear date" }));
     expect(spy).toHaveBeenCalledWith({ startDate: "" });
-    expect(screen.getByText("Select date or date range")).toBeDefined();
+    expect(screen.getByText("Select start and end date")).toBeDefined();
   });
 
   it("disables dates after today and blocks navigating past the current month", () => {
@@ -227,5 +227,45 @@ describe("DatePicker", () => {
     expect(screen.queryByRole("dialog")).not.toBeNull();
     fireEvent.mouseDown(document.body);
     expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  describe("explicit start and end selection", () => {
+    it("shows a Start → End summary that guides the user through both dates", () => {
+      render(<Harness />);
+      fireEvent.click(trigger());
+      const summary = () => document.querySelector(".range-summary")!.textContent ?? "";
+      expect(summary()).toContain("Start");
+      expect(summary()).toContain("Select a date");
+
+      fireEvent.click(day("1 June 2026"));
+      expect(summary()).toContain("2026-06-01");
+      expect(summary()).toContain("Select end date");
+
+      fireEvent.click(day("10 June 2026"));
+      fireEvent.click(trigger());
+      expect(summary()).toContain("2026-06-01");
+      expect(summary()).toContain("2026-06-10");
+    });
+
+    it("offers a 'Single date only' button after the first click", () => {
+      const spy = vi.fn();
+      render(<Harness spy={spy} />);
+      fireEvent.click(trigger());
+      expect(screen.queryByRole("button", { name: "Single date only" })).toBeNull();
+      fireEvent.click(day("1 June 2026"));
+      fireEvent.click(screen.getByRole("button", { name: "Single date only" }));
+      expect(screen.queryByRole("dialog")).toBeNull();
+      expect(spy).toHaveBeenCalledTimes(1);
+      expect(screen.getByText("2026-06-01")).toBeDefined();
+    });
+
+    it("selecting the end before the start swaps them so start is never after end", () => {
+      const spy = vi.fn();
+      render(<Harness spy={spy} />);
+      fireEvent.click(trigger());
+      fireEvent.click(day("10 June 2026"));
+      fireEvent.click(day("1 June 2026"));
+      expect(spy).toHaveBeenLastCalledWith({ startDate: "2026-06-01", endDate: "2026-06-10" });
+    });
   });
 });

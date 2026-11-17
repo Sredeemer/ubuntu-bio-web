@@ -103,7 +103,7 @@ export function AfricaGlobeSection() {
               altitude={0.16}
               autoRotate={true}
               rotationSpeed={0.06}
-              phi={0.35} // Centered on African continent
+              phi={4.36} // Faces Africa (~20°E) at load: atan2(-x, z) of the continent centroid under FlagGlobe's projection
               theta={0.16} // Optimal tilt framing North, West, Central, East and Southern Africa
               markerDots={true}
               stars={false}
@@ -136,7 +136,7 @@ export function AfricaGlobeSection() {
             <Compass size={16} className="badge-icon-accent" />
             <div>
               <strong>54 Sovereign Nodes</strong>
-              <span>Click & Drag to Rotate in 3D</span>
+              <span>Drag to rotate · hover or tap a flag</span>
             </div>
           </div>
         </div>

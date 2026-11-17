@@ -1,0 +1,49 @@
+/* FlagGlobe — hover / tap highlight and tooltip for country flags. */
+
+.flag-globe-flag-inner {
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  transform-origin: center;
+}
+
+.flag-globe-flag[data-active="true"] .flag-globe-flag-inner {
+  transform: scale(1.55);
+  box-shadow: 0 0 0 2px #00ed64, 0 4px 14px rgba(0, 237, 100, 0.45);
+}
+
+.flag-globe-tooltip {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: rgba(0, 20, 30, 0.94);
+  border: 1px solid rgba(0, 237, 100, 0.55);
+  color: #ffffff;
+  font-size: 12px;
+  line-height: 1.25;
+  white-space: nowrap;
+  pointer-events: none;
+  visibility: hidden;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+.flag-globe-tooltip-name {
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.flag-globe-tooltip-code {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: #00ed64;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flag-globe-flag-inner { transition: none; }
+}

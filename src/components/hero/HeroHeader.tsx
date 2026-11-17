@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import { ArrowRight, ChevronRight, Copy, Check } from "lucide-react";
 
 export function HeroHeader() {
@@ -82,10 +83,10 @@ export function HeroHeader() {
               Lassa, Mpox, cholera and vector isolates indexed with MIxS metadata and sub-50ms
               faceted search.
             </p>
-            <a href="#catalog" className="ubio-link-chevron">
+            <Link href="/datasets" className="ubio-link-chevron">
               <span>Browse the catalog</span>
               <ChevronRight size={16} aria-hidden="true" />
-            </a>
+            </Link>
           </article>
 
           <article className="bento-card">
@@ -95,10 +96,10 @@ export function HeroHeader() {
               Human data (NCBI 9606) is rejected at ingest. Gated datasets enforce Nagoya Protocol
               benefit-sharing agreements.
             </p>
-            <a href="#coverage" className="ubio-link-chevron">
+            <Link href="/docs/governance" className="ubio-link-chevron">
               <span>Read the policy</span>
               <ChevronRight size={16} aria-hidden="true" />
-            </a>
+            </Link>
           </article>
         </div>
       </div>

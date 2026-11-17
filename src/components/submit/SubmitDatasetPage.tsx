@@ -1520,7 +1520,7 @@ export function SubmitDatasetPage() {
 
                     <div className="form-field">
                       <label htmlFor="input-sample-date" className="form-label">
-                        Collection Date
+                        Collection Date Range
                       </label>
                       <DatePicker
                         id="input-sample-date"
