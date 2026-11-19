@@ -158,7 +158,7 @@ export function WaccbipOriginSection() {
             </div>
 
             <h2 id="origin-heading" className="ubio-origin-title ubio-display-condensed">
-              Founded at WACCBIP by Ghana’s First Cohort of Bioinformatics MSc Scholars
+              Founded at WACCBIP by Ghana’s First Bioinformatics Master&apos;s Students
             </h2>
 
             <p className="ubio-origin-lead">
@@ -198,12 +198,12 @@ export function WaccbipOriginSection() {
                 <span>Founders&rsquo; Manifesto</span>
               </div>
               <blockquote className="white-card-quote">
-                &ldquo;As Ghana&rsquo;s first cohort of bioinformatics MSc scholars at WACCBIP,
-                we experienced firsthand how African pathogen and biodiversity datasets are scattered
+                &ldquo;As the first bioinformatics master&rsquo;s students at WACCBIP in Ghana,
+                we saw firsthand how African pathogen and biodiversity datasets are scattered
                 abroad. Our hands are small, but our collective resolve is sovereign.&rdquo;
               </blockquote>
               <div className="white-card-attribution">
-                <strong>Ghana&rsquo;s first cohort of bioinformatics MSc scholars</strong>
+                <strong>Ghana&rsquo;s first bioinformatics master&rsquo;s students</strong>
                 <span>WACCBIP &bull; University of Ghana, Legon</span>
               </div>
             </div>

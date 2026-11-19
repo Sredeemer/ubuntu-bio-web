@@ -48,8 +48,8 @@ export default function DocsGovernancePage() {
           <h2>Founding &amp; WACCBIP Heritage</h2>
           <p>
             UbuntuBio was born at the <strong>West African Centre for Cell Biology of Infectious Pathogens (WACCBIP)</strong>,
-            University of Ghana, Legon. It was founded by <strong>Ghana’s first cohort of bioinformatics MSc scholars</strong>,
-            who experienced firsthand how African pathogen and biodiversity datasets are scattered abroad across disparate
+            University of Ghana, Legon. It was founded by <strong>the first group of bioinformatics master&apos;s students at the University of Ghana</strong>,
+            who saw firsthand how African pathogen and biodiversity datasets are scattered abroad across disparate
             global databases without sovereign governance.
           </p>
           <p>
