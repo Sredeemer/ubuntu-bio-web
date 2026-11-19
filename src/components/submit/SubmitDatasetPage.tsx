@@ -1739,7 +1739,7 @@ export function SubmitDatasetPage() {
                         ))}
                       </select>
                       <span className="field-hint">
-                        Only the 54 African Union Member States are permitted.
+                        Only the 55 African Union Member States are permitted.
                       </span>
                     </div>
 

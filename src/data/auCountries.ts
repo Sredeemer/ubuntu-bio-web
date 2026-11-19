@@ -1,5 +1,5 @@
 /**
- * 54 African Union (AU) member states (ISO-3166-1 alpha-2)
+ * 55 African Union (AU) member states (ISO-3166-1 alpha-2, including EH)
  * Strictly conforms to docs/guidelines/bioinformatics-data.md and AGENTS.md
  */
 
@@ -61,6 +61,7 @@ export const AU_COUNTRIES: AUCountry[] = [
   { code: "TG", name: "Togo" },
   { code: "TN", name: "Tunisia" },
   { code: "UG", name: "Uganda" },
+  { code: "EH", name: "Western Sahara" },
   { code: "ZM", name: "Zambia" },
   { code: "ZW", name: "Zimbabwe" },
 ];

@@ -211,7 +211,7 @@ AI assistants generating code or metadata for UbuntuBio must enforce the followi
 2. **Permitted Biological Domains**:
    Must be one of: `bacteria`, `virus`, `parasite`, `fungus`, `plant`, `animal`, `vector`, `metagenome`, `environmental`.
 3. **African Union Sovereign Countries**:
-   Country codes must strictly be one of the 54 AU member states (ISO-3166-1 alpha-2):
+   Country codes must strictly be one of the 55 AU member states (ISO-3166-1 alpha-2):
    `DZ`, `AO`, `BJ`, `BW`, `BF`, `BI`, `CV`, `CM`, `CF`, `TD`, `KM`, `CG`, `CD`, `CI`, `DJ`, `EG`, `GQ`, `ER`, `SZ`, `ET`, `GA`, `GM`, `GH`, `GN`, `GW`, `KE`, `LS`, `LR`, `LY`, `MG`, `MW`, `ML`, `MR`, `MU`, `MA`, `MZ`, `NA`, `NE`, `NG`, `RW`, `ST`, `SN`, `SC`, `SL`, `SO`, `ZA`, `SS`, `SD`, `TZ`, `TG`, `TN`, `UG`, `ZM`, `ZW`.
 4. **Dataset Directory Metadata Standards**:
    When uploading a folder via `ubio upload` or `ub.upload_folder`:

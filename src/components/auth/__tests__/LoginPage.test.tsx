@@ -31,7 +31,7 @@ describe("LoginPage", () => {
         name: /explore sovereign african genomics and pathogen surveillance/i,
       })
     ).toBeDefined();
-    expect(screen.getByText(/54 african union member states/i)).toBeDefined();
+    expect(screen.getByText(/55 african union member states/i)).toBeDefined();
     expect(screen.getByRole("link", { name: /browse public datasets/i })).toBeDefined();
   });
 

@@ -145,7 +145,7 @@ describe("BatchMetadataEditor", () => {
             },
             {
               field: "country",
-              message: "Country must be one of the 54 African Union member states.",
+              message: "Country must be one of the 55 African Union member states.",
               severity: "error",
             },
           ],
@@ -182,7 +182,7 @@ describe("BatchMetadataEditor", () => {
     expect(countryInput.className).toContain("cell-input-error");
     fireEvent.mouseEnter(countryInput.parentElement!);
     expect(screen.getByRole("tooltip").textContent).toContain(
-      "Country must be one of the 54 African Union member states."
+      "Country must be one of the 55 African Union member states."
     );
   });
 

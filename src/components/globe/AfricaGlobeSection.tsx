@@ -10,7 +10,7 @@ export function AfricaGlobeSection() {
   const [parallaxY, setParallaxY] = useState<number>(0);
   const sectionRef = useRef<HTMLElement | null>(null);
 
-  // All 54 African Union Sovereign Member States
+  // All 55 African Union Sovereign Member States
   const markers: FlagGlobeMarker[] = useMemo(() => {
     return AU_COUNTRIES.map((c) => ({
       code: c.code,
@@ -67,13 +67,13 @@ export function AfricaGlobeSection() {
           <div className="ubio-globe-badge">
             <span className="ubio-globe-dot" />
             <Globe size={13} className="ubio-globe-badge-icon" />
-            <span>African Union Coverage • 54 Sovereign Member States</span>
+            <span>African Union Coverage • 55 Sovereign Member States</span>
           </div>
           <h2 className="ubio-globe-title">
             Pan-African Genomic Observatory
           </h2>
           <p className="ubio-globe-subtitle">
-            Explore 54 sovereign sequencing nodes in interactive 3D space. Drag the globe to inspect regional pathogen surveillance repositories, vector callsets, and biodiversity nodes.
+            Explore 55 sovereign sequencing nodes in interactive 3D space. Drag the globe to inspect regional pathogen surveillance repositories, vector callsets, and biodiversity nodes.
           </p>
         </div>
 
@@ -135,7 +135,7 @@ export function AfricaGlobeSection() {
           >
             <Compass size={16} className="badge-icon-accent" />
             <div>
-              <strong>54 Sovereign Nodes</strong>
+              <strong>55 Sovereign Nodes</strong>
               <span>Drag to rotate · hover or tap a flag</span>
             </div>
           </div>
@@ -145,7 +145,7 @@ export function AfricaGlobeSection() {
         <div className="ubio-globe-footer">
           <div className="ubio-globe-stats">
             <div className="ubio-globe-stat-item">
-              <span className="stat-number">54</span>
+              <span className="stat-number">55</span>
               <span className="stat-label">AU Member States Covered</span>
             </div>
             <div className="ubio-globe-stat-divider" />

@@ -77,7 +77,7 @@ export default function DocsOverviewPage() {
                 <h3 className="docs-pillar-title">Sub-50ms Discovery</h3>
               </div>
               <p className="docs-pillar-desc">
-                Meilisearch &amp; Valkey engine enables instant filtering across 54 AU member states, biosafety levels, and taxon IDs.
+                Meilisearch &amp; Valkey engine enables instant filtering across 55 AU member states, biosafety levels, and taxon IDs.
               </p>
             </div>
 

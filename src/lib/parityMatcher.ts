@@ -166,7 +166,7 @@ export function validateRowAttributes(
   } else if (!AU_CODE_SET.has(countryClean)) {
     issues.push({
       field: "country",
-      message: `Invalid country code: ${countryClean} is not one of the 54 African Union member states.`,
+      message: `Invalid country code: ${countryClean} is not one of the 55 African Union member states.`,
       severity: "error",
     });
   }

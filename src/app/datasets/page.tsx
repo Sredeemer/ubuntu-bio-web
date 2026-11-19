@@ -7,7 +7,7 @@ import { Footer } from "../../components/footer/Footer";
 export const metadata: Metadata = {
   title: "Genomic & Pathogen Datasets Catalog — UbuntuBio",
   description:
-    "Explore peer-verified non-human genomic datasets across 54 AU member states, with fast sequence synchronization and sub-50ms search.",
+    "Explore peer-verified non-human genomic datasets across 55 AU member states, with fast sequence synchronization and sub-50ms search.",
 };
 
 export default function DatasetsPage() {

@@ -883,7 +883,7 @@ Surveillance cohort investigating genomic epidemiology and transmission dynamics
             </p>
           </DocsCallout>
 
-          <DocsCallout type="tip" title="African Union 54 Member States">
+          <DocsCallout type="tip" title="African Union 55 Member States">
             <p>
               Datasets must declare geographical origin from one of the 54 recognized African Union
               member states (ISO-3166-1 alpha-2). The repository must conform to the Nagoya Protocol

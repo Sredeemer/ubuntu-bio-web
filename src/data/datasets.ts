@@ -1,6 +1,6 @@
 /**
  * UbuntuBio Shared Dataset Registry
- * Defines sample genomic datasets across 54 African Union member states.
+ * Defines sample genomic datasets across 55 African Union member states.
  * Enforces bioinformatics domain invariants:
  * - Human genomic data (NCBI Taxon ID 9606) is strictly prohibited.
  * - All datasets originate from authorized AU Member States (ISO 3166-1 alpha-2).

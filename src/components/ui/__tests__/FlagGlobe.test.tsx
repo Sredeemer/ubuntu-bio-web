@@ -10,10 +10,10 @@ vi.mock("cobe", () => ({
 }));
 
 describe("AU member-state data feeding the globe", () => {
-  it("has 54 unique ISO 3166-1 alpha-2 codes", () => {
+  it("has 55 unique ISO 3166-1 alpha-2 codes", () => {
     const codes = AU_COUNTRIES.map((c) => c.code);
-    expect(codes).toHaveLength(54);
-    expect(new Set(codes).size).toBe(54);
+    expect(codes).toHaveLength(55);
+    expect(new Set(codes).size).toBe(55);
     for (const code of codes) expect(code).toMatch(/^[A-Z]{2}$/);
   });
 

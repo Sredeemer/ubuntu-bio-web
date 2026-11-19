@@ -202,7 +202,7 @@ export function LoginPage() {
           </h2>
 
           <p className="ubio-hero-copy">
-            Connect with bioinformaticians, AI researchers, and public health labs across 54
+            Connect with bioinformaticians, AI researchers, and public health labs across 55
             African Union member states. Deposit, discover, and synchronize genomic datasets with
             sub-50ms search and cryptographic CAS token verification.
           </p>

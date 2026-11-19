@@ -191,7 +191,7 @@ export function DatasetSearch() {
           <h2 className="ubio-catalog-title">African Bioinformatics Datasets</h2>
           <p className="ubio-catalog-subtitle">
             Curated pathogen isolates, antimicrobial resistance profiles, and disease vector
-            sequences from the 54 African Union member states.
+            sequences from the 55 African Union member states.
           </p>
         </div>
         <a href="#coverage" className="ubio-link-chevron catalog-header-link">
@@ -235,7 +235,7 @@ export function DatasetSearch() {
               className="ubio-country-select"
               aria-label="Filter by African Union nation"
             >
-              <option value="all">All 54 AU Nations</option>
+              <option value="all">All 55 AU Nations</option>
               {AU_COUNTRIES.map((c) => (
                 <option key={c.code} value={c.code}>
                   {c.name} ({c.code})

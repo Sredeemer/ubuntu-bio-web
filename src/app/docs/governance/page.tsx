@@ -90,7 +90,7 @@ export default function DocsGovernancePage() {
             </p>
           </DocsCallout>
 
-          <DocsCallout type="tip" title="54 African Union Member States Enforced">
+          <DocsCallout type="tip" title="55 African Union Member States Enforced">
             <p>
               Datasets must declare provenance from one of the 54 recognized AU member states
               (ISO 3166-1 alpha-2). Non-AU geographical origins cannot be registered as primary provenance hosts.

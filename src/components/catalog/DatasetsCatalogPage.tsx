@@ -160,7 +160,7 @@ export function DatasetsCatalogPage() {
             African Pathogen &amp; Genomic Catalog
           </h1>
           <p className="ubio-catalog-subtitle">
-            Explore peer-validated non-human genomic datasets across 54 African
+            Explore peer-validated non-human genomic datasets across 55 African
             Union member states with sub-50ms search and fast sequence
             synchronization.
           </p>
@@ -173,7 +173,7 @@ export function DatasetsCatalogPage() {
             </div>
             <div className="metric-divider" />
             <div className="metric-item">
-              <span className="metric-val">54</span>
+              <span className="metric-val">55</span>
               <span className="metric-lbl">AU States Permitted</span>
             </div>
             <div className="metric-divider" />

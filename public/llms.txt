@@ -19,7 +19,7 @@
    - Instant multi-facet filtering by pathogen keyword, AU member state ISO code, biological domain, and biosafety level (BSL-1 to BSL-4).
 
 4. **Sovereignty & Governance Compliance (Nagoya Protocol)**:
-   - Validates sample provenance against the 54 African Union member states.
+   - Validates sample provenance against the 55 African Union member states.
    - **Strict Non-Human Invariant**: Enforces zero tolerance for human genomic data (NCBI Taxon ID 9606 is strictly prohibited in v1).
 
 5. **Remote Sequencing File Streaming**:
@@ -162,7 +162,7 @@ ub.upload_folder("ebola-surveillance", folder_path="./assemblies", message="Init
 ## System Invariants & Rules for AI Agents
 
 1. **Human Genomic Data Strictly Forbidden**: NCBI Taxon ID `9606` (Homo sapiens) is rejected by client and server pre-validation. Never generate submission code targeting human subjects.
-2. **AU Country Codes Only**: Originating country codes must be one of the 54 African Union ISO-3166-1 alpha-2 codes (e.g., `NG`, `SN`, `KE`, `ZA`, `GH`, `EG`, `ET`).
+2. **AU Country Codes Only**: Originating country codes must be one of the 55 African Union ISO-3166-1 alpha-2 codes (e.g., `NG`, `SN`, `KE`, `ZA`, `GH`, `EG`, `ET`, `EH`).
 3. **Valid Biological Domains**: `bacteria`, `virus`, `parasite`, `fungus`, `plant`, `animal`, `vector`, `metagenome`, `environmental`.
 4. **Machine Parsing**: Always pass `--json` to CLI commands when parsing stdout programmatically in scripts.
 

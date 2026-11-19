@@ -77,7 +77,7 @@ export function AfricaGeoMap() {
         <span className="ubio-eyebrow">Distributed federation</span>
         <h2 className="ubio-map-title ubio-display-condensed">Regional Genomic Datasets &amp; AU Coverage</h2>
         <p className="ubio-map-subtitle">
-          Real-time pathogen surveillance and genomic dataset coverage across the 54 African Union member states.
+          Real-time pathogen surveillance and genomic dataset coverage across the 55 African Union member states.
         </p>
       </div>
 

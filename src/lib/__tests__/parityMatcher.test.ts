@@ -77,7 +77,7 @@ describe("parityMatcher", () => {
     const issues = validateRowAttributes(row, new Map(), false);
     const countryIssue = issues.find((i) => i.field === "country");
     expect(countryIssue).toBeDefined();
-    expect(countryIssue?.message).toContain("54 African Union");
+    expect(countryIssue?.message).toContain("55 African Union");
   });
 
   it("detects malformed non-ISO dates", () => {

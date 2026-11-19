@@ -30,7 +30,7 @@ const STEPS: ScrollyStep[] = [
     badge: "African Genomic Sovereignty",
     title: "Enforcing AU Country Verification & Nagoya Compliance",
     description:
-      "Every dataset submitted to the hub is validated against the 54 African Union member state standards and the Nagoya Protocol on Access and Benefit Sharing. Human genomic sequences (NCBI Taxon ID 9606) are strictly blocked at the client and server levels to prevent unconsented exploitation.",
+      "Every dataset submitted to the hub is validated against the 55 African Union member state standards and the Nagoya Protocol on Access and Benefit Sharing. Human genomic sequences (NCBI Taxon ID 9606) are strictly blocked at the client and server levels to prevent unconsented exploitation.",
     metricLabel: "Authorized AU Member States",
     metricValue: "54",
   },
