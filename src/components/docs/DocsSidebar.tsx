@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { BookOpen, Terminal, Code2, ShieldCheck, ArrowLeft, ExternalLink, Bot, UploadCloud } from "lucide-react";
+import { BookOpen, Terminal, Code2, ShieldCheck, ArrowLeft, ExternalLink, Bot, UploadCloud, ScrollText, Wrench } from "lucide-react";
 
 interface DocsSidebarProps {
   currentPath: string;
@@ -62,6 +62,24 @@ export function DocsSidebar({ currentPath }: DocsSidebarProps) {
               </a>
             );
           })}
+        </div>
+
+        <div className="docs-nav-group mt-6">
+          <span className="docs-group-label">Governance &amp; Continuity</span>
+          <a
+            href="/founding-charter"
+            className={`docs-nav-item ${currentPath === "/founding-charter" ? "active" : ""}`}
+          >
+            <ScrollText size={16} className="docs-nav-icon" />
+            <span>Founding Charter</span>
+          </a>
+          <a
+            href="/technical-handover"
+            className={`docs-nav-item ${currentPath === "/technical-handover" ? "active" : ""}`}
+          >
+            <Wrench size={16} className="docs-nav-icon" />
+            <span>Technical Handover</span>
+          </a>
         </div>
 
         <div className="docs-nav-group mt-6">
