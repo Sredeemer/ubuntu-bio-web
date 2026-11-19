@@ -1,4 +1,5 @@
 import type { BatchSampleRow } from "./templateGenerator";
+import { AU_COUNTRIES } from "../data/auCountries";
 
 /**
  * Generates canonical README.md and samples.tsv with YAML frontmatter conforming to
@@ -23,6 +24,7 @@ export interface ReadmeGeneratorParams {
   authorName: string;
   authorAffiliation: string;
   countryCode: string;
+  countryCodes?: readonly string[] | undefined;
   countryName: string;
   institution: string;
   collectionDate: string;
@@ -109,13 +111,48 @@ ${fileList}`;
           .join(", ")
       : `${params.hostSpecies || "N/A"}${params.hostTaxonId ? ` (NCBI Taxon ID: \`${params.hostTaxonId}\`)` : ""}`;
 
+  // Resolve deduplicated AU country codes from explicit multi-select + batch rows
+  const countrySet = new Set<string>();
+  const initialCodes =
+    params.countryCodes && params.countryCodes.length > 0
+      ? params.countryCodes
+      : [params.countryCode];
+  for (const code of initialCodes) {
+    const clean = code.trim().toUpperCase();
+    if (clean.length === 2) {
+      countrySet.add(clean);
+    }
+  }
+  if (params.batchRows && params.batchRows.length > 0) {
+    for (const row of params.batchRows) {
+      const clean = (row.country || "").trim().toUpperCase();
+      if (clean.length === 2) {
+        countrySet.add(clean);
+      }
+    }
+  }
+  if (countrySet.size === 0 && params.countryCode.trim()) {
+    countrySet.add(params.countryCode.trim().toUpperCase());
+  }
+  const resolvedCountryCodes = Array.from(countrySet);
+  const primaryCountryCode = resolvedCountryCodes[0] ?? params.countryCode.toUpperCase();
+  const countriesYaml = resolvedCountryCodes.map((c) => `  - "${c}"`).join("\n");
+  const resolvedCountryNames = resolvedCountryCodes.map((code) => {
+    const match = AU_COUNTRIES.find((c) => c.code === code);
+    return match ? match.name : code === params.countryCode.toUpperCase() ? params.countryName : code;
+  });
+  const countryProvenanceLabel = resolvedCountryCodes
+    .map((code, idx) => `${resolvedCountryNames[idx] ?? code} (\`${code}\`)`)
+    .join(", ");
+  const countryGovernanceNames = resolvedCountryNames.join(", ");
+
   const frontmatter = `---
 title: "${params.title || "Genomic Surveillance Cohort"}"
 domain: ${params.domain.toLowerCase()}
 access: ${accessTier}
 license: "${licenseStr.toLowerCase()}"
 countries:
-  - "${params.countryCode.toUpperCase()}"
+${countriesYaml}
 taxon_ids:
   - ${params.taxonId || 0}
 date_created: "${today}"
@@ -123,7 +160,7 @@ authors:
   - name: "${params.authorName || "Principal Investigator"}"
     affiliation: "${params.authorAffiliation || params.institution || "Research Center"}"
 provenance:
-  country: "${params.countryCode.toUpperCase()}"
+  country: "${primaryCountryCode}"
   collecting_institution: "${params.institution || "National Surveillance Lab"}"
   collection_date: "${params.collectionDate || today}"
   sample_type: "${params.sampleType || "Blood swab"}"
@@ -154,7 +191,7 @@ ${params.description || "Genomic surveillance and pathogen sequencing cohort."}
 
 - **Pathogen**: ${params.scientificName || "Taxon"} (NCBI Taxon ID: \`${params.taxonId}\`)
 - **Host**: ${hostDescription}
-- **Geographic Provenance**: ${params.countryName} (\`${params.countryCode.toUpperCase()}\`) — African Union Member State
+- **Geographic Provenance**: ${countryProvenanceLabel} — African Union Member State${resolvedCountryCodes.length > 1 ? "s" : ""}
 - **Collection Date**: ${params.collectionDate || today}
 - **Specimen Source**: ${params.sampleType || "Swab / Blood specimen"}
 
@@ -167,7 +204,7 @@ ${params.description || "Genomic surveillance and pathogen sequencing cohort."}
 
 ## Sovereign Data Governance & Ethics
 
-Biological materials and digital sequence information (DSI) originate from **${params.countryName}** and conform to national Prior Informed Consent (PIC) and Mutually Agreed Terms (MAT) pursuant to the Nagoya Protocol and African Union sovereign genomic frameworks. Human genomic data (NCBI Taxon ID 9606) is excluded.
+Biological materials and digital sequence information (DSI) originate from **${countryGovernanceNames}** and conform to national Prior Informed Consent (PIC) and Mutually Agreed Terms (MAT) pursuant to the Nagoya Protocol and African Union sovereign genomic frameworks. Human genomic data (NCBI Taxon ID 9606) is excluded.
 `;
 
   return frontmatter + markdownBody;

@@ -63,4 +63,40 @@ describe("readmeGenerator", () => {
     expect(tsv).toContain("sample_id\ttaxon_id\tcountry\tcollection_date\tlat\tlon\tadmin1\thost\tisolation_source");
     expect(tsv).toContain("EXP001\t11620\tNG\t2026-03-15\t\t\t\tMastomys natalensis\tBlood plasma swab");
   });
+
+  it("emits multiple countries in YAML frontmatter and unions batch row countries", () => {
+    const readme = generateDatasetReadme({
+      ...sampleParams,
+      countryCode: "GH",
+      countryCodes: ["GH", "NG"],
+      countryName: "Ghana",
+      runs: [],
+      batchRows: [
+        {
+          sample_id: "VCHOL_GH01",
+          taxon_id: 666,
+          country: "GH",
+          collection_date: "2026-10-12",
+          host: "Environmental water",
+          isolation_source: "Surface water",
+          forward_read: "VCHOL_GH01_R1.fastq.gz",
+          reverse_read: "VCHOL_GH01_R2.fastq.gz",
+        },
+        {
+          sample_id: "VCHOL_KE03",
+          taxon_id: 666,
+          country: "KE",
+          collection_date: "2026-10-16",
+          host: "Environmental water",
+          isolation_source: "River water",
+          forward_read: "VCHOL_KE03_R1.fastq.gz",
+          reverse_read: "VCHOL_KE03_R2.fastq.gz",
+        },
+      ],
+    });
+
+    expect(readme).toContain('countries:\n  - "GH"\n  - "NG"\n  - "KE"');
+    expect(readme).toContain("Ghana (`GH`), Nigeria (`NG`), Kenya (`KE`)");
+    expect(readme).toContain("African Union Member States");
+  });
 });

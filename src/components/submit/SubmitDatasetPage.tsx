@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ShieldAlert,
   ShieldCheck,
@@ -25,7 +25,8 @@ import {
 import * as Tooltip from "@radix-ui/react-tooltip";
 import * as Tabs from "@radix-ui/react-tabs";
 import { toast, Toaster } from "sonner";
-import { AU_COUNTRIES, PROHIBITED_HUMAN_TAXON_ID } from "../../data/auCountries";
+import { AU_COUNTRIES, PROHIBITED_HUMAN_TAXON_ID, isAUCountryCode } from "../../data/auCountries";
+import { AUCountryMultiSelect } from "./AUCountryMultiSelect";
 import {
   SEQUENCING_PLATFORMS,
   LIBRARY_STRATEGIES,
@@ -124,6 +125,7 @@ export function SubmitDatasetPage() {
 
   // Step 3: Sequencing Technology & Sovereign Specs
   const [countryCode, setCountryCode] = useState("NG");
+  const [selectedCountries, setSelectedCountries] = useState<string[]>(["NG"]);
   const [platformId, setPlatformId] = useState<"ILLUMINA" | "OXFORD_NANOPORE" | "PACBIO" | "MGI" | "ION_TORRENT">("ILLUMINA");
   const [instrumentModel, setInstrumentModel] = useState("Illumina NovaSeq 6000");
   const [libraryStrategy, setLibraryStrategy] = useState("WGS");
@@ -297,13 +299,45 @@ export function SubmitDatasetPage() {
     setCurrentStep(2);
   };
 
+  const handleBatchCountriesChange = (codes: string[]): void => {
+    setSelectedCountries(codes);
+    if (codes[0]) {
+      setCountryCode(codes[0]);
+    }
+  };
+
+  // Auto-sync valid AU country codes discovered in imported/edited batch samples.tsv rows
+  useEffect(() => {
+    if (submissionTrack !== "batch" || batchRows.length === 0) return;
+    const rowCodes = batchRows
+      .map((r) => (r.country || "").trim().toUpperCase())
+      .filter((c) => c.length === 2 && isAUCountryCode(c));
+    if (rowCodes.length === 0) return;
+    setSelectedCountries((prev) => {
+      const merged = Array.from(new Set([...prev, ...rowCodes]));
+      if (merged.length === prev.length) return prev;
+      return merged;
+    });
+  }, [submissionTrack, batchRows]);
+
+  const effectiveBatchCountries = Array.from(
+    new Set([
+      ...selectedCountries.map((c) => c.trim().toUpperCase()).filter((c) => c.length === 2),
+      ...(submissionTrack === "batch"
+        ? batchRows
+            .map((r) => (r.country || "").trim().toUpperCase())
+            .filter((c) => c.length === 2 && isAUCountryCode(c))
+        : []),
+    ])
+  );
+
   const isBatchStep1Valid =
     isStep1Valid &&
     taxonId.trim().length > 0 &&
     parseInt(taxonId, 10) > 0 &&
     !isHumanTaxon &&
     taxonName.trim().length >= 3 &&
-    countryCode.length === 2 &&
+    effectiveBatchCountries.length > 0 &&
     nagoyaAgreed;
 
   const handleProceedToBatchStep2 = () => {
@@ -313,8 +347,8 @@ export function SubmitDatasetPage() {
         handleProceedToStep2();
       } else if (!taxonId || parseInt(taxonId, 10) <= 0 || isHumanTaxon || taxonName.trim().length < 3) {
         toast.error("Valid non-human target pathogen taxonomy is required.");
-      } else if (countryCode.length !== 2) {
-        toast.error("Please select an African Union member state origin.");
+      } else if (effectiveBatchCountries.length === 0) {
+        toast.error("Please select at least one African Union member state origin.");
       } else if (!nagoyaAgreed) {
         toast.error("Please agree to the AU Sovereign Data & Nagoya Protocol declaration.");
       }
@@ -395,12 +429,22 @@ export function SubmitDatasetPage() {
     ? `ubio check .\nubio push ${displayNamespace}/${displayDatasetSlug} . --message "Initial sovereign dataset upload"`
     : `ubio create ${displayNamespace}/${displayDatasetSlug} --domain ${(pathogenType || "virus").toLowerCase()} --exist-ok\nubio check .\nubio push ${displayNamespace}/${displayDatasetSlug} . --message "Initial sovereign dataset upload"`;
 
+  const activeCountryCodes =
+    submissionTrack === "batch" ? effectiveBatchCountries : [countryCode];
+  const activeCountryDisplay = activeCountryCodes
+    .map((code) => {
+      const found = AU_COUNTRIES.find((c) => c.code === code);
+      return found ? `${found.name} (${code})` : code;
+    })
+    .join(", ");
+
   const readmeParams = {
     title: name || "Genomic Surveillance Cohort",
     domain: pathogenType.toLowerCase(),
     authorName: user?.name || "Principal Investigator",
     authorAffiliation: leadInstitution || "Lead Research Institution",
-    countryCode,
+    countryCode: activeCountryCodes[0] || countryCode,
+    countryCodes: activeCountryCodes,
     countryName: selectedCountryObj?.name || "African Union Member State",
     institution: leadInstitution || "Contributing Institution",
     collectionDate: submissionTrack === "batch" ? (batchRows[0]?.collection_date || collectionDate || "2026-01-01") : collectionDate,
@@ -1158,20 +1202,17 @@ export function SubmitDatasetPage() {
 
                         <div className="form-field">
                           <label htmlFor="input-batch-country" className="form-label">
-                            AU Country of Origin <span className="req">*</span>
+                            AU Countries of Origin <span className="req">*</span>
                           </label>
-                          <select
+                          <AUCountryMultiSelect
                             id="input-batch-country"
-                            className="form-select"
-                            value={countryCode}
-                            onChange={(e) => setCountryCode(e.target.value)}
-                          >
-                            {AU_COUNTRIES.map((c) => (
-                              <option key={c.code} value={c.code}>
-                                {c.name} ({c.code}) - AU Member State
-                              </option>
-                            ))}
-                          </select>
+                            selectedCodes={effectiveBatchCountries}
+                            onChange={handleBatchCountriesChange}
+                          />
+                          <span className="field-hint">
+                            Select one or more of the 55 AU member states. Countries present in your
+                            batch <code>samples.tsv</code> are added automatically.
+                          </span>
                         </div>
                       </div>
 
@@ -2255,9 +2296,17 @@ export function SubmitDatasetPage() {
                           <span className="review-val">{name}</span>
                         </div>
                         <div className="review-row">
-                          <span className="review-lbl">Origin AU Country:</span>
+                          <span className="review-lbl">
+                            Origin AU {activeCountryCodes.length > 1 ? "Countries" : "Country"}:
+                          </span>
                           <span className="review-val">
-                            {selectedCountryObj?.name} (<code>{countryCode}</code>)
+                            {activeCountryCodes.length > 1 ? (
+                              activeCountryDisplay
+                            ) : (
+                              <>
+                                {selectedCountryObj?.name} (<code>{countryCode}</code>)
+                              </>
+                            )}
                           </span>
                         </div>
                         <div className="review-row">
@@ -2517,7 +2566,9 @@ export function SubmitDatasetPage() {
                   <span className="rail-spec-label">AU Origin</span>
                   {submissionTrack === "batch" || currentStep >= 3 ? (
                     <span className="rail-spec-val font-mono">
-                      {countryCode} ({selectedCountryObj?.name || "AU"})
+                      {activeCountryCodes.length > 1
+                        ? activeCountryCodes.join(", ")
+                        : `${countryCode} (${selectedCountryObj?.name || "AU"})`}
                     </span>
                   ) : (
                     <span className="rail-spec-val text-muted">Pending Step 3</span>
