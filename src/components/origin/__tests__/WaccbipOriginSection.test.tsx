@@ -6,9 +6,9 @@ import { WaccbipOriginSection } from "../WaccbipOriginSection";
 describe("WaccbipOriginSection Component", () => {
   it("renders the WACCBIP founding heading and University of Ghana badge", () => {
     render(<WaccbipOriginSection />);
-    expect(screen.getByRole("heading", { name: /Founded at WACCBIP by Ghana[’']s First Cohort of Bioinformatics/i })).toBeDefined();
+    expect(screen.getByRole("heading", { name: /Founded at WACCBIP by Ghana[’']s First Bioinformatics Master[’']s Students/i })).toBeDefined();
     expect(screen.getAllByText(/University of Ghana/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/First cohort of bioinformatics/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/first bioinformatics master[’']s students/i).length).toBeGreaterThan(0);
   });
 
   it("renders the 3D ring asset for scroll animation", () => {
