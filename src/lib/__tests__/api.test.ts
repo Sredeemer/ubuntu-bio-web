@@ -114,13 +114,32 @@ describe("UbuntuBio API Client (FastAPI Integration)", () => {
       expect(result.items[0]?.countryCode).toBe("KE");
     });
 
-    it("falls back to local curated data when search endpoint fails", async () => {
+    it("returns empty results on network failure by default (strict live mode)", async () => {
       vi.spyOn(global, "fetch").mockRejectedValueOnce(new Error("Search server error"));
 
       const result = await searchDatasets("lassa");
       expect(result.isLive).toBe(false);
-      expect(result.items.length).toBeGreaterThan(0);
-      expect(result.items[0]?.id).toContain("lassa");
+      expect(result.items).toEqual([]);
+      expect(result.total).toBe(0);
+    });
+
+    it("falls back to local curated data only when NEXT_PUBLIC_STRICT_LIVE_DATA=false", async () => {
+      const prev = process.env.NEXT_PUBLIC_STRICT_LIVE_DATA;
+      process.env.NEXT_PUBLIC_STRICT_LIVE_DATA = "false";
+      try {
+        vi.spyOn(global, "fetch").mockRejectedValueOnce(new Error("Search server error"));
+
+        const result = await searchDatasets("lassa");
+        expect(result.isLive).toBe(false);
+        expect(result.items.length).toBeGreaterThan(0);
+        expect(result.items[0]?.id).toContain("lassa");
+      } finally {
+        if (prev === undefined) {
+          delete process.env.NEXT_PUBLIC_STRICT_LIVE_DATA;
+        } else {
+          process.env.NEXT_PUBLIC_STRICT_LIVE_DATA = prev;
+        }
+      }
     });
   });
 
@@ -151,19 +170,40 @@ describe("UbuntuBio API Client (FastAPI Integration)", () => {
       expect(repos[0]?.id).toBe("test-org/ebola-study");
     });
 
-    it("falls back to default curated list on network failure", async () => {
+    it("returns empty array on network failure by default (strict live mode)", async () => {
       vi.spyOn(global, "fetch").mockRejectedValueOnce(new Error("Network error"));
 
       const repos = await fetchRepositories();
-      expect(repos).toEqual(DATASETS);
+      expect(repos).toEqual([]);
+    });
+
+    it("falls back to default curated list only when NEXT_PUBLIC_STRICT_LIVE_DATA=false", async () => {
+      const prev = process.env.NEXT_PUBLIC_STRICT_LIVE_DATA;
+      process.env.NEXT_PUBLIC_STRICT_LIVE_DATA = "false";
+      try {
+        vi.spyOn(global, "fetch").mockRejectedValueOnce(new Error("Network error"));
+
+        const repos = await fetchRepositories();
+        expect(repos).toEqual(DATASETS);
+      } finally {
+        if (prev === undefined) {
+          delete process.env.NEXT_PUBLIC_STRICT_LIVE_DATA;
+        } else {
+          process.env.NEXT_PUBLIC_STRICT_LIVE_DATA = prev;
+        }
+      }
     });
   });
 
   describe("fetchRepository", () => {
-    it("fetches single repo from backend or falls back to local record", async () => {
+    it("returns null when repo is missing on backend by default (strict live mode)", async () => {
+      vi.spyOn(global, "fetch").mockResolvedValueOnce({
+        ok: false,
+        status: 404,
+      } as Response);
+
       const repo = await fetchRepository("pasteur-dakar", "lassa-surveillance-2026");
-      expect(repo).toBeDefined();
-      expect(repo?.countryCode).toBe("SN");
+      expect(repo).toBeNull();
     });
   });
 

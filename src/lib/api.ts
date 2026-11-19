@@ -34,7 +34,7 @@ function getApiBaseUrl(): string {
 export const API_BASE_URL = getApiBaseUrl();
 
 export function isStrictLiveMode(): boolean {
-  return process.env.NEXT_PUBLIC_STRICT_LIVE_DATA === "true";
+  return process.env.NEXT_PUBLIC_STRICT_LIVE_DATA !== "false";
 }
 
 function getApiOrigin(): string {
