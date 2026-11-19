@@ -1211,6 +1211,199 @@
   margin: 0 !important;
 }
 
+/* --- Founding Charter & Technical Handover Extensions --- */
+.charter-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  padding: 16px 18px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  margin: 4px 0 8px;
+}
+
+.charter-meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.charter-meta-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+}
+
+.charter-meta-value {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #0f172a;
+  line-height: 1.5;
+}
+
+.charter-two-col {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin: 8px 0 12px;
+}
+
+.charter-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.charter-card h3 {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.charter-card p {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: #334155;
+}
+
+.charter-card ul {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 0.9rem;
+  line-height: 1.68;
+  color: #334155;
+}
+
+.charter-declaration {
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 24px 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.charter-declaration p {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.75;
+  color: #1e293b;
+}
+
+.charter-closing-oath {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #0f172a;
+  padding-top: 12px;
+  border-top: 1px solid #e2e8f0;
+  line-height: 1.65;
+}
+
+/* --- Docs Radix Tabs (Technical Handover) --- */
+.docs-tabs-root {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.docs-tabs-list {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-bottom: 1px solid #e2e8f0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.docs-tabs-list::-webkit-scrollbar {
+  display: none;
+}
+
+.docs-tab-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 11px 14px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  font-family: var(--font-sans), -apple-system, sans-serif;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #475569;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.docs-tab-trigger:hover {
+  color: #0f172a;
+}
+
+.docs-tab-trigger:focus-visible {
+  outline: 2px solid #15803d;
+  outline-offset: -2px;
+  border-radius: 4px;
+}
+
+.docs-tab-trigger[data-state="active"] {
+  color: #15803d;
+  border-bottom-color: #15803d;
+  font-weight: 600;
+}
+
+.docs-tab-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  outline: none;
+}
+
+.docs-tab-panel[hidden] {
+  display: none;
+}
+
+.docs-section ol {
+  margin: 0;
+  padding-left: 22px;
+  font-size: 0.9375rem;
+  color: #334155;
+  line-height: 1.72;
+  word-spacing: 0.04em;
+  letter-spacing: 0.006em;
+}
+
+.handover-horizon-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin: 8px 0 12px;
+}
+
+.handover-horizon-badge {
+  display: inline-block;
+  width: fit-content;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #15803d;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 4px;
+  padding: 2px 7px;
+}
+
 /* --- Responsive Breakpoints (Mobile First) --- */
 @media (max-width: 1024px) {
   .ubio-docs-container.has-right-rail {
@@ -1219,7 +1412,8 @@
   .ubio-docs-right-rail {
     display: none;
   }
-  .docs-pillars-grid {
+  .docs-pillars-grid,
+  .handover-horizon-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
@@ -1245,7 +1439,10 @@
     display: none; /* Keep subnav clean on mobile */
   }
 
-  .docs-pillars-grid {
+  .docs-pillars-grid,
+  .charter-meta-grid,
+  .charter-two-col,
+  .handover-horizon-grid {
     grid-template-columns: 1fr;
     gap: 12px;
   }
