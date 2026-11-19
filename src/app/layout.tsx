@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { AuthProvider } from "../context/AuthContext";
+import { JsonLd } from "../components/seo/JsonLd";
+import { organizationJsonLd, websiteJsonLd } from "../lib/seo";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -82,6 +84,8 @@ export default function RootLayout({
         />
       </head>
       <body>
+        <JsonLd data={organizationJsonLd()} />
+        <JsonLd data={websiteJsonLd()} />
         <a href="#main-content" className="skip-link">
           Skip to main content
         </a>
