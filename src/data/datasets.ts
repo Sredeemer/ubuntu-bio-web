@@ -22,12 +22,14 @@ export interface DatasetItem {
   datasetId: string;
   name: string;
   countryCode: string;
+  countryCodes?: string[] | undefined;
   countryName: string;
   taxonId: number;
   taxonName: string;
   pathogenType: "Virus" | "Bacteria" | "Parasite" | "Vector" | "Fungus";
   samplesCount: number;
   totalSizeMb: number;
+  totalSizeBytes?: number | undefined;
   biocontainment: "BSL-1" | "BSL-2" | "BSL-3" | "BSL-4";
   accessGate: "public" | "gated";
   description: string;
@@ -38,6 +40,28 @@ export interface DatasetItem {
   seqPlatforms: string[];
   citation: string;
   files: DatasetFile[];
+}
+
+/**
+ * Formats a dataset's storage volume cleanly without fabricating placeholder sizes.
+ * Returns an empty string when total size is 0 bytes.
+ */
+export function formatDatasetVolume(
+  sizeBytes: number | undefined,
+  fallbackMb: number
+): string {
+  const bytes =
+    typeof sizeBytes === "number"
+      ? sizeBytes
+      : fallbackMb > 0
+      ? fallbackMb * 1024 * 1024
+      : 0;
+
+  if (bytes <= 0) return "";
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
 }
 
 export const DATASETS: DatasetItem[] = [

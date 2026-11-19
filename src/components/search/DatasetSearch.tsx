@@ -3,13 +3,16 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { Search, Check, Copy, ArrowRight } from "lucide-react";
 import { AU_COUNTRIES } from "../../data/auCountries";
+import { formatDatasetVolume } from "../../data/datasets";
 import { searchDatasets, isStrictLiveMode } from "../../lib/api";
 
 export interface DatasetItem {
   id: string;
   name: string;
   countryCode: string;
+  countryCodes?: string[] | undefined;
   countryName: string;
+  totalSizeBytes?: number | undefined;
   taxonId: number;
   taxonName: string;
   pathogenType: "Virus" | "Bacteria" | "Parasite" | "Vector" | "Fungus";
@@ -161,16 +164,21 @@ export function DatasetSearch() {
 
   const filteredDatasets = useMemo(() => {
     return datasetsList.filter((item) => {
+      const itemCodes =
+        item.countryCodes && item.countryCodes.length > 0
+          ? item.countryCodes
+          : [item.countryCode];
+
       const matchesSearch =
         searchQuery === "" ||
         item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.countryName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.countryCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        itemCodes.some((c) => c.toLowerCase().includes(searchQuery.toLowerCase())) ||
         item.id.toLowerCase().includes(searchQuery.toLowerCase());
 
       const matchesType = selectedType === "all" || item.pathogenType === selectedType;
       const matchesCountry =
-        selectedCountry === "all" || item.countryCode === selectedCountry;
+        selectedCountry === "all" || itemCodes.includes(selectedCountry);
 
       return matchesSearch && matchesType && matchesCountry;
     });
@@ -262,7 +270,9 @@ export function DatasetSearch() {
                     {ds.pathogenType}
                   </span>
                   <span className="dataset-country-pill">
-                    {ds.countryCode} • {ds.countryName}
+                    {ds.countryCodes && ds.countryCodes.length > 1
+                      ? `${ds.countryCodes.join(", ")} • ${ds.countryName}`
+                      : `${ds.countryCode} • ${ds.countryName}`}
                   </span>
                 </div>
 
@@ -301,7 +311,9 @@ export function DatasetSearch() {
                 <div className="stat-divider" />
                 <div className="stat-unit">
                   <span className="stat-label">Data Volume</span>
-                  <span className="stat-number">{(ds.totalSizeMb / 1024).toFixed(1)} GB</span>
+                  <span className="stat-number">
+                    {formatDatasetVolume(ds.totalSizeBytes, ds.totalSizeMb) || "0 B"}
+                  </span>
                 </div>
                 <div className="stat-divider" />
                 <div className="stat-unit">

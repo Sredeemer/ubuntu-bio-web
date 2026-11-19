@@ -96,6 +96,7 @@ export interface SearchHit {
   id: string;
   slug: string;
   name: string;
+  title?: string;
   owner_slug?: string;
   owner_type?: string;
   owner_id?: string;
@@ -171,11 +172,18 @@ export function repoToDatasetItem(repo: RepoResponse | SearchHit): DatasetItem {
     pathogenType = "Fungus";
   }
 
-  // Determine country
-  let countryCode = "NG";
-  if ("countries" in repo && Array.isArray(repo.countries) && repo.countries[0]) {
-    countryCode = repo.countries[0].toUpperCase();
-  } else {
+  // Determine countries (preserve all AU country codes for multi-country datasets)
+  let countryCodes: string[] = [];
+  if ("countries" in repo && Array.isArray(repo.countries) && repo.countries.length > 0) {
+    countryCodes = Array.from(
+      new Set(
+        repo.countries
+          .map((c) => (typeof c === "string" ? c.trim().toUpperCase() : ""))
+          .filter((c) => c.length === 2)
+      )
+    );
+  }
+  if (countryCodes.length === 0) {
     // Intelligent heuristic scanning for African Union countries
     for (const c of AU_COUNTRIES) {
       if (
@@ -184,13 +192,20 @@ export function repoToDatasetItem(repo: RepoResponse | SearchHit): DatasetItem {
         textToScan.includes(`/${c.code.toLowerCase()}-`) ||
         textToScan.startsWith(`${c.code.toLowerCase()}-`)
       ) {
-        countryCode = c.code;
+        countryCodes = [c.code];
         break;
       }
     }
   }
-  const countryMatch = AU_COUNTRIES.find((c) => c.code === countryCode);
-  const countryName = countryMatch?.name || "African Union Sovereign Node";
+  const countryCode = countryCodes[0] ?? "NG";
+  if (countryCodes.length === 0) {
+    countryCodes = [countryCode];
+  }
+  const countryNames = countryCodes.map(
+    (code) => AU_COUNTRIES.find((c) => c.code === code)?.name ?? code
+  );
+  const countryName =
+    countryNames.length > 0 ? countryNames.join(", ") : "African Union Sovereign Node";
 
   const TAXON_NAMES: Record<number, string> = {
     562: "Escherichia coli",
@@ -256,34 +271,53 @@ export function repoToDatasetItem(repo: RepoResponse | SearchHit): DatasetItem {
     }
   }
 
-  const totalBytes = ("total_size_bytes" in repo && typeof repo.total_size_bytes === "number" && repo.total_size_bytes > 0)
-    ? repo.total_size_bytes
-    : 104857600;
+  const totalBytes =
+    "total_size_bytes" in repo &&
+    typeof repo.total_size_bytes === "number" &&
+    repo.total_size_bytes > 0
+      ? repo.total_size_bytes
+      : 0;
+
+  const samplesCount =
+    "samples_count" in repo &&
+    typeof repo.samples_count === "number" &&
+    repo.samples_count >= 0
+      ? repo.samples_count
+      : 0;
+
+  const displayTitle =
+    ("title" in repo && typeof repo.title === "string" && repo.title.trim()) ||
+    repo.name ||
+    slug;
 
   return {
     id: slug,
     namespace,
     datasetId,
-    name: repo.name || slug,
+    name: displayTitle,
     countryCode,
+    countryCodes,
     countryName,
     taxonId,
     taxonName,
     pathogenType,
-    samplesCount: ("samples_count" in repo && typeof repo.samples_count === "number" && repo.samples_count > 0) ? repo.samples_count : 1,
-    totalSizeMb: Math.round(totalBytes / (1024 * 1024)),
+    samplesCount,
+    totalSizeMb: totalBytes > 0 ? Math.round((totalBytes / (1024 * 1024)) * 100) / 100 : 0,
+    totalSizeBytes: totalBytes,
     biocontainment: "BSL-3",
-    accessGate: (repo.access === "gated" ? "gated" : "public"),
-    description: repo.description || "African Union sovereign genomic dataset hosted on UbuntuBio Hub.",
+    accessGate: repo.access === "gated" ? "gated" : "public",
+    description:
+      repo.description || "African Union sovereign genomic dataset hosted on UbuntuBio Hub.",
     longDescription:
       repo.description ||
       "Sovereign genomic data collection conforming to African Union data governance and OpenXet content-addressable storage standards.",
-    leadInstitution: namespace.toUpperCase(),
-    updatedAt: (("updated_at" in repo && repo.updated_at) ? repo.updated_at.split("T")[0] : null) ??
+    leadInstitution: `@${namespace}`,
+    updatedAt:
+      ("updated_at" in repo && repo.updated_at ? repo.updated_at.split("T")[0] : null) ??
       (new Date().toISOString().split("T")[0] ?? "2026-10-18"),
-    license: ("license" in repo && repo.license) ? repo.license : "CC-BY-4.0",
+    license: "license" in repo && repo.license ? repo.license : "CC-BY-4.0",
     seqPlatforms,
-    citation: `${namespace}. (2026). ${repo.name}. UbuntuBio Data Hub.`,
+    citation: `${namespace}. (2026). ${displayTitle}. UbuntuBio Data Hub.`,
     files: [],
   };
 }

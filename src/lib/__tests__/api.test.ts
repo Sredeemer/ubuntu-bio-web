@@ -10,7 +10,7 @@ import {
   commitWebDatasetFiles,
   RepoResponse,
 } from "../api";
-import { DATASETS } from "../../data/datasets";
+import { DATASETS, formatDatasetVolume } from "../../data/datasets";
 
 describe("UbuntuBio API Client (FastAPI Integration)", () => {
   beforeEach(() => {
@@ -41,6 +41,33 @@ describe("UbuntuBio API Client (FastAPI Integration)", () => {
       expect(item.pathogenType).toBe("Bacteria");
       expect(item.accessGate).toBe("public");
       expect(item.license).toBe("CC-BY-4.0");
+      expect(item.samplesCount).toBe(0);
+      expect(item.totalSizeBytes).toBe(0);
+      expect(item.totalSizeMb).toBe(0);
+      expect(item.leadInstitution).toBe("@noguchi");
+    });
+
+    it("preserves multiple AU countries and real byte sizes without fabricating 100 MB", () => {
+      const item = repoToDatasetItem({
+        id: "uuid-multi",
+        slug: "waccbip/vchol-multi",
+        name: "vchol-multi",
+        title: "Vibrio cholerae Multi-Country Batch",
+        domain: "bacteria",
+        access: "public",
+        countries: ["GH", "NG", "KE"],
+        samples_count: 3,
+        total_size_bytes: 2450,
+      });
+
+      expect(item.name).toBe("Vibrio cholerae Multi-Country Batch");
+      expect(item.countryCode).toBe("GH");
+      expect(item.countryCodes).toEqual(["GH", "NG", "KE"]);
+      expect(item.countryName).toBe("Ghana, Nigeria, Kenya");
+      expect(item.samplesCount).toBe(3);
+      expect(item.totalSizeBytes).toBe(2450);
+      expect(formatDatasetVolume(item.totalSizeBytes, item.totalSizeMb)).toBe("2.4 KB");
+      expect(formatDatasetVolume(0, 0)).toBe("");
     });
 
     it("prefers rich curated metadata when available in local registry", () => {

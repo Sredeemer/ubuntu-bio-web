@@ -597,27 +597,34 @@ export function SubmitDatasetPage() {
     setUploadStatusText("Initializing sovereign repository on UbuntuBio Hub...");
 
     try {
-      const res = await createRepository(
-        {
-          owner_slug: effectiveNamespace.trim().toLowerCase(),
-          name: datasetId.trim().toLowerCase(),
-          description: description.trim(),
-          domain: pathogenType.toLowerCase(),
-          access: accessTier,
-          license: "cc-by-4.0",
-        },
-        token || undefined
-      );
+      const targetSlug = `${effectiveNamespace.trim().toLowerCase()}/${datasetId.trim().toLowerCase()}`;
+      let activeToken: string | undefined = token || undefined;
+      let resolvedSlug: string | null = hubRepoSlug === targetSlug ? hubRepoSlug : null;
 
-      if (!res.success || !res.data) {
-        const msg = res.error || "Failed to initialize repository on UbuntuBio Hub.";
-        setSubmitError(msg);
-        toast.error(msg);
-        return;
+      if (!resolvedSlug) {
+        const res = await createRepository(
+          {
+            owner_slug: effectiveNamespace.trim().toLowerCase(),
+            name: datasetId.trim().toLowerCase(),
+            description: description.trim(),
+            domain: pathogenType.toLowerCase(),
+            access: accessTier,
+            license: "cc-by-4.0",
+          },
+          token || undefined
+        );
+
+        if (!res.success || !res.data) {
+          const msg = res.error || "Failed to initialize repository on UbuntuBio Hub.";
+          setSubmitError(msg);
+          toast.error(msg);
+          return;
+        }
+
+        activeToken = token || res.authToken;
+        resolvedSlug = res.data.slug;
+        setHubRepoSlug(resolvedSlug);
       }
-
-      const activeToken = token || res.authToken;
-      setHubRepoSlug(res.data.slug);
 
       const stagedMap = new Map<string, Blob>();
       stagedMap.set("README.md", new Blob([generatedReadme], { type: "text/markdown;charset=utf-8" }));
@@ -658,7 +665,7 @@ export function SubmitDatasetPage() {
       );
 
       const commitRes = await commitWebDatasetFiles(
-        res.data.slug,
+        resolvedSlug,
         filesToCommit,
         "Initial dataset submission via UbuntuBio Web",
         activeToken,
@@ -679,7 +686,7 @@ export function SubmitDatasetPage() {
         commitRes.deduplicatedCount && commitRes.deduplicatedCount > 0
           ? ` (${commitRes.deduplicatedCount} deduplicated via CAS)`
           : "";
-      toast.success(`Repository published: ${res.data.slug}${dedupNote}`);
+      toast.success(`Repository published: ${resolvedSlug}${dedupNote}`);
       setSubmitted(true);
     } catch (err: unknown) {
       const msg =

@@ -12,7 +12,7 @@ import {
   ShieldCheck,
   SlidersHorizontal,
 } from "lucide-react";
-import { DatasetItem, getAllDatasets } from "../../data/datasets";
+import { DatasetItem, formatDatasetVolume, getAllDatasets } from "../../data/datasets";
 import { AU_COUNTRIES } from "../../data/auCountries";
 import { searchDatasets, isStrictLiveMode } from "../../lib/api";
 import * as Flags from "country-flag-icons/react/1x1";
@@ -77,12 +77,12 @@ export function DatasetsCatalogPage() {
       if (selectedBSLs.length > 0 && !selectedBSLs.includes(d.biocontainment)) {
         return false;
       }
-      // Country filter (checkboxes)
-      if (
-        selectedCountries.length > 0 &&
-        !selectedCountries.includes(d.countryCode)
-      ) {
-        return false;
+      // Country filter (checkboxes) — matches primary or any secondary AU country
+      if (selectedCountries.length > 0) {
+        const codes = d.countryCodes && d.countryCodes.length > 0 ? d.countryCodes : [d.countryCode];
+        if (!codes.some((code) => selectedCountries.includes(code))) {
+          return false;
+        }
       }
       // Search query (client-side pass for instant typing response)
       if (!searchQuery.trim()) return true;
@@ -188,10 +188,17 @@ export function DatasetsCatalogPage() {
             <div className="metric-divider" />
             <div className="metric-item">
               <span className="metric-val">
-                {(
-                  datasets.reduce((acc, d) => acc + d.totalSizeMb, 0) / 1024
-                ).toFixed(1)}{" "}
-                GB
+                {formatDatasetVolume(
+                  datasets.reduce(
+                    (acc, d) =>
+                      acc +
+                      (typeof d.totalSizeBytes === "number"
+                        ? d.totalSizeBytes
+                        : d.totalSizeMb * 1024 * 1024),
+                    0
+                  ),
+                  0
+                ) || "0 B"}
               </span>
               <span className="metric-lbl">Total Volume</span>
             </div>
@@ -396,38 +403,67 @@ export function DatasetsCatalogPage() {
           ) : (
             <div className="ubio-catalog-grid">
               {filteredDatasets.map((dataset) => {
-                const sizeFormatted =
-                  dataset.totalSizeMb >= 1000
-                    ? `${(dataset.totalSizeMb / 1024).toFixed(1)} GB`
-                    : `${dataset.totalSizeMb} MB`;
-
-                const FlagComponent = (
-                  Flags as Record<
-                    string,
-                    React.ComponentType<React.SVGProps<SVGSVGElement>> | undefined
-                  >
-                )[dataset.countryCode];
+                const sizeFormatted = formatDatasetVolume(
+                  dataset.totalSizeBytes,
+                  dataset.totalSizeMb
+                );
+                const sampleLabel =
+                  dataset.samplesCount === 1
+                    ? "1 sample"
+                    : `${dataset.samplesCount} samples`;
+                const countryCodes =
+                  dataset.countryCodes && dataset.countryCodes.length > 0
+                    ? dataset.countryCodes
+                    : [dataset.countryCode];
+                const visibleFlagCodes = countryCodes.slice(0, 3);
+                const extraCountriesCount = Math.max(0, countryCodes.length - 3);
 
                 return (
                   <article key={dataset.id} className="ubio-dataset-card">
                     <div className="dataset-card-header">
                       <div className="dataset-badges">
-                        {FlagComponent ? (
-                          <span
-                            className="card-flag-circle"
-                            title={dataset.countryName}
-                            aria-label={dataset.countryName}
-                          >
-                            <FlagComponent />
-                          </span>
-                        ) : (
-                          <span
-                            className="card-flag-fallback"
-                            title={dataset.countryName}
-                          >
-                            {dataset.countryCode}
-                          </span>
-                        )}
+                        <div
+                          className="card-flag-stack"
+                          title={dataset.countryName}
+                          aria-label={dataset.countryName}
+                        >
+                          {visibleFlagCodes.map((code) => {
+                            const FlagComponent = (
+                              Flags as Record<
+                                string,
+                                React.ComponentType<React.SVGProps<SVGSVGElement>> | undefined
+                              >
+                            )[code];
+                            const label =
+                              AU_COUNTRIES.find((c) => c.code === code)?.name ?? code;
+                            return FlagComponent ? (
+                              <span
+                                key={code}
+                                className="card-flag-circle"
+                                title={label}
+                                aria-label={label}
+                              >
+                                <FlagComponent />
+                              </span>
+                            ) : (
+                              <span
+                                key={code}
+                                className="card-flag-fallback"
+                                title={label}
+                              >
+                                {code}
+                              </span>
+                            );
+                          })}
+                          {extraCountriesCount > 0 && (
+                            <span
+                              className="card-flag-overflow"
+                              title={dataset.countryName}
+                            >
+                              +{extraCountriesCount}
+                            </span>
+                          )}
+                        </div>
                         <span
                           className={`badge-type badge-${dataset.pathogenType.toLowerCase()}`}
                         >
@@ -435,7 +471,7 @@ export function DatasetsCatalogPage() {
                         </span>
                       </div>
                       <span className="dataset-metrics-chip">
-                        {dataset.samplesCount > 0 ? `${dataset.samplesCount} samples` : "Genomic Callset"} · {sizeFormatted}
+                        {sizeFormatted ? `${sampleLabel} · ${sizeFormatted}` : sampleLabel}
                       </span>
                     </div>
 
