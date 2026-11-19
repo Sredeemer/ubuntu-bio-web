@@ -140,7 +140,7 @@ export function SequenceDropzone({ onFilesInspected, onClearFiles }: SequenceDro
                   <th>Compression</th>
                   <th>Est. Length</th>
                   <th>Phred Scale</th>
-                  <th>Safety Status</th>
+                  <th>Status</th>
                   <th>Action</th>
                 </tr>
               </thead>
@@ -170,7 +170,7 @@ export function SequenceDropzone({ onFilesInspected, onClearFiles }: SequenceDro
                         </span>
                       ) : (
                         <span className="status-badge passed">
-                          <Check size={13} /> Passed Pre-Flight
+                          <Check size={13} /> Passed (Non-Human)
                         </span>
                       )}
                     </td>

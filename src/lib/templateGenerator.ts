@@ -1,4 +1,5 @@
 import { AU_COUNTRIES } from "../data/auCountries";
+import { firstDateOf } from "./dateNormalize";
 
 export interface BatchSampleRow {
   sample_id: string;
@@ -45,7 +46,7 @@ export function generateSampleTemplateTsv(defaults: TemplateDefaults = {}): stri
   const sampleCountry = defaults.countryCode || "NG";
   const sampleHost = defaults.hostSpecies || "Homo sapiens";
   const sampleSource = defaults.sampleType || "Blood swab specimen";
-  const sampleDate = defaults.collectionDate || new Date().toISOString().split("T")[0];
+  const sampleDate = firstDateOf(defaults.collectionDate) || new Date().toISOString().split("T")[0];
   const isPaired = defaults.layout !== "SINGLE";
 
   const exampleRow1 = [

@@ -6,6 +6,8 @@ import { NotificationBanner } from "../common/NotificationBanner";
 import { UbuntuBioLogo } from "../icons/UbuntuBioLogo";
 import { useAuth } from "../../context/AuthContext";
 
+const MOBILE_DRAWER_ID = "mobile-navigation-drawer";
+
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
@@ -24,8 +26,23 @@ export function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Escape closes the mobile drawer and hands focus back to its toggle.
+  const toggleRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setMobileMenuOpen(false);
+        toggleRef.current?.focus();
+      }
+    }
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [mobileMenuOpen]);
+
   const getInitials = (name?: string) => {
-    if (!name) return "U";
+    // API data is not guaranteed to be a string; never call string methods on anything else.
+    if (!name || typeof name !== "string") return "U";
     const parts = name.trim().split(" ").filter(Boolean);
     const first = parts[0];
     const second = parts[1];
@@ -61,8 +78,8 @@ export function Navbar() {
           <a href="/docs" className="ubio-nav-item">
             Documentation
           </a>
-          <a href="/#story" className="ubio-nav-item">
-            Our Story
+          <a href="/docs/governance" className="ubio-nav-item">
+            Governance
           </a>
         </nav>
 
@@ -161,9 +178,13 @@ export function Navbar() {
           </a>
 
           <button
+            ref={toggleRef}
+            type="button"
             className="ubio-mobile-toggle"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            aria-label="Toggle navigation menu"
+            aria-expanded={mobileMenuOpen}
+            aria-controls={MOBILE_DRAWER_ID}
+            aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
           >
             {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
@@ -172,7 +193,7 @@ export function Navbar() {
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="ubio-mobile-drawer">
+        <div className="ubio-mobile-drawer" id={MOBILE_DRAWER_ID}>
           <a
             href="/datasets"
             onClick={() => setMobileMenuOpen(false)}
@@ -195,11 +216,11 @@ export function Navbar() {
             Documentation
           </a>
           <a
-            href="/#story"
+            href="/docs/governance"
             onClick={() => setMobileMenuOpen(false)}
             className="mobile-nav-item"
           >
-            Our Story
+            Governance
           </a>
 
           <div className="ubio-mobile-drawer-cta">

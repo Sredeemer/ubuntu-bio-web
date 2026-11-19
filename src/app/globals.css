@@ -390,3 +390,33 @@ button {
     animation: none;
   }
 }
+
+
+/* ── Skip-to-main-content link (WCAG 2.4.1) ───────────────────────────────── */
+.skip-link {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 10000;
+  padding: 10px 16px;
+  border-radius: 8px;
+  background: #00ed64;
+  color: #001e2b;
+  font-weight: 700;
+  text-decoration: none;
+  /* Off-screen until focused, so it is still in the tab order. */
+  transform: translateY(-200%);
+}
+
+.skip-link:focus,
+.skip-link:focus-visible {
+  transform: translateY(0);
+  outline: 3px solid #001e2b;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 5px #00ed64;
+}
+
+/* The skip target takes programmatic focus; it needs no visible ring. */
+#main-content:focus {
+  outline: none;
+}

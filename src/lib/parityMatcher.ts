@@ -1,5 +1,6 @@
 import { AU_COUNTRIES, PROHIBITED_HUMAN_TAXON_ID } from "../data/auCountries";
 import { BatchSampleRow, TemplateDefaults } from "./templateGenerator";
+import { collectionDateIssue, firstDateOf } from "./dateNormalize";
 
 export interface DiscoveredSequenceFile {
   name: string;
@@ -170,18 +171,9 @@ export function validateRowAttributes(
     });
   }
 
-  const dateClean = row.collection_date.trim();
-  if (!dateClean) {
-    issues.push({ field: "collection_date", message: "Collection date is required.", severity: "error" });
-  } else {
-    const isoDatePattern = /^\d{4}(?:-(?:0[1-9]|1[0-2])(?:-(?:0[1-9]|[12]\d|3[01]))?)?$/;
-    if (!isoDatePattern.test(dateClean)) {
-      issues.push({
-        field: "collection_date",
-        message: "Collection date must strictly adhere to ISO-8601 (YYYY-MM-DD or YYYY-MM).",
-        severity: "error",
-      });
-    }
+  const dateMessage = collectionDateIssue(row.collection_date);
+  if (dateMessage) {
+    issues.push({ field: "collection_date", message: dateMessage, severity: "error" });
   }
 
   if (!row.forward_read.trim()) {
@@ -329,7 +321,8 @@ export function generateRowsFromOrphanFiles(
 ): BatchSampleRow[] {
   const pairedGroups = autoGroupSequenceFiles(orphanFiles);
   const fallbackDate = new Date().toISOString().split("T")[0] ?? "2026-01-01";
-  const dateStr = defaults.collectionDate || fallbackDate;
+  // A wizard-level range ("start/end") cannot be a single sample's date; use its start.
+  const dateStr = firstDateOf(defaults.collectionDate) || fallbackDate;
 
   return pairedGroups.map((g, idx) => ({
     sample_id: g.sampleRoot || `SAMPLE_${String(idx + 1).padStart(3, "0")}`,

@@ -67,13 +67,25 @@ export function InteractiveTerminal({
   activeTabOverride?: string;
   onTabChange?: (tabId: string) => void;
 }) {
-  const [selectedTabId, setSelectedTabId] = useState<string>("upload");
+  // Clicking a tab and scrolling to a section are two independent inputs to the
+  // same state. A click always wins immediately; a change of `activeTabOverride`
+  // (driven by scroll) replaces the selection, but an unchanged override never
+  // re-asserts itself over a manual choice.
+  const [selectedTabId, setSelectedTabId] = useState<string>(
+    activeTabOverride && TABS.some((t) => t.id === activeTabOverride) ? activeTabOverride : "upload"
+  );
   const [typedCommand, setTypedCommand] = useState<string>("");
   const [isTyping, setIsTyping] = useState<boolean>(true);
   const [copied, setCopied] = useState<boolean>(false);
 
-  const activeTabId = activeTabOverride || selectedTabId;
-  const currentTab = TABS.find((t) => t.id === activeTabId) ?? TABS[0]!;
+  useEffect(() => {
+    if (activeTabOverride && TABS.some((t) => t.id === activeTabOverride)) {
+      setSelectedTabId(activeTabOverride);
+    }
+  }, [activeTabOverride]);
+
+  const currentTab = TABS.find((t) => t.id === selectedTabId) ?? TABS[0]!;
+  const activeTabId = currentTab.id;
 
   useEffect(() => {
     setTypedCommand("");
@@ -94,10 +106,14 @@ export function InteractiveTerminal({
     return () => clearInterval(interval);
   }, [currentTab.command]);
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(currentTab.command);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(currentTab.command);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard API unavailable (insecure context / denied): leave the icon unchanged.
+    }
   };
 
   const handleTabClick = (tabId: string) => {
@@ -122,8 +138,11 @@ export function InteractiveTerminal({
           {TABS.map((tab) => (
             <button
               key={tab.id}
+              type="button"
               role="tab"
+              id={`ubio-tab-${tab.id}`}
               aria-selected={tab.id === activeTabId}
+              aria-controls="ubio-terminal-panel"
               onClick={() => handleTabClick(tab.id)}
               className={`ubio-tab-btn ${tab.id === activeTabId ? "active" : ""}`}
             >
@@ -144,7 +163,12 @@ export function InteractiveTerminal({
       </div>
 
       {/* Terminal Viewport */}
-      <div className="ubio-terminal-screen">
+      <div
+        className="ubio-terminal-screen"
+        role="tabpanel"
+        id="ubio-terminal-panel"
+        aria-labelledby={`ubio-tab-${activeTabId}`}
+      >
         <div className="ubio-prompt-row">
           <span className="terminal-prompt-user">ubuntu-bio@node-af</span>
           <span className="terminal-prompt-sep">:</span>

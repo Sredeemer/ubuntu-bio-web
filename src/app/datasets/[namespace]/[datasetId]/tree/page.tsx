@@ -36,7 +36,7 @@ export default async function Page({ params }: PageProps) {
   return (
     <div className="ubio-landing-wrapper ubio-band-light">
       <Navbar />
-      <main id="main-content">
+      <main id="main-content" tabIndex={-1}>
         <DatasetTreePage
           dataset={dataset}
           namespace={namespace}

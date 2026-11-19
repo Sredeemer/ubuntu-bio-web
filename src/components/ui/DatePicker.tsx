@@ -50,14 +50,13 @@ function addDays(d: Date, days: number): Date {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate() + days);
 }
 
-/** "15 Oct 2024" */
+/** ISO-8601 calendar date, "2026-10-01". Falls back to the raw string if it is not a valid date. */
 export function formatDisplayDate(iso: string): string {
   const d = parseIsoDate(iso);
-  if (!d) return iso;
-  return `${d.getDate()} ${(MONTH_NAMES[d.getMonth()] ?? "").slice(0, 3)} ${d.getFullYear()}`;
+  return d ? formatIsoDate(d) : iso;
 }
 
-/** "15 Oct 2024" or "10 Oct 2024 – 24 Oct 2024". */
+/** "2026-10-01" or "2026-10-01 – 2026-10-21". */
 export function formatDateValue(val: CollectionDateValue): string {
   if (!val.startDate) return "";
   if (!val.endDate || val.endDate === val.startDate) return formatDisplayDate(val.startDate);
@@ -68,7 +67,7 @@ export function DatePicker({
   id,
   value,
   onChange,
-  placeholder = "Select date or date range",
+  placeholder = "Select start and end date",
   maxDate,
   minDate = "1990-01-01",
   disabled = false,
@@ -274,7 +273,7 @@ export function DatePicker({
   // Quick-select presets (each picks a single date).
   const today = parseIsoDate(todayIso) ?? new Date();
   const dayShort = (d: Date) => WEEKDAYS_SHORT[d.getDay()] ?? "";
-  const dayMonth = (d: Date) => `${d.getDate()} ${(MONTH_NAMES[d.getMonth()] ?? "").slice(0, 3)}`;
+  const dayMonth = (d: Date) => `${d.getDate()} ${(MONTH_NAMES[d.getMonth()] ?? "").slice(0, 3)}`; // preset hint only
   const yesterday = addDays(today, -1);
   const lastSaturday = addDays(yesterday, -((yesterday.getDay() + 1) % 7));
   const weeksAgo = (n: number) => addDays(today, -7 * n);
@@ -415,6 +414,25 @@ export function DatePicker({
                 <ChevronRight size={18} aria-hidden="true" />
               </button>
             </div>
+          </div>
+
+          <div className="range-summary" aria-live="polite">
+            <div className={`range-chip${awaitingEnd || !hasValue ? " is-current" : ""}`}>
+              <span className="range-chip-label">Start</span>
+              <span className="range-chip-value">{start || "Select a date"}</span>
+            </div>
+            <span className="range-chip-arrow" aria-hidden="true">→</span>
+            <div className={`range-chip${awaitingEnd ? " is-awaiting" : ""}`}>
+              <span className="range-chip-label">End</span>
+              <span className="range-chip-value">
+                {end || (awaitingEnd ? "Select end date" : hasValue ? "Optional" : "—")}
+              </span>
+            </div>
+            {awaitingEnd && (
+              <button type="button" className="range-single-btn" onClick={() => close(true)}>
+                Single date only
+              </button>
+            )}
           </div>
 
           {view === "years" ? (

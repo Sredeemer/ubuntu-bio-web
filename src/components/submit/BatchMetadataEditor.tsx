@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import {
   Download,
   Upload,
@@ -21,7 +21,25 @@ import {
   parseBatchSheet,
 } from "../../lib/templateGenerator";
 import { ReconciliationReport, ReconciledRow } from "../../lib/parityMatcher";
+import { normalizeDateString, firstDateOf } from "../../lib/dateNormalize";
+import { FieldTooltip } from "../ui/FieldTooltip";
 import "./BatchMetadataEditor.css";
+
+const TAXON_GUIDANCE =
+  "NCBI Taxonomy ID of the sequenced organism: a positive whole number (e.g. 11620 for Lassa mammarenavirus). Human data (Taxon ID 9606) is prohibited under the African Union sovereign-data invariants.";
+const COUNTRY_GUIDANCE =
+  "Two-letter ISO 3166-1 alpha-2 code of the African Union member state where the sample was collected (e.g. NG, KE, SN, ZA).";
+const DATE_GUIDANCE =
+  "Collection date in ISO-8601 format: YYYY-MM-DD (YYYY-MM is also accepted). Use Normalize Dates to convert recognised formats.";
+
+function CellGuidance({ issue, guidance }: { issue?: string | undefined; guidance: string }) {
+  return (
+    <>
+      {issue && <span className="field-tip-issue">{issue}</span>}
+      <span className="field-tip-guidance">{guidance}</span>
+    </>
+  );
+}
 
 interface BatchMetadataEditorProps {
   rows: BatchSampleRow[];
@@ -39,9 +57,9 @@ export function BatchMetadataEditor({
   isPaired,
 }: BatchMetadataEditorProps) {
   const fileUploadInputRef = useRef<HTMLInputElement>(null);
-  const collectionDateDefault = defaults.collectionDate?.includes("/")
-    ? ""
-    : defaults.collectionDate;
+  // A wizard-level range ("start/end") is not a single sample's date; default rows to its start.
+  const collectionDateDefault = firstDateOf(defaults.collectionDate);
+  const [feedback, setFeedback] = useState<{ kind: "success" | "warning" | "info"; text: string } | null>(null);
   const templateDefaults = { ...defaults, collectionDate: collectionDateDefault };
 
   const handleDownloadTemplate = (format: "tsv" | "csv") => {
@@ -124,6 +142,7 @@ export function BatchMetadataEditor({
     if (!currentRow) return;
 
     const target: BatchSampleRow = { ...currentRow };
+    setFeedback(null);
 
     if (field === "taxon_id") {
       target.taxon_id = value ? parseInt(value, 10) || value : "";
@@ -136,44 +155,79 @@ export function BatchMetadataEditor({
     onChange(updated);
   };
 
+  /**
+   * Reset the study-level fields of every row to the defaults chosen earlier in the wizard.
+   * An explicit reset overwrites manual edits, but only where a study default actually exists;
+   * identifiers and read-file paths (sample_id, forward/reverse read) are never touched.
+   */
   const handleFillDefaults = () => {
+    if (rows.length === 0) {
+      setFeedback({ kind: "info", text: "Add a row first, then use Fill Defaults to apply the study defaults." });
+      return;
+    }
     const fallbackDate = new Date().toISOString().split("T")[0] ?? "2026-01-01";
-    const dateStr = collectionDateDefault || fallbackDate;
-    const updated: BatchSampleRow[] = rows.map((r) => ({
-      ...r,
-      taxon_id: r.taxon_id || defaults.taxonId || 5833,
-      country: r.country || defaults.countryCode || "NG",
-      collection_date: r.collection_date || dateStr,
-      host: r.host || defaults.hostSpecies || "Homo sapiens",
-      isolation_source: r.isolation_source || defaults.sampleType || "clinical specimen",
-    }));
-    onChange(updated);
-  };
-
-  const handleNormalizeDates = () => {
+    let changedRows = 0;
     const updated: BatchSampleRow[] = rows.map((r) => {
-      const raw = r.collection_date.trim();
-      const slashParts = raw.split(/[/]/);
-      if (slashParts.length === 3) {
-        const p0 = slashParts[0] ?? "";
-        const p1 = slashParts[1] ?? "";
-        const p2 = slashParts[2] ?? "";
-        if (p0.length === 4) {
-          const y = p0;
-          const m = p1.padStart(2, "0");
-          const d = p2.padStart(2, "0");
-          return { ...r, collection_date: `${y}-${m}-${d}` };
-        }
-        if (p2.length === 4) {
-          const y = p2;
-          const m = p0.padStart(2, "0");
-          const d = p1.padStart(2, "0");
-          return { ...r, collection_date: `${y}-${m}-${d}` };
-        }
-      }
-      return r;
+      const next: BatchSampleRow = {
+        ...r,
+        taxon_id: defaults.taxonId || r.taxon_id || 5833,
+        country: defaults.countryCode || r.country || "NG",
+        collection_date: collectionDateDefault || r.collection_date || fallbackDate,
+        host: defaults.hostSpecies || r.host || "Homo sapiens",
+        isolation_source: defaults.sampleType || r.isolation_source || "clinical specimen",
+      };
+      const changed =
+        String(next.taxon_id) !== String(r.taxon_id) ||
+        next.country !== r.country ||
+        next.collection_date !== r.collection_date ||
+        next.host !== r.host ||
+        next.isolation_source !== r.isolation_source;
+      if (changed) changedRows += 1;
+      return changed ? next : r;
     });
     onChange(updated);
+    setFeedback(
+      changedRows > 0
+        ? {
+            kind: "success",
+            text: `Defaults applied to ${changedRows} of ${rows.length} row${rows.length === 1 ? "" : "s"}.`,
+          }
+        : { kind: "info", text: "All rows already match the study defaults." }
+    );
+  };
+
+  /**
+   * Rewrite recognised alternative date formats to ISO-8601 (YYYY-MM-DD). Ambiguous or invalid
+   * values (e.g. 03/04/2026) are never guessed at: they stay as typed and stay flagged.
+   */
+  const handleNormalizeDates = () => {
+    if (rows.length === 0) {
+      setFeedback({ kind: "info", text: "There are no rows to normalize." });
+      return;
+    }
+    let normalized = 0;
+    const unresolved: number[] = [];
+    const updated: BatchSampleRow[] = rows.map((r, idx) => {
+      const result = normalizeDateString(r.collection_date);
+      if (result.status === "normalized") {
+        normalized += 1;
+        return { ...r, collection_date: result.value };
+      }
+      if (result.status === "ambiguous" || result.status === "invalid") unresolved.push(idx + 1);
+      return r;
+    });
+
+    if (normalized > 0) onChange(updated);
+
+    const parts: string[] = [];
+    if (normalized > 0) parts.push(`Normalized ${normalized} date${normalized === 1 ? "" : "s"} to YYYY-MM-DD.`);
+    if (unresolved.length > 0) {
+      parts.push(
+        `Row${unresolved.length === 1 ? "" : "s"} ${unresolved.join(", ")} could not be converted (ambiguous or invalid) — fix ${unresolved.length === 1 ? "it" : "them"} manually.`
+      );
+    }
+    if (parts.length === 0) parts.push("All dates are already in YYYY-MM-DD format.");
+    setFeedback({ kind: unresolved.length > 0 ? "warning" : normalized > 0 ? "success" : "info", text: parts.join(" ") });
   };
 
   const getRowReconciliation = (index: number): ReconciledRow | undefined => {
@@ -233,7 +287,7 @@ export function BatchMetadataEditor({
             type="button"
             className="btn-toolbar"
             onClick={handleNormalizeDates}
-            title="Format slashed dates (MM/DD/YYYY) to standard ISO-8601 (YYYY-MM-DD)"
+            title="Convert recognised date formats (e.g. 14/05/2026, 1 Oct 2026) to ISO-8601 (YYYY-MM-DD). Ambiguous dates are left for you to fix."
           >
             <CalendarCheck size={13} />
             <span>Normalize Dates</span>
@@ -278,6 +332,12 @@ export function BatchMetadataEditor({
         </div>
       </div>
 
+      <div className="batch-feedback-region" role="status" aria-live="polite">
+        {feedback && (
+          <p className={`batch-feedback batch-feedback-${feedback.kind}`}>{feedback.text}</p>
+        )}
+      </div>
+
       {rows.length === 0 ? (
         <div className="table-empty-container">
           <div className="table-empty-box">
@@ -301,8 +361,22 @@ export function BatchMetadataEditor({
                   <th style={{ width: "36px", textAlign: "center" }}>#</th>
                   <th style={{ width: "105px" }}>Status</th>
                   <th style={{ minWidth: "130px" }}>Sample ID *</th>
-                  <th style={{ minWidth: "90px" }}>Taxon ID *</th>
-                  <th style={{ minWidth: "80px" }}>AU Country *</th>
+                  <th style={{ minWidth: "90px" }}>
+                    Taxon ID *{" "}
+                    <FieldTooltip content={<span className="field-tip-guidance">{TAXON_GUIDANCE}</span>}>
+                      <button type="button" className="th-help-btn" aria-label="About Taxon ID">
+                        <HelpCircle size={12} aria-hidden="true" />
+                      </button>
+                    </FieldTooltip>
+                  </th>
+                  <th style={{ minWidth: "80px" }}>
+                    AU Country *{" "}
+                    <FieldTooltip content={<span className="field-tip-guidance">{COUNTRY_GUIDANCE}</span>}>
+                      <button type="button" className="th-help-btn" aria-label="About AU Country">
+                        <HelpCircle size={12} aria-hidden="true" />
+                      </button>
+                    </FieldTooltip>
+                  </th>
                   <th style={{ minWidth: "120px" }}>Collection Date *</th>
                   <th style={{ minWidth: "140px" }}>Host Organism *</th>
                   <th style={{ minWidth: "140px" }}>Specimen Source *</th>
@@ -347,34 +421,56 @@ export function BatchMetadataEditor({
                         />
                       </td>
                       <td>
-                        <input
-                          type="text"
-                          className={`cell-input font-mono ${taxonIssue ? "cell-input-error" : ""}`}
-                          title={taxonIssue}
-                          value={row.taxon_id}
-                          onChange={(e) => handleUpdateCell(idx, "taxon_id", e.target.value)}
-                        />
+                        <FieldTooltip
+                          block
+                          invalid={Boolean(taxonIssue)}
+                          content={<CellGuidance issue={taxonIssue} guidance={TAXON_GUIDANCE} />}
+                        >
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            aria-label={`Taxon ID, row ${idx + 1}`}
+                            aria-invalid={taxonIssue ? true : undefined}
+                            className={`cell-input font-mono ${taxonIssue ? "cell-input-error" : ""}`}
+                            value={row.taxon_id}
+                            onChange={(e) => handleUpdateCell(idx, "taxon_id", e.target.value)}
+                          />
+                        </FieldTooltip>
                       </td>
                       <td>
-                        <input
-                          type="text"
-                          maxLength={2}
-                          className={`cell-input font-mono ${countryIssue ? "cell-input-error" : ""}`}
-                          title={countryIssue}
-                          style={{ textTransform: "uppercase" }}
-                          value={row.country}
-                          onChange={(e) => handleUpdateCell(idx, "country", e.target.value)}
-                        />
+                        <FieldTooltip
+                          block
+                          invalid={Boolean(countryIssue)}
+                          content={<CellGuidance issue={countryIssue} guidance={COUNTRY_GUIDANCE} />}
+                        >
+                          <input
+                            type="text"
+                            maxLength={2}
+                            aria-label={`AU country code, row ${idx + 1}`}
+                            aria-invalid={countryIssue ? true : undefined}
+                            className={`cell-input font-mono ${countryIssue ? "cell-input-error" : ""}`}
+                            style={{ textTransform: "uppercase" }}
+                            value={row.country}
+                            onChange={(e) => handleUpdateCell(idx, "country", e.target.value)}
+                          />
+                        </FieldTooltip>
                       </td>
                       <td>
-                        <input
-                          type="text"
-                          className={`cell-input ${dateIssue ? "cell-input-error" : ""}`}
-                          title={dateIssue}
-                          placeholder="YYYY-MM-DD"
-                          value={row.collection_date}
-                          onChange={(e) => handleUpdateCell(idx, "collection_date", e.target.value)}
-                        />
+                        <FieldTooltip
+                          block
+                          invalid={Boolean(dateIssue)}
+                          content={<CellGuidance issue={dateIssue} guidance={DATE_GUIDANCE} />}
+                        >
+                          <input
+                            type="text"
+                            aria-label={`Collection date, row ${idx + 1}`}
+                            aria-invalid={dateIssue ? true : undefined}
+                            className={`cell-input ${dateIssue ? "cell-input-error" : ""}`}
+                            placeholder="YYYY-MM-DD"
+                            value={row.collection_date}
+                            onChange={(e) => handleUpdateCell(idx, "collection_date", e.target.value)}
+                          />
+                        </FieldTooltip>
                       </td>
                       <td>
                         <input

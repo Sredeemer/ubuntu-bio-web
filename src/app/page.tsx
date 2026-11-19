@@ -13,7 +13,7 @@ export default function HomePage() {
   return (
     <div className="ubio-landing-wrapper">
       <Navbar />
-      <main id="main-content">
+      <main id="main-content" tabIndex={-1}>
         <HeroHeader />
         <ScrollyHero />
         <AfricaGlobeSection />

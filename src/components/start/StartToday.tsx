@@ -27,8 +27,8 @@ export function StartToday() {
                 Register your institution, validate MIxS metadata against AU country codes, and
                 upload datasets with content-addressed, resumable chunking.
               </p>
-              <a href="/submit" className="btn-pill-primary start-card-cta">
-                Get started
+              <a href="/docs" className="btn-pill-primary start-card-cta">
+                Explore Documentation
               </a>
             </div>
             <pre className="start-card-code" aria-label="Example upload commands">

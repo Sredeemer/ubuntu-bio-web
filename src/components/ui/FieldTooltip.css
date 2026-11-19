@@ -1,0 +1,21 @@
+.field-tip-anchor { display: inline-flex; max-width: 100%; }
+.field-tip-anchor.is-block { display: block; width: 100%; }
+
+.field-tip {
+  position: fixed;
+  z-index: 1100;
+  max-width: min(320px, calc(100vw - 16px));
+  padding: 9px 12px;
+  border-radius: 8px;
+  background: #0b1f2a;
+  border: 1px solid #1f3a4a;
+  color: #f1f5f9;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.field-tip.is-invalid { border-color: #ef4444; }
+.field-tip-issue { display: block; margin-bottom: 4px; color: #fca5a5; font-weight: 600; }
+.field-tip-guidance { display: block; color: #cbd5e1; }
+.field-tip code { font-family: "JetBrains Mono", ui-monospace, monospace; color: #00ed64; }
